@@ -40,7 +40,8 @@ else:
 #           Erreur : impossible de diviser par zéro !
 
 
-# TODO 4 : Sinon (b n'est pas zéro), calcule  a / b  et affiche le résultat.
+# TODO 4 : Sinon (b n'est pas zéro), ajoute le code après le print plus haut
+#           Calcule  a / b  et affiche le résultat.
 #           Le résultat doit ressembler à (si a=10 et b=2) :
 #           10 / 2 = 5.0
 
