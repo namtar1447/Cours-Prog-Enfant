@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cours Python — Plan de cours</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 32px 24px 24px;
+      text-align: center;
+    }
+    header h1 { font-size: 2em; color: var(--accent); margin-bottom: 6px; }
+    header p  { color: var(--muted); font-size: 1em; }
+
+    .progress-bar-global {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .progress-track {
+      background: #13131f;
+      border-radius: 20px;
+      height: 10px;
+      width: 260px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      transition: width 0.6s ease;
+    }
+    .progress-label { color: var(--muted); font-size: .9em; }
+
+    /* ── Main layout ── */
+    main { max-width: 1000px; margin: 0 auto; padding: 40px 20px 60px; }
+
+    /* ── Bloc sections ── */
+    .bloc {
+      margin-bottom: 48px;
+    }
+    .bloc-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .bloc-icon { font-size: 1.6em; }
+    .bloc-header h2 { font-size: 1.3em; color: var(--text); }
+    .bloc-header .bloc-ide {
+      margin-left: auto;
+      font-size: .8em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(124,106,247,.15);
+      color: var(--accent);
+      border: 1px solid rgba(124,106,247,.3);
+      white-space: nowrap;
+    }
+
+    /* ── Lesson grid ── */
+    .lesson-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Lesson card ── */
+    .lesson-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid rgba(124,106,247,.2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .lesson-card.available:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(124,106,247,.15);
+    }
+    .lesson-card.locked {
+      opacity: 0.45;
+      border-style: dashed;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .lesson-num {
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      padding: 2px 9px;
+      font-size: .8em;
+      font-weight: bold;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .lesson-card.locked .lesson-num { background: var(--muted); }
+
+    .card-title { font-size: .95em; font-weight: 600; color: var(--text); }
+    .card-project { font-size: .82em; color: var(--muted); }
+
+    /* ── Badges ── */
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge {
+      font-size: .75em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: default;
+      white-space: nowrap;
+    }
+    .badge.lesson-link {
+      background: rgba(124,106,247,.15);
+      color: var(--accent);
+      border: 1px solid rgba(124,106,247,.35);
+      cursor: pointer;
+    }
+    .badge.lesson-link:hover {
+      background: rgba(124,106,247,.3);
+    }
+    .badge.ex-link {
+      background: rgba(247,162,106,.1);
+      color: var(--accent2);
+      border: 1px solid rgba(247,162,106,.3);
+      cursor: pointer;
+    }
+    .badge.ex-link:hover {
+      background: rgba(247,162,106,.2);
+    }
+    .badge.soon {
+      background: rgba(108,112,134,.1);
+      color: var(--muted);
+      border: 1px solid rgba(108,112,134,.3);
+    }
+    .badge.gamedesign {
+      background: rgba(166,227,161,.08);
+      color: var(--success);
+      border: 1px solid rgba(166,227,161,.25);
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 32px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border-radius: 10px;
+      font-size: .85em;
+    }
+    .legend-item { display: flex; align-items: center; gap: 7px; color: var(--muted); }
+
+    @media (max-width: 600px) {
+      .lesson-grid { grid-template-columns: 1fr; }
+      .bloc-header .bloc-ide { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🐍 Cours Python — Adam</h1>
+  <p>20 leçons · Du Python de base aux mods Luanti</p>
+  <div class="progress-bar-global">
+    <span class="progress-label" id="prog-label">Chargement…</span>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</header>
+
+<main>
+
+  <div class="legend">
+    <div class="legend-item">🟣 <span>Leçon disponible</span></div>
+    <div class="legend-item">🔒 <span>Leçon à venir</span></div>
+    <div class="legend-item"><span style="color:var(--accent)">Présentation</span> → ouvre le support visuel</div>
+    <div class="legend-item"><span style="color:var(--accent2)">Exercice</span> → ouvre le fichier Python</div>
+  </div>
+
+  <div id="course-content"></div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DONNÉES DU COURS
+// Pour marquer une leçon comme disponible :
+//   available: true
+// Pour ajouter des exercices :
+//   exercises: ['exercice_01.py', 'exercice_02.py']
+// ═══════════════════════════════════════════════════════
+
+const BLOCS = [
+  {
+    id: 1,
+    title: 'Bloc 1 — Python fondamentaux',
+    icon: '🐍',
+    ide: 'Thonny',
+    lessons: [
+      {
+        num: '00', folder: 'lecon_00',
+        title: 'Introduction à Thonny',
+        project: 'Écrire et rouler son premier programme',
+        available: true,
+        exercises: [],
+      },
+      {
+        num: '01', folder: 'lecon_01',
+        title: 'Variables, types, print, input',
+        project: 'Mini-calculatrice de base',
+        available: true,
+        exercises: ['exercice_01.py', 'exercice_02.py'],
+      },
+      {
+        num: '02', folder: 'lecon_02',
+        title: 'Conditions — if / elif / else',
+        project: 'Calculatrice avec détection d\'erreurs',
+        available: false,
+      },
+      {
+        num: '03', folder: 'lecon_03',
+        title: 'Boucles — for / while',
+        project: 'Tables de multiplication, countdown',
+        available: false,
+      },
+      {
+        num: '04', folder: 'lecon_04',
+        title: 'Fonctions, paramètres, return',
+        project: 'Fonctions mathématiques réutilisables',
+        available: false,
+      },
+      {
+        num: '05', folder: 'lecon_05',
+        title: 'Listes et dictionnaires',
+        project: 'Historique de calculs',
+        available: false,
+      },
+      {
+        num: '06', folder: 'lecon_06',
+        title: 'Modules, import, mpmath',
+        project: 'Calculatrice avancée — grands nombres, tétration',
+        available: false,
+      },
+      {
+        num: '06b', folder: 'lecon_06b',
+        title: 'matplotlib — Tracer des fonctions',
+        project: '🏆 Projet : calculatrice graphique complète',
+        available: false,
+      },
+    ],
+  },
+  {
+    id: 2,
+    title: 'Bloc 2 — Jeux 2D avec pygame',
+    icon: '🎮',
+    ide: 'Thonny',
+    lessons: [
+      {
+        num: '07', folder: 'lecon_07',
+        title: 'Fenêtre, boucle de jeu, événements',
+        project: 'La boucle update → draw → repeat',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '08', folder: 'lecon_08',
+        title: 'Images, sprites, animations',
+        project: 'Le game feel et la fluidité',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '09', folder: 'lecon_09',
+        title: 'Collisions, limites d\'écran',
+        project: 'Tension et risque',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '10', folder: 'lecon_10',
+        title: 'Score, vies, état du jeu',
+        project: 'Progression et feedback',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '11', folder: 'lecon_11',
+        title: 'Écrans multiples — menu, pause, game over',
+        project: 'Structure d\'un jeu complet',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '12', folder: 'lecon_12',
+        title: 'Sons et effets visuels',
+        project: 'Le polish',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '13', folder: 'lecon_13',
+        title: 'Projet — Jeu 2D complet',
+        project: '🏆 Bilan de conception',
+        gamedesign: true,
+        available: false,
+      },
+    ],
+  },
+  {
+    id: 3,
+    title: 'Bloc 3 — Lua & Luanti',
+    icon: '🧱',
+    ide: 'VS Code',
+    lessons: [
+      {
+        num: '14', folder: 'lecon_14',
+        title: 'Lua vs Python — mêmes idées, syntaxe différente',
+        project: '',
+        available: false,
+      },
+      {
+        num: '15', folder: 'lecon_15',
+        title: 'Structure d\'un mod, API Luanti de base',
+        project: 'Règles simples, profondeur émergente',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '16', folder: 'lecon_16',
+        title: 'Événements, triggers — on_place / on_use',
+        project: '',
+        available: false,
+      },
+      {
+        num: '17', folder: 'lecon_17',
+        title: 'Tables avancées, craft recipes',
+        project: '',
+        available: false,
+      },
+      {
+        num: '18', folder: 'lecon_18',
+        title: 'Entités et mobs simples',
+        project: 'Les mobs comme mécaniques',
+        gamedesign: true,
+        available: false,
+      },
+      {
+        num: '19', folder: 'lecon_19',
+        title: 'Génération de terrain, biomes',
+        project: '',
+        available: false,
+      },
+      {
+        num: '20', folder: 'lecon_20',
+        title: 'Projet — Mini-mod Luanti complet',
+        project: '🏆 Concevoir une expérience',
+        gamedesign: true,
+        available: false,
+      },
+    ],
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+// RENDU
+// ═══════════════════════════════════════════════════════
+
+function renderCourse() {
+  const container = document.getElementById('course-content');
+  let totalLessons = 0;
+  let availableLessons = 0;
+
+  BLOCS.forEach(bloc => {
+    const blocEl = document.createElement('div');
+    blocEl.className = 'bloc';
+
+    blocEl.innerHTML = `
+      <div class="bloc-header">
+        <span class="bloc-icon">${bloc.icon}</span>
+        <h2>${bloc.title}</h2>
+        <span class="bloc-ide">IDE : ${bloc.ide}</span>
+      </div>
+      <div class="lesson-grid" id="grid-${bloc.id}"></div>
+    `;
+    container.appendChild(blocEl);
+
+    const grid = blocEl.querySelector(`#grid-${bloc.id}`);
+
+    bloc.lessons.forEach(lesson => {
+      totalLessons++;
+      if (lesson.available) availableLessons++;
+
+      const card = document.createElement('div');
+      card.className = `lesson-card ${lesson.available ? 'available' : 'locked'}`;
+
+      const badgesHtml = lesson.available
+        ? buildAvailableBadges(lesson)
+        : `<span class="badge soon">🔒 À venir</span>`;
+
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="lesson-num">Leçon ${lesson.num}</span>
+          <div>
+            <div class="card-title">${lesson.title}</div>
+            ${lesson.project ? `<div class="card-project">${lesson.project}</div>` : ''}
+          </div>
+        </div>
+        <div class="badges">${badgesHtml}</div>
+      `;
+
+      grid.appendChild(card);
+    });
+  });
+
+  // Progress indicator
+  const pct = Math.round((availableLessons / totalLessons) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent =
+    `${availableLessons} / ${totalLessons} leçons disponibles`;
+}
+
+function buildAvailableBadges(lesson) {
+  let html = `<a class="badge lesson-link" href="${lesson.folder}/presentation.html">📖 Présentation</a>`;
+
+  if (lesson.exercises) {
+    lesson.exercises.forEach((ex, i) => {
+      html += `<a class="badge ex-link" href="${lesson.folder}/${ex}">✏️ Exercice ${String(i + 1).padStart(2, '0')}</a>`;
+    });
+  }
+
+  if (lesson.gamedesign) {
+    html += `<span class="badge gamedesign">🎮 Game design</span>`;
+  }
+
+  return html;
+}
+
+renderCourse();
+</script>
+
+</body>
+</html>

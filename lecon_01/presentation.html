@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 01 — Variables et premiers programmes</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 4px 12px;
+      border: 1px solid var(--muted);
+      border-radius: 20px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .progress-item {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      border: 1px solid var(--muted);
+      cursor: default;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.15);
+      font-weight: bold;
+    }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent);
+      color: white;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .card.analogy  { border-left: 4px solid var(--accent2); }
+    .card.info     { border-left: 4px solid var(--accent); }
+    .card.warning  { border-left: 4px solid var(--warning); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      border: 1px solid rgba(124, 106, 247, 0.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+
+    .output-line {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 10px;
+      background: rgba(247, 162, 106, 0.07);
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      margin-top: 6px;
+      color: var(--accent2);
+    }
+    .output-line::before { content: '▶  '; color: var(--accent2); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+    .label.tip     { background: rgba(249,226,175,.2); color: var(--warning); }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 4px;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .demo-btn:active { transform: translateY(0); }
+    .demo-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      border: 1px solid rgba(124, 106, 247, 0.3);
+    }
+
+    /* ── RPG slots ── */
+    .rpg-sheet {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .rpg-slot {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid rgba(124, 106, 247, 0.2);
+      transition: all 0.4s;
+    }
+    .rpg-slot .slot-name  { color: var(--muted); font-family: 'Courier New', monospace; font-size: 0.9em; }
+    .rpg-slot .slot-value { color: var(--accent2); font-weight: bold; font-size: 1.2em; font-family: 'Courier New', monospace; min-width: 80px; text-align: right; }
+    .rpg-slot.changed     { border-color: var(--accent); background: rgba(124, 106, 247, 0.1); }
+
+    /* ── Type cards ── */
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+    .type-card {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .type-card:hover    { border-color: var(--accent); transform: translateY(-2px); }
+    .type-card.selected { border-color: var(--accent); background: rgba(124, 106, 247, 0.1); }
+    .type-card .type-name { font-size: 1.3em; font-weight: bold; color: var(--accent2); font-family: 'Courier New', monospace; }
+    .type-card .type-desc { color: var(--muted); font-size: 0.9em; margin-top: 6px; }
+    .type-card .type-ex   { font-family: 'Courier New', monospace; margin-top: 8px; }
+
+    /* ── Quiz ── */
+    .quiz-box {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 28px 0;
+      border: 2px solid rgba(124, 106, 247, 0.3);
+    }
+    .quiz-box h4 {
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-size: 0.85em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .quiz-question { font-size: 1.05em; margin-bottom: 14px; }
+
+    .quiz-options  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      background: #13131f;
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quiz-option:hover    { border-color: var(--accent); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 106, 247, 0.1); }
+    .quiz-option.correct  { border-color: var(--success); background: rgba(166, 227, 161, 0.08); }
+    .quiz-option.wrong    { border-color: var(--error);   background: rgba(243, 139, 168, 0.08); }
+
+    .quiz-input {
+      background: #13131f;
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      width: 180px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .quiz-input:focus         { outline: none; border-color: var(--accent); }
+    .quiz-input.correct       { border-color: var(--success); }
+    .quiz-input.wrong         { border-color: var(--error); }
+
+    .attempts { display: flex; gap: 6px; margin-bottom: 10px; }
+    .attempt-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); transition: all 0.3s; }
+    .attempt-dot.used    { background: var(--error); }
+    .attempt-dot.success { background: var(--success); }
+
+    .quiz-feedback { padding: 10px 14px; border-radius: 8px; margin-top: 8px; font-size: 0.95em; display: none; }
+    .quiz-feedback.show    { display: block; }
+    .quiz-feedback.success { background: rgba(166,227,161,.1); border: 1px solid var(--success); color: var(--success); }
+    .quiz-feedback.error   { background: rgba(243,139,168,.1); border: 1px solid var(--error);   color: var(--error); }
+    .quiz-feedback.hint    { background: rgba(249,226,175,.1); border: 1px solid var(--warning); color: var(--warning); }
+
+    /* ── Objectives ── */
+    .objectives { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .objective  { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface); border-radius: 8px; }
+    .objective .icon { font-size: 1.4em; }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 12px; }
+    .step  { display: flex; gap: 16px; align-items: flex-start; }
+    .step-num {
+      background: var(--accent); color: white;
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: bold; flex-shrink: 0; margin-top: 2px;
+    }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th { background: var(--accent); color: white; padding: 10px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(124, 106, 247, 0.2); }
+    tr:hover td { background: rgba(124, 106, 247, 0.04); }
+    td code, th code { font-family: 'Courier New', monospace; color: var(--accent2); background: #13131f; padding: 2px 6px; border-radius: 4px; }
+
+    /* ── Small inputs ── */
+    .small-input {
+      background: #13131f;
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .small-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Console output ── */
+    .console {
+      background: #0d0d17;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      min-height: 40px;
+      border: 1px solid rgba(124, 106, 247, 0.2);
+      margin-top: 12px;
+    }
+
+    /* ── Next lesson card ── */
+    .next-lesson {
+      background: linear-gradient(135deg, rgba(124,106,247,.1), rgba(247,162,106,.1));
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 24px;
+    }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85em;
+      margin-top: 28px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+
+    @media (max-width: 600px) {
+      .rpg-sheet, .type-grid { grid-template-columns: 1fr; }
+    }
+
+    code { font-family: 'Courier New', monospace; color: var(--accent2); background: #13131f; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     BARRE DE PROGRESSION
+══════════════════════════════════════════ -->
+<nav id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span style="color:var(--accent);font-weight:bold;margin-right:8px;white-space:nowrap">Leçon 01</span>
+  <div class="progress-item" data-section="s0">0. Intro</div>
+  <div class="progress-item" data-section="s1">1. Variables</div>
+  <div class="progress-item" data-section="s2">2. Types</div>
+  <div class="progress-item" data-section="s3">3. print()</div>
+  <div class="progress-item" data-section="s4">4. input()</div>
+  <div class="progress-item" data-section="s5">5. Mini-calc</div>
+  <div class="progress-item" data-section="s6">6. Résumé</div>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════════
+     SECTION 0 — EN-TÊTE
+══════════════════════════════════════════ -->
+<section class="section" id="s0">
+  <h1>🐍 Leçon 01</h1>
+  <h2 style="color:var(--accent2);margin-bottom:24px">Variables, types et premiers programmes</h2>
+
+  <div class="objectives">
+    <div class="objective">
+      <span class="icon">📦</span>
+      <span>Comprendre ce qu'est une <strong>variable</strong> et comment en créer une</span>
+    </div>
+    <div class="objective">
+      <span class="icon">🏷️</span>
+      <span>Connaître les 4 types de base : <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code></span>
+    </div>
+    <div class="objective">
+      <span class="icon">🖨️</span>
+      <span>Afficher des messages et des valeurs avec <code>print()</code></span>
+    </div>
+    <div class="objective">
+      <span class="icon">⌨️</span>
+      <span>Demander une saisie à l'utilisateur avec <code>input()</code></span>
+    </div>
+    <div class="objective">
+      <span class="icon">🧮</span>
+      <span>Construire une <strong>mini-calculatrice</strong> qui lit deux nombres et affiche leur somme</span>
+    </div>
+  </div>
+
+  <div class="card info" style="margin-top:20px">
+    <strong>⏱️ Durée estimée :</strong> ~25 min de présentation &nbsp;+&nbsp; ~60 min d'exercices dans Thonny
+  </div>
+
+  <div class="scroll-hint">▼ Défile vers le bas pour commencer</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 1 — VARIABLES
+══════════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Variables — Les boîtes de ton programme</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Imagine la fiche de personnage d'un RPG. Ton héros a des <strong>points de vie</strong>, un <strong>niveau</strong>, un <strong>nom</strong>…</p>
+    <p style="margin-top:10px">Chaque information est dans une <strong>boîte</strong> avec une étiquette. En Python, on appelle ces boîtes des <strong>variables</strong>.</p>
+  </div>
+
+  <!-- Static RPG sheet -->
+  <div class="rpg-sheet" style="margin:20px 0">
+    <div class="rpg-slot"><span class="slot-name">nom</span><span class="slot-value" style="color:var(--success)">"Héros"</span></div>
+    <div class="rpg-slot"><span class="slot-name">niveau</span><span class="slot-value">1</span></div>
+    <div class="rpg-slot"><span class="slot-name">vies</span><span class="slot-value">3</span></div>
+    <div class="rpg-slot"><span class="slot-name">score</span><span class="slot-value">0</span></div>
+  </div>
+
+  <div class="label code">🐍 En Python</div>
+  <div class="code-block">
+<span class="cm"># Pour créer une variable : étiquette = valeur</span>
+
+<span class="var">nom</span>    <span class="op">=</span> <span class="str">"Héros"</span>
+<span class="var">niveau</span> <span class="op">=</span> <span class="num">1</span>
+<span class="var">vies</span>   <span class="op">=</span> <span class="num">3</span>
+<span class="var">score</span>  <span class="op">=</span> <span class="num">0</span>
+  </div>
+
+  <div class="card info">
+    <strong>Le signe <code>=</code> en Python, c'est une flèche :</strong><br>
+    <span style="color:var(--accent2);font-family:'Courier New',monospace">score = 100</span>
+    &nbsp;signifie « mets la valeur <strong>100</strong> dans la boîte <strong>score</strong> ».
+  </div>
+
+  <h3>Changer la valeur d'une variable</h3>
+  <p>Une variable peut changer — c'est pour ça qu'on l'appelle variable !</p>
+
+  <div class="code-block">
+<span class="var">vies</span> <span class="op">=</span> <span class="num">3</span>              <span class="cm"># vies vaut 3</span>
+<span class="var">vies</span> <span class="op">=</span> <span class="var">vies</span> <span class="op">-</span> <span class="num">1</span>      <span class="cm"># on perd une vie → vies vaut 2</span>
+<span class="var">vies</span> <span class="op">=</span> <span class="var">vies</span> <span class="op">+</span> <span class="num">5</span>      <span class="cm"># on gagne 5 vies → vies vaut 7</span>
+  </div>
+
+  <div class="label demo">🕹️ Démo interactive</div>
+  <div class="demo-box">
+    <p style="color:var(--muted);font-size:.9em;margin-bottom:16px">Clique sur les boutons pour simuler une partie :</p>
+    <div class="rpg-sheet" id="rpg-demo">
+      <div class="rpg-slot" id="slot-nom">   <span class="slot-name">nom</span>   <span class="slot-value" id="val-nom"   style="color:var(--success)">"Héros"</span></div>
+      <div class="rpg-slot" id="slot-vies">  <span class="slot-name">vies</span>  <span class="slot-value" id="val-vies">3</span></div>
+      <div class="rpg-slot" id="slot-score"> <span class="slot-name">score</span> <span class="slot-value" id="val-score">0</span></div>
+      <div class="rpg-slot" id="slot-niveau"><span class="slot-name">niveau</span><span class="slot-value" id="val-niveau">1</span></div>
+    </div>
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px">
+      <button class="demo-btn" onclick="rpgAction('ennemi')">⚔️ Rencontrer un ennemi (−1 vie)</button>
+      <button class="demo-btn" onclick="rpgAction('tresor')">💰 Trouver un trésor (+50 score)</button>
+      <button class="demo-btn" onclick="rpgAction('niveau')">⬆️ Monter de niveau</button>
+      <button class="demo-btn secondary" onclick="rpgAction('reset')">🔄 Réinitialiser</button>
+    </div>
+    <div class="code-block" id="rpg-code" style="margin-top:16px;font-size:13px;min-height:50px">
+      <span class="cm"># En attente d'action…</span>
+    </div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 1</h4>
+    <p class="quiz-question">
+      Après ces deux lignes, quelle est la valeur de <code>score</code> ?<br><br>
+      <span style="font-family:'Courier New';font-size:.95em">
+        <span style="color:var(--text)">score</span> <span style="color:var(--accent2)">=</span> <span style="color:var(--warning)">10</span><br>
+        <span style="color:var(--text)">score</span> <span style="color:var(--accent2)">=</span> <span style="color:var(--text)">score</span> <span style="color:var(--accent2)">+</span> <span style="color:var(--warning)">5</span>
+      </span>
+    </p>
+    <div class="attempts" id="q1-dots">
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+    </div>
+    <input type="text" class="quiz-input" id="q1-input" placeholder="Ta réponse…"><br>
+    <button class="demo-btn" onclick="checkQuiz('q1','15')">Vérifier</button>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 2 — TYPES
+══════════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Types de données — Différentes sortes de valeurs</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Dans un jeu, il y a différentes sortes d'objets : une épée (avec des dégâts entiers), une potion (avec un pourcentage décimal), le nom d'un héros (du texte), un interrupteur <em>activé / désactivé</em>.</p>
+    <p style="margin-top:10px">Python fait pareil — chaque valeur a un <strong>type</strong>. Le type dit à Python <em>comment utiliser</em> la valeur.</p>
+  </div>
+
+  <p>Python a 4 types de base. Clique sur chacun pour voir des exemples :</p>
+
+  <div class="type-grid">
+    <div class="type-card" onclick="showType('int',this)">
+      <div class="type-name">int</div>
+      <div style="font-size:1.6em;margin:8px 0">🔢</div>
+      <div class="type-desc">Nombre entier</div>
+      <div class="type-ex" style="color:var(--warning)">42, −7, 0, 1000</div>
+    </div>
+    <div class="type-card" onclick="showType('float',this)">
+      <div class="type-name">float</div>
+      <div style="font-size:1.6em;margin:8px 0">📊</div>
+      <div class="type-desc">Nombre décimal</div>
+      <div class="type-ex" style="color:var(--warning)">3.14, 0.5, −2.7</div>
+    </div>
+    <div class="type-card" onclick="showType('str',this)">
+      <div class="type-name">str</div>
+      <div style="font-size:1.6em;margin:8px 0">💬</div>
+      <div class="type-desc">Texte (string)</div>
+      <div class="type-ex" style="color:var(--success)">"Bonjour", "Python"</div>
+    </div>
+    <div class="type-card" onclick="showType('bool',this)">
+      <div class="type-name">bool</div>
+      <div style="font-size:1.6em;margin:8px 0">💡</div>
+      <div class="type-desc">Vrai ou Faux</div>
+      <div class="type-ex" style="color:#c792ea">True, False</div>
+    </div>
+  </div>
+
+  <div id="type-detail" class="card" style="display:none"></div>
+
+  <h3>Les 4 types dans le code</h3>
+  <div class="code-block">
+<span class="cm"># int — nombre entier (pas de point)</span>
+<span class="var">vies</span>      <span class="op">=</span> <span class="num">3</span>
+
+<span class="cm"># float — nombre décimal (avec un point, pas une virgule !)</span>
+<span class="var">vitesse</span>   <span class="op">=</span> <span class="num">1.5</span>
+
+<span class="cm"># str — texte entre guillemets</span>
+<span class="var">heros</span>     <span class="op">=</span> <span class="str">"Gandalf"</span>
+
+<span class="cm"># bool — vrai ou faux (majuscule obligatoire !)</span>
+<span class="var">en_vie</span>    <span class="op">=</span> <span class="kw">True</span>
+<span class="var">game_over</span> <span class="op">=</span> <span class="kw">False</span>
+  </div>
+
+  <div class="card warning">
+    <strong>⚠️ Attention :</strong> En Python, le séparateur décimal est le <strong>point</strong> — <code>1.5</code> est correct,
+    mais <code>1,5</code> provoquerait une erreur !
+  </div>
+
+  <h3>Vérifier le type d'une valeur</h3>
+  <div class="code-block">
+<span class="fn">type</span>(<span class="num">42</span>)         <span class="cm"># → &lt;class 'int'&gt;</span>
+<span class="fn">type</span>(<span class="num">3.14</span>)       <span class="cm"># → &lt;class 'float'&gt;</span>
+<span class="fn">type</span>(<span class="str">"Bonjour"</span>)  <span class="cm"># → &lt;class 'str'&gt;</span>
+<span class="fn">type</span>(<span class="kw">True</span>)        <span class="cm"># → &lt;class 'bool'&gt;</span>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 2</h4>
+    <p class="quiz-question">Quel est le type de la valeur <code style="color:var(--success)">"100"</code> (avec les guillemets) ?</p>
+    <div class="attempts" id="q2-dots">
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+    </div>
+    <div class="quiz-options" id="q2-options">
+      <div class="quiz-option" onclick="selectMC('q2',this,'int')">🔢 <code>int</code> — c'est le nombre 100</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'str')">💬 <code>str</code> — c'est du texte entre guillemets</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'float')">📊 <code>float</code> — ça ressemble à un nombre</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'bool')">💡 <code>bool</code> — vrai ou faux</div>
+    </div>
+    <button class="demo-btn" onclick="checkMC('q2','str')">Vérifier</button>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 3 — PRINT
+══════════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>print() — Parler à l'écran</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Dans Scratch, tu avais le bloc <strong>« Dire … »</strong> pour qu'un personnage affiche un message.</p>
+    <p style="margin-top:10px">En Python, <code>print()</code> fait la même chose — il affiche quelque chose dans la console.</p>
+  </div>
+
+  <div class="label code">🐍 Utilisation de base</div>
+  <div class="code-block">
+<span class="fn">print</span>(<span class="str">"Bonjour, monde !"</span>)
+<div class="output-line">Bonjour, monde !</div>
+
+<span class="fn">print</span>(<span class="num">42</span>)
+<div class="output-line">42</div>
+
+<span class="fn">print</span>(<span class="num">3</span> <span class="op">+</span> <span class="num">4</span>)
+<div class="output-line">7</div>
+  </div>
+
+  <h3>Afficher la valeur d'une variable</h3>
+  <div class="code-block">
+<span class="var">score</span> <span class="op">=</span> <span class="num">250</span>
+<span class="fn">print</span>(<span class="var">score</span>)
+<div class="output-line">250</div>
+  </div>
+
+  <h3>Combiner texte et variable — la f-string</h3>
+  <div class="code-block">
+<span class="var">nom</span>   <span class="op">=</span> <span class="str">"Adam"</span>
+<span class="var">score</span> <span class="op">=</span> <span class="num">150</span>
+
+<span class="fn">print</span>(<span class="str">f"Joueur : </span><span class="op">{</span><span class="var">nom</span><span class="op">}</span><span class="str">, Score : </span><span class="op">{</span><span class="var">score</span><span class="op">}</span><span class="str">"</span>)
+<div class="output-line">Joueur : Adam, Score : 150</div>
+  </div>
+
+  <div class="card info">
+    <strong>La f-string :</strong> mets un <code>f</code> juste avant les guillemets, puis utilise
+    <code style="color:var(--accent2)">{nom_de_variable}</code> pour insérer des valeurs directement dans le texte.
+    C'est comme remplir les blancs d'une phrase !
+  </div>
+
+  <div class="label demo">🕹️ Démo — print()</div>
+  <div class="demo-box">
+    <p style="color:var(--muted);font-size:.9em;margin-bottom:14px">Écris un message et un nombre, clique <strong>Afficher</strong> :</p>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:12px">
+      <div>
+        <label style="color:var(--muted);font-size:.85em;display:block;margin-bottom:4px">message</label>
+        <input type="text" id="print-msg" class="small-input" value="Bonjour" style="width:160px" oninput="updatePrintPreview()">
+      </div>
+      <div>
+        <label style="color:var(--muted);font-size:.85em;display:block;margin-bottom:4px">nombre</label>
+        <input type="number" id="print-num" class="small-input" value="42" style="width:90px" oninput="updatePrintPreview()">
+      </div>
+    </div>
+    <div id="print-preview" style="font-family:'Courier New';font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+    <button class="demo-btn" onclick="runPrint()">▶ Afficher</button>
+    <button class="demo-btn secondary" onclick="clearPrint()">Effacer</button>
+    <div class="console" id="print-console"></div>
+  </div>
+
+  <!-- Quiz 3 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 3</h4>
+    <p class="quiz-question">
+      Que va afficher ce code ?<br><br>
+      <span style="font-family:'Courier New';font-size:.95em">
+        <span style="color:var(--text)">x</span> <span style="color:var(--accent2)">=</span> <span style="color:var(--warning)">3</span><br>
+        <span style="color:var(--text)">y</span> <span style="color:var(--accent2)">=</span> <span style="color:var(--warning)">4</span><br>
+        <span style="color:#82aaff">print</span>(<span style="color:var(--text)">x</span> <span style="color:var(--accent2)">+</span> <span style="color:var(--text)">y</span>)
+      </span>
+    </p>
+    <div class="attempts" id="q3-dots">
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+    </div>
+    <input type="text" class="quiz-input" id="q3-input" placeholder="Ta réponse…"><br>
+    <button class="demo-btn" onclick="checkQuiz('q3','7')">Vérifier</button>
+    <div class="quiz-feedback" id="q3-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 4 — INPUT
+══════════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>input() — Écouter l'utilisateur</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Quand un jeu démarre et affiche <em>« Entrez votre nom : »</em>, il utilise quelque chose comme <code>input()</code>.</p>
+    <p style="margin-top:10px"><code>input()</code> <strong>met le programme en pause</strong> et attend que tu appuies sur Entrée.</p>
+  </div>
+
+  <div class="code-block">
+<span class="var">prenom</span> <span class="op">=</span> <span class="fn">input</span>(<span class="str">"Quel est ton prénom ? "</span>)
+<span class="fn">print</span>(<span class="str">f"Bonjour, </span><span class="op">{</span><span class="var">prenom</span><span class="op">}</span><span class="str"> !"</span>)
+  </div>
+
+  <div class="steps" style="margin:20px 0">
+    <div class="step"><div class="step-num">1</div><div>Affiche <em>« Quel est ton prénom ? »</em> et se met en pause.</div></div>
+    <div class="step"><div class="step-num">2</div><div>L'utilisateur tape quelque chose et appuie sur <kbd style="background:var(--surface);border:1px solid var(--muted);padding:2px 8px;border-radius:4px">↵ Entrée</kbd>.</div></div>
+    <div class="step"><div class="step-num">3</div><div>Ce texte est stocké dans la variable <code>prenom</code>.</div></div>
+    <div class="step"><div class="step-num">4</div><div>Le programme continue et affiche le message.</div></div>
+  </div>
+
+  <h3>⚠️ input() retourne TOUJOURS du texte !</h3>
+
+  <div class="card warning">
+    <p>Même si l'utilisateur tape <code>42</code>, Python reçoit le <strong>texte</strong> <code style="color:var(--success)">"42"</code>, pas le nombre <code style="color:var(--warning)">42</code>.</p>
+    <p style="margin-top:10px">Pour faire des calculs, il faut convertir avec <code>int()</code> ou <code>float()</code> :</p>
+  </div>
+
+  <div class="code-block">
+<span class="cm"># ❌ Sans conversion</span>
+<span class="var">a</span> <span class="op">=</span> <span class="fn">input</span>(<span class="str">"Nombre : "</span>)   <span class="cm"># l'utilisateur tape 5 → a = "5" (texte)</span>
+<span class="var">b</span> <span class="op">=</span> <span class="fn">input</span>(<span class="str">"Nombre : "</span>)   <span class="cm"># l'utilisateur tape 3 → b = "3" (texte)</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">+</span> <span class="var">b</span>)              <span class="cm"># affiche : 53  ← collage de texte, pas une addition !</span>
+
+<span class="cm"># ✅ Avec conversion</span>
+<span class="var">a</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nombre : "</span>))  <span class="cm"># a = 5  (entier)</span>
+<span class="var">b</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nombre : "</span>))  <span class="cm"># b = 3  (entier)</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">+</span> <span class="var">b</span>)              <span class="cm"># affiche : 8  ✓</span>
+  </div>
+
+  <div class="label demo">🕹️ Simulateur input()</div>
+  <div class="demo-box">
+    <p style="color:var(--muted);font-size:.9em;margin-bottom:14px">Simule ce que Python fait avec ton âge :</p>
+    <div id="sim-step1">
+      <div style="font-family:'Courier New';font-size:14px;color:var(--muted);margin-bottom:10px">
+        <span style="color:var(--text)">age_str</span> <span style="color:var(--accent2)">=</span>
+        <span style="color:#82aaff">input</span>(<span style="color:var(--success)">"Quel est ton âge ? "</span>)
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:var(--accent2)">Quel est ton âge ?</span>
+        <input type="number" id="sim-age" class="small-input" placeholder="Ton âge" style="width:110px" min="1" max="99">
+        <button class="demo-btn" onclick="runSim()">↵ Entrée</button>
+      </div>
+    </div>
+    <div id="sim-result" style="display:none">
+      <div style="background:#13131f;border-radius:8px;padding:14px;font-family:'Courier New';font-size:14px;line-height:2.2">
+        <div><span style="color:var(--muted)">age_str</span> = <span id="sim-str" style="color:var(--success)"></span> &nbsp;<span style="color:var(--muted)"># type : str</span></div>
+        <div><span style="color:var(--muted)">age_int</span> = <span style="color:#82aaff">int</span>(<span style="color:var(--muted)">age_str</span>) = <span id="sim-int" style="color:var(--warning)"></span> &nbsp;<span style="color:var(--muted)"># type : int</span></div>
+        <div id="sim-calc" style="margin-top:6px"></div>
+      </div>
+      <button class="demo-btn secondary" style="margin-top:12px" onclick="resetSim()">🔄 Réinitialiser</button>
+    </div>
+  </div>
+
+  <!-- Quiz 4 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 4</h4>
+    <p class="quiz-question">
+      L'utilisateur tape <code>7</code> au clavier. Quelle est la valeur de <code>x</code> après :<br><br>
+      <span style="font-family:'Courier New'">x = input("Nombre : ")</span>
+    </p>
+    <div class="attempts" id="q4-dots">
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+      <div class="attempt-dot"></div>
+    </div>
+    <div class="quiz-options" id="q4-options">
+      <div class="quiz-option" onclick="selectMC('q4',this,'int7')">Le nombre entier <code>7</code></div>
+      <div class="quiz-option" onclick="selectMC('q4',this,'str7')">Le texte <code style="color:var(--success)">"7"</code></div>
+      <div class="quiz-option" onclick="selectMC('q4',this,'none')">Rien — input() ne retourne rien</div>
+    </div>
+    <button class="demo-btn" onclick="checkMC('q4','str7')">Vérifier</button>
+    <div class="quiz-feedback" id="q4-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 5 — MINI-CALCULATRICE
+══════════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Mini-calculatrice — Tout assembler</h2>
+  </div>
+
+  <p>On combine tout ce qu'on vient d'apprendre :</p>
+
+  <div class="code-block">
+<span class="cm"># ============================================</span>
+<span class="cm"># Mini-calculatrice</span>
+<span class="cm"># ============================================</span>
+
+<span class="cm"># 1. Demander deux nombres à l'utilisateur</span>
+<span class="var">a</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Premier nombre : "</span>))
+<span class="var">b</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Deuxième nombre : "</span>))
+
+<span class="cm"># 2. Faire les calculs</span>
+<span class="var">somme</span>   <span class="op">=</span> <span class="var">a</span> <span class="op">+</span> <span class="var">b</span>
+<span class="var">produit</span> <span class="op">=</span> <span class="var">a</span> <span class="op">*</span> <span class="var">b</span>
+
+<span class="cm"># 3. Afficher les résultats</span>
+<span class="fn">print</span>(<span class="str">f"</span><span class="op">{</span><span class="var">a</span><span class="op">}</span><span class="str"> + </span><span class="op">{</span><span class="var">b</span><span class="op">}</span><span class="str"> = </span><span class="op">{</span><span class="var">somme</span><span class="op">}</span><span class="str">"</span>)
+<span class="fn">print</span>(<span class="str">f"</span><span class="op">{</span><span class="var">a</span><span class="op">}</span><span class="str"> × </span><span class="op">{</span><span class="var">b</span><span class="op">}</span><span class="str"> = </span><span class="op">{</span><span class="var">produit</span><span class="op">}</span><span class="str">"</span>)
+  </div>
+
+  <div class="label demo">🕹️ Essaie ici !</div>
+  <div class="demo-box">
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end">
+      <div>
+        <label style="color:var(--muted);font-size:.85em;display:block;margin-bottom:4px">Premier nombre (a)</label>
+        <input type="number" id="calc-a" class="small-input" value="6" style="width:100px">
+      </div>
+      <div style="padding-bottom:6px;color:var(--accent2);font-size:1.4em">+  −  ×  ÷</div>
+      <div>
+        <label style="color:var(--muted);font-size:.85em;display:block;margin-bottom:4px">Deuxième nombre (b)</label>
+        <input type="number" id="calc-b" class="small-input" value="7" style="width:100px">
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="demo-btn" onclick="runCalc()">▶ Calculer</button>
+      <button class="demo-btn secondary" onclick="resetCalc()">🔄 Reset</button>
+    </div>
+    <div class="console" id="calc-output" style="display:none"></div>
+  </div>
+
+  <h3>Opérateurs arithmétiques en Python</h3>
+  <table>
+    <tr><th>Symbole</th><th>Opération</th><th>Exemple</th><th>Résultat</th></tr>
+    <tr><td><code>+</code></td><td>Addition</td><td><code>3 + 4</code></td><td><code>7</code></td></tr>
+    <tr><td><code>-</code></td><td>Soustraction</td><td><code>10 - 3</code></td><td><code>7</code></td></tr>
+    <tr><td><code>*</code></td><td>Multiplication</td><td><code>3 * 4</code></td><td><code>12</code></td></tr>
+    <tr><td><code>/</code></td><td>Division (décimale)</td><td><code>7 / 2</code></td><td><code>3.5</code></td></tr>
+    <tr><td><code>//</code></td><td>Division entière</td><td><code>7 // 2</code></td><td><code>3</code></td></tr>
+    <tr><td><code>%</code></td><td>Reste (modulo)</td><td><code>7 % 2</code></td><td><code>1</code></td></tr>
+    <tr><td><code>**</code></td><td>Puissance</td><td><code>2 ** 8</code></td><td><code>256</code></td></tr>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SECTION 6 — RÉSUMÉ
+══════════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <div class="section-number" style="background:var(--success);color:#1e1e2e">✓</div>
+    <h2>Résumé — Ce qu'on a appris</h2>
+  </div>
+
+  <table>
+    <tr><th>Concept</th><th>Syntaxe</th><th>À quoi ça sert</th></tr>
+    <tr><td>Variable</td><td><code>nom = valeur</code></td><td>Stocker une information</td></tr>
+    <tr><td>Entier</td><td><code>x = 42</code></td><td>Nombres sans virgule</td></tr>
+    <tr><td>Décimal</td><td><code>x = 3.14</code></td><td>Nombres avec point</td></tr>
+    <tr><td>Texte</td><td><code>x = "Bonjour"</code></td><td>Du texte entre guillemets</td></tr>
+    <tr><td>Booléen</td><td><code>x = True</code></td><td>Vrai ou Faux</td></tr>
+    <tr><td>Afficher</td><td><code>print(x)</code></td><td>Voir une valeur dans la console</td></tr>
+    <tr><td>F-string</td><td><code>f"texte {var}"</code></td><td>Mélanger texte et variables</td></tr>
+    <tr><td>Saisie</td><td><code>input("message")</code></td><td>Demander une valeur à l'utilisateur</td></tr>
+    <tr><td>Conversion</td><td><code>int(...)</code> / <code>float(...)</code></td><td>Transformer du texte en nombre</td></tr>
+  </table>
+
+  <div class="card" style="margin-top:24px;background:rgba(166,227,161,.06);border:1px solid var(--success)">
+    <strong style="color:var(--success)">📁 Tes exercices :</strong>
+    <div class="steps" style="margin-top:14px">
+      <div class="step">
+        <div class="step-num" style="background:var(--success);color:#1e1e2e">1</div>
+        <div>Ouvre <code>exercice_01.py</code> dans Thonny — variables et types</div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:var(--success);color:#1e1e2e">2</div>
+        <div>Ouvre <code>exercice_02.py</code> — print, input et mini-calculatrice</div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:var(--success);color:#1e1e2e">3</div>
+        <div>Lance <code>tests.py</code> pour vérifier tes réponses automatiquement !</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-lesson">
+    <strong style="color:var(--accent)">⏭️ Prochaine leçon :</strong>
+    <p style="margin-top:8px"><strong>Leçon 02 — Conditions (<code>if / elif / else</code>)</strong></p>
+    <p style="color:var(--muted);margin-top:6px">
+      On apprendra à prendre des décisions dans un programme — comme quand un jeu vérifie si tu as gagné, perdu, ou si tu peux acheter un objet.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ─── Progress bar ───────────────────────────
+const sectionIds = ['s0','s1','s2','s3','s4','s5','s6'];
+const progItems  = document.querySelectorAll('.progress-item');
+
+function updateProgress() {
+  let current = 's0';
+  for (const id of sectionIds) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 80) current = id;
+  }
+  progItems.forEach(item =>
+    item.classList.toggle('active', item.dataset.section === current)
+  );
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ─── RPG demo ────────────────────────────────
+let rpg = { vies: 3, score: 0, niveau: 1 };
+
+function rpgAction(action) {
+  const prev = { ...rpg };
+  let lines = [];
+
+  if (action === 'ennemi') {
+    rpg.vies = Math.max(0, rpg.vies - 1);
+    lines = [`<span class="cm"># vies passe de ${prev.vies} à ${rpg.vies}</span>`,
+             `<span class="var">vies</span> <span class="op">=</span> <span class="var">vies</span> <span class="op">-</span> <span class="num">1</span>`];
+    flash('slot-vies');
+  } else if (action === 'tresor') {
+    rpg.score += 50;
+    lines = [`<span class="cm"># score passe de ${prev.score} à ${rpg.score}</span>`,
+             `<span class="var">score</span> <span class="op">=</span> <span class="var">score</span> <span class="op">+</span> <span class="num">50</span>`];
+    flash('slot-score');
+  } else if (action === 'niveau') {
+    rpg.niveau += 1;
+    rpg.vies = Math.min(rpg.vies + 1, 9);
+    lines = [`<span class="cm"># niveau : ${prev.niveau} → ${rpg.niveau}, vies : ${prev.vies} → ${rpg.vies}</span>`,
+             `<span class="var">niveau</span> <span class="op">=</span> <span class="var">niveau</span> <span class="op">+</span> <span class="num">1</span>`,
+             `<span class="var">vies</span>   <span class="op">=</span> <span class="var">vies</span>   <span class="op">+</span> <span class="num">1</span>`];
+    flash('slot-niveau'); flash('slot-vies');
+  } else {
+    rpg = { vies: 3, score: 0, niveau: 1 };
+    lines = [`<span class="cm"># Réinitialisation</span>`,
+             `<span class="var">vies</span>   <span class="op">=</span> <span class="num">3</span>`,
+             `<span class="var">score</span>  <span class="op">=</span> <span class="num">0</span>`,
+             `<span class="var">niveau</span> <span class="op">=</span> <span class="num">1</span>`];
+  }
+
+  document.getElementById('val-vies').textContent   = rpg.vies;
+  document.getElementById('val-score').textContent  = rpg.score;
+  document.getElementById('val-niveau').textContent = rpg.niveau;
+  document.getElementById('rpg-code').innerHTML = lines.join('\n');
+}
+
+function flash(id) {
+  const el = document.getElementById(id);
+  el.classList.add('changed');
+  setTimeout(() => el.classList.remove('changed'), 1400);
+}
+
+// ─── Type detail cards ───────────────────────
+const typeDetails = {
+  int:   { title: 'int — Nombre entier',
+           body: `Parfait pour : points de vie, score, niveau, âge, dégâts…<br><br>
+                  <div class="code-block"><span class="var">vies</span> <span class="op">=</span> <span class="num">3</span><br><span class="var">score</span> <span class="op">=</span> <span class="num">-10</span><br><span class="fn">type</span>(<span class="num">42</span>) <span class="cm">→ &lt;class 'int'&gt;</span></div>` },
+  float: { title: 'float — Nombre décimal',
+           body: `Parfait pour : vitesses, pourcentages, coordonnées, pi…<br><br>
+                  <div class="code-block"><span class="var">vitesse</span> <span class="op">=</span> <span class="num">1.5</span><br><span class="var">pi</span> <span class="op">=</span> <span class="num">3.14159</span><br><span class="fn">type</span>(<span class="num">3.14</span>) <span class="cm">→ &lt;class 'float'&gt;</span></div>` },
+  str:   { title: 'str — Texte (string)',
+           body: `Parfait pour : noms, messages, menus, dialogues…<br><br>
+                  <div class="code-block"><span class="var">heros</span> <span class="op">=</span> <span class="str">"Gandalf"</span><br><span class="var">msg</span> <span class="op">=</span> <span class="str">'Bienvenue !'</span><br><span class="fn">type</span>(<span class="str">"abc"</span>) <span class="cm">→ &lt;class 'str'&gt;</span></div>` },
+  bool:  { title: 'bool — Vrai ou Faux',
+           body: `Parfait pour : interrupteurs, conditions, état du jeu…<br><br>
+                  <div class="code-block"><span class="var">en_vie</span> <span class="op">=</span> <span class="kw">True</span><br><span class="var">pause</span> <span class="op">=</span> <span class="kw">False</span><br><span class="fn">type</span>(<span class="kw">True</span>) <span class="cm">→ &lt;class 'bool'&gt;</span></div>` },
+};
+let lastTypeCard = null;
+
+function showType(t, card) {
+  if (lastTypeCard) lastTypeCard.classList.remove('selected');
+  card.classList.add('selected');
+  lastTypeCard = card;
+  const detail = document.getElementById('type-detail');
+  const d = typeDetails[t];
+  detail.style.display = 'block';
+  detail.innerHTML = `<strong style="color:var(--accent2)">${d.title}</strong><br><br>${d.body}`;
+}
+
+// ─── print() demo ─────────────────────────────
+function updatePrintPreview() {
+  const msg = document.getElementById('print-msg').value || '';
+  const num = document.getElementById('print-num').value || '0';
+  document.getElementById('print-preview').innerHTML =
+    `<span style="color:#82aaff">print</span>(<span style="color:var(--success)">f"</span><span style="color:var(--text)">${esc(msg)}</span><span style="color:var(--success)"> — le nombre est </span><span style="color:var(--accent2)">{</span><span style="color:var(--warning)">${esc(num)}</span><span style="color:var(--accent2)">}</span><span style="color:var(--success)">"</span>)`;
+}
+updatePrintPreview();
+
+function runPrint() {
+  const msg = document.getElementById('print-msg').value || '';
+  const num = document.getElementById('print-num').value || '0';
+  const con = document.getElementById('print-console');
+  const line = document.createElement('div');
+  line.style.cssText = 'color:var(--accent2);padding:2px 0';
+  line.textContent = '▶  ' + msg + ' — le nombre est ' + num;
+  con.appendChild(line);
+}
+function clearPrint() { document.getElementById('print-console').innerHTML = ''; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ─── input() simulator ────────────────────────
+function runSim() {
+  const val = parseInt(document.getElementById('sim-age').value);
+  if (isNaN(val) || val < 1) return;
+  document.getElementById('sim-str').textContent = `"${val}"`;
+  document.getElementById('sim-int').textContent = val;
+  document.getElementById('sim-calc').innerHTML =
+    `<span style="color:var(--muted)">age_int + 5 = </span><span style="color:var(--warning)">${val + 5}</span>` +
+    `  <span style="color:var(--muted)">← dans 5 ans tu auras ${val + 5} ans !</span>`;
+  document.getElementById('sim-step1').style.display = 'none';
+  document.getElementById('sim-result').style.display = 'block';
+}
+function resetSim() {
+  document.getElementById('sim-age').value = '';
+  document.getElementById('sim-step1').style.display = 'block';
+  document.getElementById('sim-result').style.display = 'none';
+}
+
+// ─── calculator demo ──────────────────────────
+function runCalc() {
+  const a = parseFloat(document.getElementById('calc-a').value) || 0;
+  const b = parseFloat(document.getElementById('calc-b').value) || 0;
+  const W = n => `<span style="color:var(--warning)">${n}</span>`;
+  const G = n => `<span style="color:var(--success);font-weight:bold">${n}</span>`;
+  const out = document.getElementById('calc-output');
+  out.style.display = 'block';
+  const divLine = b !== 0
+    ? `${W(a)} ÷ ${W(b)} = ${G((a/b).toFixed(4))}`
+    : `<span style="color:var(--error)">Division par zéro impossible !</span>`;
+  out.innerHTML = [
+    `${W(a)} + ${W(b)} = ${G(a+b)}`,
+    `${W(a)} − ${W(b)} = ${G(a-b)}`,
+    `${W(a)} × ${W(b)} = ${G(a*b)}`,
+    divLine,
+    `${W(a)} ** ${W(b)} = ${G(Math.pow(a,b))}`,
+  ].join('<br>');
+}
+function resetCalc() {
+  document.getElementById('calc-a').value = 6;
+  document.getElementById('calc-b').value = 7;
+  document.getElementById('calc-output').style.display = 'none';
+}
+
+// ─── Quiz system ──────────────────────────────
+const QS = {
+  q1: { tries: 0, done: false,
+        hints: ['Quelle est la valeur de score au départ ? Qu\'est-ce qu\'on y ajoute ?',
+                'Calcule mentalement : 10 + 5 = ?'],
+        answer: '15',
+        explain: 'score commence à 10, puis on ajoute 5 → score vaut 15.' },
+  q2: { tries: 0, done: false, sel: null,
+        hints: ['Regarde les guillemets autour de la valeur — que signifient-ils en Python ?',
+                'Tout texte entre guillemets " " est un str, même si ça ressemble à un nombre.'],
+        answer: 'str',
+        explain: '"100" avec les guillemets est un str. Pour avoir l\'entier 100, on écrit 100 sans guillemets.' },
+  q3: { tries: 0, done: false,
+        hints: ['x vaut 3 et y vaut 4. Que donne 3 + 4 ?',
+                '3 + 4 = ? Python calcule et print affiche le résultat.'],
+        answer: '7',
+        explain: 'x = 3, y = 4, donc x + y = 7. print affiche 7.' },
+  q4: { tries: 0, done: false, sel: null,
+        hints: ['input() reçoit ce que l\'utilisateur tape, mais sous quelle forme ?',
+                'input() retourne toujours un str — même si on tape un chiffre.'],
+        answer: 'str7',
+        explain: 'input() retourne toujours un str. Pour avoir l\'entier 7, il faudrait écrire int(input(...)).' },
+};
+
+function dots(id) { return document.getElementById(`${id}-dots`).children; }
+function feedback(id) { return document.getElementById(`${id}-feedback`); }
+
+function showFB(el, type, msg) {
+  el.className = `quiz-feedback show ${type}`;
+  el.innerHTML = msg;
+}
+
+function markDot(id, idx, cls) {
+  const d = dots(id);
+  if (idx < 3) { d[idx].classList.remove('used','success'); d[idx].classList.add(cls); }
+}
+
+function checkQuiz(id, correct) {
+  const s = QS[id];
+  if (s.done) return;
+  const inp = document.getElementById(`${id}-input`);
+  const val = inp.value.trim();
+  s.tries++;
+  markDot(id, s.tries - 1, 'used');
+
+  if (val.toLowerCase() === correct.toLowerCase()) {
+    s.done = true;
+    inp.classList.add('correct');
+    markDot(id, s.tries - 1, 'success');
+    showFB(feedback(id), 'success', '✅ Bravo ! ' + s.explain);
+    return;
+  }
+  inp.classList.add('wrong');
+  setTimeout(() => inp.classList.remove('wrong'), 600);
+
+  if (s.tries < 3) {
+    showFB(feedback(id), 'hint', '💡 ' + s.hints[s.tries - 1]);
+  } else {
+    s.done = true;
+    showFB(feedback(id), 'error', `❌ La réponse était <strong>${correct}</strong>. ${s.explain}`);
+  }
+}
+
+function selectMC(id, el, val) {
+  if (QS[id].done) return;
+  QS[id].sel = val;
+  document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function checkMC(id, correct) {
+  const s = QS[id];
+  if (s.done || !s.sel) return;
+  s.tries++;
+  markDot(id, s.tries - 1, 'used');
+
+  if (s.sel === correct) {
+    s.done = true;
+    markDot(id, s.tries - 1, 'success');
+    document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => {
+      if (o.getAttribute('onclick').includes(`'${correct}'`)) o.classList.add('correct');
+    });
+    showFB(feedback(id), 'success', '✅ Bravo ! ' + s.explain);
+    return;
+  }
+
+  document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => o.classList.remove('selected'));
+  s.sel = null;
+
+  if (s.tries < 3) {
+    showFB(feedback(id), 'hint', '💡 ' + s.hints[s.tries - 1]);
+  } else {
+    s.done = true;
+    document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => {
+      if (o.getAttribute('onclick').includes(`'${correct}'`)) o.classList.add('correct');
+    });
+    showFB(feedback(id), 'error', '❌ ' + s.explain);
+  }
+}
+</script>
+</body>
+</html>

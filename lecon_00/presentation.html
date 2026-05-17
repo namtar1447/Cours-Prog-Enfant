@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 00 — Bienvenue dans Thonny</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      border: 1px solid var(--muted);
+      cursor: default;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.15);
+      font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 4px 12px;
+      border: 1px solid var(--muted);
+      border-radius: 20px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent);
+      color: white;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+    .label.tip     { background: rgba(249,226,175,.2); color: var(--warning); }
+
+    /* ── Code ── */
+    .code-block {
+      background: #13131f;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      border: 1px solid rgba(124, 106, 247, 0.2);
+    }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .err { color: var(--error); }
+    .output-line {
+      color: var(--accent2);
+      display: flex; gap: 8px; align-items: center;
+      padding: 4px 8px;
+      background: rgba(247,162,106,.07);
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 4px;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      border: 1px solid rgba(124, 106, 247, 0.3);
+    }
+
+    /* ── Screenshots ── */
+    .screenshot-wrap {
+      margin: 20px 0;
+    }
+    .screenshot-wrap img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(124, 106, 247, 0.3);
+      display: block;
+    }
+    .screenshot-caption {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85em;
+      margin-top: 8px;
+      font-style: italic;
+    }
+    .screenshot-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    @media (max-width: 600px) {
+      .screenshot-pair { grid-template-columns: 1fr; }
+    }
+
+    /* ── Zone diagram ── */
+    .zone-diagram {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      grid-template-rows: 1fr 180px;
+      gap: 8px;
+      background: #13131f;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 20px 0;
+      border: 1px solid rgba(124,106,247,.3);
+      height: 380px;
+    }
+    .zone {
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      font-size: .9em;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .zone.editor    { background: rgba(124,106,247,.12); border: 2px solid var(--accent); grid-row: 1; grid-column: 1; }
+    .zone.variables { background: rgba(247,162,106,.1);  border: 2px solid var(--accent2); grid-row: 1 / 3; grid-column: 2; }
+    .zone.console   { background: rgba(166,227,161,.08); border: 2px solid var(--success); grid-row: 2; grid-column: 1; }
+    .zone:hover { transform: scale(1.02); }
+    .zone .zone-icon { font-size: 2em; }
+    .zone .zone-name { font-weight: bold; font-size: 1.05em; }
+    .zone .zone-desc { color: var(--muted); font-size: .85em; }
+    #zone-detail {
+      margin-top: 12px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border-radius: 10px;
+      border-left: 4px solid var(--accent);
+      display: none;
+      font-size: .95em;
+    }
+
+    /* ── Thonny simulator ── */
+    .thonny-sim {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(124,106,247,.3);
+      margin: 16px 0;
+    }
+    .sim-titlebar {
+      background: #2d2d2d;
+      padding: 6px 14px;
+      font-size: .8em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #444;
+    }
+    .sim-tab {
+      background: #3a3a3a;
+      padding: 3px 12px;
+      border-radius: 4px 4px 0 0;
+      font-size: .85em;
+      color: var(--text);
+    }
+    .sim-editor {
+      background: #1e1e1e;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #d4d4d4;
+      min-height: 80px;
+      border-bottom: 1px solid #333;
+    }
+    .sim-editor textarea {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      width: 100%;
+      resize: none;
+      min-height: 60px;
+    }
+    .sim-toolbar {
+      background: #2d2d2d;
+      padding: 6px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid #444;
+    }
+    .sim-run-btn {
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .sim-run-btn:hover { background: #66bb6a; }
+    .sim-stop-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sim-console {
+      background: #1a1a2e;
+      padding: 12px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      min-height: 80px;
+      color: #cdd6f4;
+    }
+    .sim-prompt { color: #82aaff; }
+    .sim-output { color: var(--accent2); }
+    .sim-error  { color: var(--error); }
+
+    /* ── Traceback annotated ── */
+    .traceback {
+      background: #0d0d17;
+      border-radius: 10px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 2;
+      margin: 12px 0;
+      border: 1px solid rgba(243,139,168,.3);
+    }
+    .tb-cmd   { color: var(--muted); }
+    .tb-trace { color: #aaa; }
+    .tb-err   { color: var(--error); font-weight: bold; }
+    .tb-ann   {
+      display: inline-block;
+      background: rgba(124,106,247,.2);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 0 8px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 12px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+    .step  { display: flex; gap: 16px; align-items: flex-start; }
+    .step-num {
+      background: var(--accent); color: white;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: bold; flex-shrink: 0; margin-top: 2px;
+    }
+
+    /* ── Objectives ── */
+    .objectives { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .objective  { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface); border-radius: 8px; }
+    .objective .icon { font-size: 1.4em; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th { background: var(--accent); color: white; padding: 10px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(124,106,247,.2); }
+    tr:hover td { background: rgba(124,106,247,.04); }
+    td code, th code { font-family:'Courier New',monospace; color:var(--accent2); background:#13131f; padding:2px 6px; border-radius:4px; }
+
+    /* ── Misc ── */
+    code { font-family:'Courier New',monospace; color:var(--accent2); background:#13131f; padding:2px 6px; border-radius:4px; }
+    kbd  { background:var(--surface); border:1px solid var(--muted); padding:2px 8px; border-radius:4px; font-family:'Courier New',monospace; font-size:.9em; }
+
+    .next-lesson {
+      background: linear-gradient(135deg, rgba(124,106,247,.1), rgba(247,162,106,.1));
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 24px;
+    }
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em; margin-top: 28px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+  </style>
+</head>
+<body>
+
+<!-- ── Barre de progression ── -->
+<nav id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span style="color:var(--accent);font-weight:bold;margin-right:8px;white-space:nowrap">Leçon 00</span>
+  <div class="progress-item" data-section="s0">0. Intro</div>
+  <div class="progress-item" data-section="s1">1. C'est quoi ?</div>
+  <div class="progress-item" data-section="s2">2. Les 3 zones</div>
+  <div class="progress-item" data-section="s3">3. Barre d'outils</div>
+  <div class="progress-item" data-section="s4">4. Premier programme</div>
+  <div class="progress-item" data-section="s5">5. Les erreurs</div>
+  <div class="progress-item" data-section="s6">6. Résumé</div>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════
+     SECTION 0 — EN-TÊTE
+══════════════════════════════════════ -->
+<section class="section" id="s0">
+  <h1>🛠️ Leçon 00</h1>
+  <h2 style="color:var(--accent2);margin-bottom:24px">Bienvenue dans Thonny !</h2>
+
+  <div class="objectives">
+    <div class="objective">
+      <span class="icon">🗺️</span>
+      <span>Reconnaître les <strong>3 zones</strong> de Thonny et savoir à quoi elles servent</span>
+    </div>
+    <div class="objective">
+      <span class="icon">▶️</span>
+      <span>Savoir <strong>écrire, sauvegarder et exécuter</strong> un programme</span>
+    </div>
+    <div class="objective">
+      <span class="icon">🐛</span>
+      <span>Lire un <strong>message d'erreur</strong> sans paniquer</span>
+    </div>
+    <div class="objective">
+      <span class="icon">🐍</span>
+      <span>Écrire et exécuter ton <strong>premier programme Python</strong></span>
+    </div>
+  </div>
+
+  <div class="card info" style="margin-top:20px">
+    <strong>⏱️ Durée estimée :</strong> ~20 min de présentation
+  </div>
+
+  <div class="scroll-hint">▼ Défile vers le bas pour commencer</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — C'EST QUOI THONNY ?
+══════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Thonny — L'atelier du programmeur</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Imagine que tu veux construire un niveau dans un jeu vidéo. Tu as besoin d'un endroit pour <strong>dessiner la carte</strong>, d'une fenêtre pour <strong>voir le résultat</strong>, et d'un panneau qui te dit <strong>ce qui existe dans le niveau</strong>.</p>
+    <p style="margin-top:10px">Thonny, c'est pareil — mais pour écrire du Python.</p>
+  </div>
+
+  <p>En programmation, on appelle ça un <strong>IDE</strong> — un outil qui regroupe tout ce dont tu as besoin au même endroit :</p>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0">
+    <div class="card" style="text-align:center;margin:0">
+      <div style="font-size:1.8em">✏️</div>
+      <div style="font-weight:bold;margin:6px 0">Écrire</div>
+      <div style="color:var(--muted);font-size:.9em">Un éditeur de texte intelligent</div>
+    </div>
+    <div class="card" style="text-align:center;margin:0">
+      <div style="font-size:1.8em">▶️</div>
+      <div style="font-weight:bold;margin:6px 0">Exécuter</div>
+      <div style="color:var(--muted);font-size:.9em">Un bouton pour lancer le programme</div>
+    </div>
+    <div class="card" style="text-align:center;margin:0">
+      <div style="font-size:1.8em">🔍</div>
+      <div style="font-weight:bold;margin:6px 0">Inspecter</div>
+      <div style="color:var(--muted);font-size:.9em">Voir ce qui se passe à l'intérieur</div>
+    </div>
+  </div>
+
+  <div class="card info">
+    Thonny est <strong>gratuit</strong>, en <strong>français</strong>, et il est conçu spécialement pour apprendre à programmer. C'est l'outil parfait pour commencer.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — LES 3 ZONES
+══════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Les 3 zones de Thonny</h2>
+  </div>
+
+  <p>Voici à quoi ressemble Thonny quand tu l'ouvres. Clique sur chaque zone pour en savoir plus :</p>
+
+  <div class="zone-diagram">
+    <div class="zone editor" onclick="showZone('editor')">
+      <span class="zone-icon">✏️</span>
+      <span class="zone-name" style="color:var(--accent)">Éditeur</span>
+      <span class="zone-desc">Là où tu écris ton code</span>
+    </div>
+    <div class="zone variables" onclick="showZone('variables')">
+      <span class="zone-icon">📦</span>
+      <span class="zone-name" style="color:var(--accent2)">Variables</span>
+      <span class="zone-desc">Ce qui est en mémoire</span>
+    </div>
+    <div class="zone console" onclick="showZone('console')">
+      <span class="zone-icon">🖥️</span>
+      <span class="zone-name" style="color:var(--success)">Console</span>
+      <span class="zone-desc">Ce que le programme affiche</span>
+    </div>
+  </div>
+  <div id="zone-detail"></div>
+
+  <p style="margin-top:24px">Et sur la vraie interface :</p>
+
+  <div class="screenshot-wrap">
+    <img src="screenshots/interface.png" alt="Interface complète de Thonny avec les 3 zones annotées">
+    <p class="screenshot-caption">L'interface de Thonny avec ses 3 zones principales</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — BARRE D'OUTILS
+══════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>La barre d'outils et les onglets</h2>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="screenshots/barre_outils.png" alt="Barre d'outils de Thonny avec les boutons principaux">
+    <p class="screenshot-caption">Les boutons que tu utiliseras à chaque programme</p>
+  </div>
+
+  <table style="margin-top:20px">
+    <tr><th>Bouton</th><th>Raccourci</th><th>À quoi ça sert</th></tr>
+    <tr>
+      <td><span style="color:#4caf50;font-size:1.3em">▶</span> <strong>Run</strong></td>
+      <td><kbd>F5</kbd></td>
+      <td>Lance ton programme</td>
+    </tr>
+    <tr>
+      <td><span style="color:#e53935;font-size:1.3em">⏹</span> <strong>Stop</strong></td>
+      <td><kbd>Ctrl+F2</kbd></td>
+      <td>Arrête le programme s'il est bloqué</td>
+    </tr>
+    <tr>
+      <td>💾 <strong>Save</strong></td>
+      <td><kbd>Ctrl+S</kbd></td>
+      <td>Sauvegarde le fichier</td>
+    </tr>
+  </table>
+
+  <h3>L'étoile ★ — ton meilleur indicateur</h3>
+
+  <div class="card warning">
+    <p>Quand l'onglet affiche une <strong style="color:var(--warning)">étoile ★</strong>, le fichier n'est <strong>pas encore sauvegardé</strong>. Si tu cliques sur ▶ sans sauvegarder, Thonny sauvegarde automatiquement — mais prends l'habitude de faire <kbd>Ctrl+S</kbd> toi-même avant de lancer.</p>
+  </div>
+
+  <div style="display:flex;gap:16px;margin:16px 0;flex-wrap:wrap">
+    <div style="background:#3a3a3a;padding:6px 16px;border-radius:6px;font-family:'Courier New';font-size:.9em;display:flex;align-items:center;gap:8px">
+      <span style="color:var(--warning)">★</span>
+      <span style="color:#ccc">&lt;sans nom&gt;</span>
+      <span style="color:var(--muted);font-size:.8em">← pas sauvegardé</span>
+    </div>
+    <div style="background:#3a3a3a;padding:6px 16px;border-radius:6px;font-family:'Courier New';font-size:.9em;display:flex;align-items:center;gap:8px">
+      <span style="color:#aaa">exercice_01.py</span>
+      <span style="color:var(--muted);font-size:.8em">← sauvegardé ✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — PREMIER PROGRAMME
+══════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Ton premier programme</h2>
+  </div>
+
+  <p>Voici les 4 gestes que tu répéteras pour <em>chaque</em> programme du cours :</p>
+
+  <div class="steps" style="margin:20px 0">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><strong>Crée un nouveau fichier</strong> — Fichier → Nouveau, ou <kbd>Ctrl+N</kbd></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><strong>Écris ton code</strong> dans l'éditeur</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><strong>Sauvegarde</strong> avec <kbd>Ctrl+S</kbd> — choisis un nom comme <code>bonjour.py</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div><strong>Lance</strong> avec ▶ ou <kbd>F5</kbd> — regarde la console !</div>
+    </div>
+  </div>
+
+  <div class="label demo">🕹️ Essaie ici — Simulateur Thonny</div>
+  <div class="thonny-sim">
+    <div class="sim-titlebar">
+      <span>Thonny</span>
+      <div class="sim-tab" id="sim-tab">bonjour.py</div>
+    </div>
+    <div class="sim-toolbar">
+      <button class="sim-run-btn" onclick="simRun()" title="Run (F5)">▶</button>
+      <button class="sim-stop-btn" onclick="simStop()" title="Stop">⏹</button>
+      <span style="color:var(--muted);font-size:.8em;margin-left:8px">bonjour.py</span>
+    </div>
+    <div class="sim-editor">
+      <textarea id="sim-code" rows="4" spellcheck="false" placeholder='Écris ton code ici, ex. : print("Bonjour !")'>print("Bonjour !")</textarea>
+    </div>
+    <div class="sim-console" id="sim-console">
+      <span class="sim-prompt">>>> </span><span style="color:var(--muted)">En attente…</span>
+    </div>
+  </div>
+
+  <div class="card info" style="margin-top:16px">
+    <strong>La ligne <code>%Run -c $EDITOR_CONTENT</code></strong> que tu vois dans la vraie console de Thonny, c'est la commande interne que Thonny envoie à Python. Tu n'as pas à t'en occuper — elle apparaît automatiquement à chaque fois que tu cliques sur ▶.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — LES ERREURS
+══════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Les erreurs — pas de panique !</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Quand tu rates un niveau dans un jeu, le jeu te dit <em>où</em> tu as échoué et <em>pourquoi</em>. Un message d'erreur Python, c'est pareil — c'est de l'aide, pas une punition.</p>
+    <p style="margin-top:10px"><strong>Tous les programmeurs font des erreurs.</strong> Ce qui distingue un bon programmeur, c'est de savoir lire les messages d'erreur.</p>
+  </div>
+
+  <h3>Comment lire un message d'erreur</h3>
+
+  <p>Un message d'erreur Python (un <em>traceback</em>) dit toujours trois choses :</p>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0">
+    <div class="card" style="margin:0;text-align:center">
+      <div style="font-size:1.5em">📍</div>
+      <strong>Où</strong>
+      <div style="color:var(--muted);font-size:.85em;margin-top:4px">Le numéro de ligne</div>
+    </div>
+    <div class="card" style="margin:0;text-align:center">
+      <div style="font-size:1.5em">🏷️</div>
+      <strong>Quel type</strong>
+      <div style="color:var(--muted);font-size:.85em;margin-top:4px">NameError, SyntaxError…</div>
+    </div>
+    <div class="card" style="margin:0;text-align:center">
+      <div style="font-size:1.5em">💬</div>
+      <strong>Quoi</strong>
+      <div style="color:var(--muted);font-size:.85em;margin-top:4px">Le message explicatif</div>
+    </div>
+  </div>
+
+  <h3>Exemple 1 — Faute de frappe dans le nom</h3>
+
+  <div class="screenshot-pair">
+    <div class="screenshot-wrap" style="margin:0">
+      <img src="screenshots/erreur_nom.png" alt="NameError dans Thonny : prnt n'est pas défini">
+      <p class="screenshot-caption">Code : <code>prnt("Papa")</code></p>
+    </div>
+    <div>
+      <div class="traceback">
+<span class="tb-cmd">>>> %Run -c $EDITOR_CONTENT</span>
+<span class="tb-trace">Traceback (most recent call last):</span>
+<span class="tb-trace">  File "&lt;string&gt;", <span style="color:var(--warning)">line 1</span>,</span>
+<span class="tb-err">NameError: name 'prnt'</span>
+<span class="tb-err">is not defined</span>
+      </div>
+      <div class="card info" style="font-size:.9em">
+        <strong>📍 line 1</strong> → l'erreur est à la ligne 1<br><br>
+        <strong>🏷️ NameError</strong> → Python ne connaît pas ce nom<br><br>
+        <strong>💬 'prnt' is not defined</strong> → tu as écrit <code>prnt</code> au lieu de <code>print</code>
+      </div>
+    </div>
+  </div>
+
+  <h3>Exemple 2 — Guillemet oublié</h3>
+
+  <div class="screenshot-pair">
+    <div class="screenshot-wrap" style="margin:0">
+      <img src="screenshots/erreur_syntaxe.png" alt="SyntaxError dans Thonny : guillemet manquant">
+      <p class="screenshot-caption">Code : <code>print("Papa)</code></p>
+    </div>
+    <div>
+      <div class="traceback">
+<span class="tb-cmd">>>> %Run -c $EDITOR_CONTENT</span>
+<span class="tb-trace">Traceback (most recent call last):</span>
+<span class="tb-trace">  File "&lt;string&gt;", <span style="color:var(--warning)">line 1</span></span>
+<span class="tb-trace">    print("Papa)</span>
+<span class="tb-trace">          <span style="color:var(--error)">^</span></span>
+<span class="tb-err">SyntaxError: unterminated</span>
+<span class="tb-err">string literal</span>
+      </div>
+      <div class="card info" style="font-size:.9em">
+        <strong>📍 line 1</strong> → l'erreur est à la ligne 1<br><br>
+        <strong>🏷️ SyntaxError</strong> → le code est mal écrit (comme une faute de grammaire)<br><br>
+        <strong>💬 unterminated string</strong> → une chaîne de texte n'est pas fermée — il manque un <code>"</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="card success" style="margin-top:24px">
+    <strong style="color:var(--success)">✅ La règle d'or face à une erreur :</strong>
+    <ol style="margin-top:10px;padding-left:20px;line-height:2">
+      <li>Lis la <strong>dernière ligne</strong> du message — c'est là que l'explication est</li>
+      <li>Regarde le <strong>numéro de ligne</strong> indiqué</li>
+      <li>Cherche une faute de frappe ou un guillemet / parenthèse manquant</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — RÉSUMÉ
+══════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <div class="section-number" style="background:var(--success);color:#1e1e2e">✓</div>
+    <h2>Résumé — Tu connais maintenant Thonny !</h2>
+  </div>
+
+  <table>
+    <tr><th>Zone / Bouton</th><th>À quoi ça sert</th></tr>
+    <tr><td>✏️ Éditeur</td><td>Écrire le code du programme</td></tr>
+    <tr><td>🖥️ Console</td><td>Voir ce que le programme affiche</td></tr>
+    <tr><td>📦 Variables</td><td>Voir les valeurs en mémoire en temps réel</td></tr>
+    <tr><td><span style="color:#4caf50">▶</span> Run / <kbd>F5</kbd></td><td>Lancer le programme</td></tr>
+    <tr><td>💾 Save / <kbd>Ctrl+S</kbd></td><td>Sauvegarder le fichier</td></tr>
+    <tr><td>Étoile ★ sur l'onglet</td><td>Le fichier a des changements non sauvegardés</td></tr>
+    <tr><td><code>NameError</code></td><td>Python ne reconnaît pas un nom — vérifie l'orthographe</td></tr>
+    <tr><td><code>SyntaxError</code></td><td>Le code est mal écrit — cherche un guillemet ou une parenthèse manquante</td></tr>
+  </table>
+
+  <div class="next-lesson">
+    <strong style="color:var(--accent)">⏭️ Prochaine leçon :</strong>
+    <p style="margin-top:8px"><strong>Leçon 01 — Variables, types et premiers programmes</strong></p>
+    <p style="color:var(--muted);margin-top:6px">
+      On va apprendre à stocker des informations dans des <em>variables</em> — comme les cases d'une fiche de personnage RPG.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ── Progress bar ─────────────────────────
+const sectionIds = ['s0','s1','s2','s3','s4','s5','s6'];
+const progItems  = document.querySelectorAll('.progress-item');
+
+function updateProgress() {
+  let current = 's0';
+  for (const id of sectionIds) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 80) current = id;
+  }
+  progItems.forEach(item =>
+    item.classList.toggle('active', item.dataset.section === current)
+  );
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ── Zone diagram ─────────────────────────
+const zoneInfo = {
+  editor: {
+    color: 'var(--accent)',
+    title: '✏️ L\'Éditeur',
+    text: 'C\'est ici que tu écris ton code Python, ligne par ligne. Thonny colore automatiquement les mots-clés pour t\'aider à lire. <strong>C\'est ton terrain de jeu principal.</strong>'
+  },
+  variables: {
+    color: 'var(--accent2)',
+    title: '📦 Le panneau Variables',
+    text: 'Quand ton programme tourne, ce panneau se remplit automatiquement avec toutes les variables et leurs valeurs. Tu peux voir en direct comment ton programme "pense". <strong>Super utile pour comprendre ce qui se passe !</strong>'
+  },
+  console: {
+    color: 'var(--success)',
+    title: '🖥️ La Console',
+    text: 'Tout ce que <code>print()</code> affiche apparaît ici. C\'est aussi là que s\'affichent les messages d\'erreur (en rouge). <strong>C\'est la "bouche" de ton programme.</strong>'
+  }
+};
+
+function showZone(zone) {
+  const info = zoneInfo[zone];
+  const detail = document.getElementById('zone-detail');
+  detail.style.display = 'block';
+  detail.style.borderLeftColor = info.color;
+  detail.innerHTML = `<strong style="color:${info.color}">${info.title}</strong><br><br>${info.text}`;
+}
+
+// ── Thonny simulator ─────────────────────
+function simRun() {
+  const code = document.getElementById('sim-code').value.trim();
+  const console_ = document.getElementById('sim-console');
+
+  // Simple Python print() interpreter
+  const lines = code.split('\n');
+  let output = '<span class="sim-prompt">>>> %Run bonjour.py</span>\n';
+  let hasOutput = false;
+  let hasError = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    const printMatch = trimmed.match(/^print\((.+)\)$/);
+    if (printMatch) {
+      let content = printMatch[1].trim();
+      // f-string or plain string
+      const strMatch = content.match(/^f?"([^"]*)"$/) || content.match(/^f?'([^']*)'$/);
+      if (strMatch) {
+        output += `<span class="sim-output">${esc(strMatch[1])}</span>\n`;
+        hasOutput = true;
+      } else if (/^\d+(\s*[+\-*/]\s*\d+)*$/.test(content)) {
+        try {
+          output += `<span class="sim-output">${Function('"use strict"; return (' + content + ')')()}</span>\n`;
+          hasOutput = true;
+        } catch(e) {
+          output += `<span class="sim-error">SyntaxError</span>\n`;
+          hasError = true;
+        }
+      } else {
+        output += `<span class="sim-output">${esc(content)}</span>\n`;
+        hasOutput = true;
+      }
+    } else if (/^prnt\s*\(/.test(trimmed)) {
+      output += `<span class="sim-error">NameError: name 'prnt' is not defined</span>\n`;
+      hasError = true;
+    } else if (/^print\s*\(/.test(trimmed) && !trimmed.endsWith(')')) {
+      output += `<span class="sim-error">SyntaxError: invalid syntax</span>\n`;
+      hasError = true;
+    }
+  }
+
+  if (!hasOutput && !hasError) {
+    output += `<span style="color:var(--muted)">(aucune sortie)</span>\n`;
+  }
+
+  output += '<span class="sim-prompt">>>> </span>';
+  console_.innerHTML = output;
+}
+
+function simStop() {
+  document.getElementById('sim-console').innerHTML =
+    '<span class="sim-prompt">>>> </span><span style="color:var(--muted)">Programme arrêté.</span>';
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
