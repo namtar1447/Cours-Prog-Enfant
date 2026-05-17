@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 04 — Fonctions</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .output-line {
+      color: var(--accent2); display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(247,162,106,.07);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Function call visualizer ── */
+    .fn-flow {
+      display: flex; flex-direction: column; gap: 10px; margin: 16px 0;
+    }
+    .fn-step {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 12px 16px; border-radius: 10px;
+      background: var(--surface); border: 2px solid transparent;
+      transition: all .4s; opacity: .35;
+    }
+    .fn-step.active {
+      border-color: var(--accent);
+      background: rgba(124,106,247,.12);
+      opacity: 1;
+      box-shadow: 0 0 16px rgba(124,106,247,.2);
+    }
+    .fn-step.done {
+      border-color: var(--success);
+      background: rgba(166,227,161,.06);
+      opacity: .75;
+    }
+    .fn-step-num {
+      background: var(--accent); color: white;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85em; font-weight: bold; flex-shrink: 0; margin-top: 2px;
+    }
+    .fn-step.done .fn-step-num { background: var(--success); color: #1e1e2e; }
+    .fn-step-content { flex: 1; }
+    .fn-step-title { font-weight: bold; margin-bottom: 4px; }
+    .fn-step-detail { font-family: 'Courier New'; font-size: .9em; color: var(--accent2); }
+
+    /* ── Value tracker ── */
+    .val-tracker {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 14px 20px; background: rgba(124,106,247,.08);
+      border-radius: 10px; border: 1px solid rgba(124,106,247,.3);
+      margin: 10px 0;
+    }
+    .val-box {
+      text-align: center; min-width: 80px;
+    }
+    .val-label { color: var(--muted); font-size: .8em; margin-bottom: 4px; }
+    .val-value {
+      font-family: 'Courier New'; font-size: 1.6em;
+      color: var(--warning); font-weight: bold;
+      transition: all .3s;
+    }
+    .val-arrow {
+      font-size: 1.8em; color: var(--accent); flex-shrink: 0;
+    }
+    .val-result {
+      font-family: 'Courier New'; font-size: 1.6em;
+      color: var(--success); font-weight: bold;
+      transition: all .3s; min-width: 60px;
+    }
+
+    /* ── Vending machine ── */
+    .vending {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      margin: 16px 0; justify-content: center;
+    }
+    .vending-slot {
+      background: var(--surface); border-radius: 12px;
+      padding: 16px 20px; text-align: center; min-width: 130px;
+      border: 2px solid transparent; transition: all .4s;
+    }
+    .vending-slot.input-slot  { border-color: var(--accent); }
+    .vending-slot.fn-slot     { border-color: var(--accent2); background: rgba(247,162,106,.08); }
+    .vending-slot.output-slot { border-color: var(--success); }
+    .vending-label { font-size: .75em; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
+    .vending-value { font-family: 'Courier New'; font-size: 1.8em; font-weight: bold; }
+    .vending-slot.input-slot  .vending-value { color: var(--accent); }
+    .vending-slot.fn-slot     .vending-value { color: var(--accent2); font-size: 1.1em; }
+    .vending-slot.output-slot .vending-value { color: var(--success); }
+    .vending-arrow { font-size: 2em; color: var(--muted); }
+
+    /* ── Parameter slider display ── */
+    .param-display {
+      display: flex; flex-direction: column; gap: 12px; margin: 16px 0;
+    }
+    .param-row {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .param-name { font-family: 'Courier New'; color: var(--accent2); min-width: 30px; }
+    .param-val  { font-family: 'Courier New'; font-size: 1.3em; color: var(--warning);
+                  min-width: 36px; font-weight: bold; }
+
+    /* ── Call stack trace ── */
+    .call-trace {
+      font-family: 'Courier New'; font-size: .9em;
+      display: flex; flex-direction: column; gap: 4px; margin: 12px 0;
+    }
+    .call-line {
+      padding: 5px 12px; border-radius: 6px; transition: all .3s;
+      border-left: 3px solid transparent;
+    }
+    .call-line.highlight { background: rgba(124,106,247,.15); border-left-color: var(--accent); }
+    .call-line.result    { background: rgba(166,227,161,.1);  border-left-color: var(--success); color: var(--success); }
+
+    /* ── Comparison grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0;
+      font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05);
+      vertical-align: top;
+    }
+    .summary-table td:first-child {
+      font-family: 'Courier New'; color: var(--accent2); font-weight: bold;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Slider ── */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Exercise links ── */
+    .exercise-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .ex-btn {
+      padding: 10px 22px; border-radius: 10px; text-decoration: none;
+      font-weight: bold; font-size: .95em; transition: all .2s;
+    }
+    .ex-btn.primary { background: var(--accent); color: white; }
+    .ex-btn.primary:hover { opacity: .85; transform: translateY(-2px); }
+    .ex-btn.secondary {
+      border: 2px solid var(--accent); color: var(--accent); background: transparent;
+    }
+    .ex-btn.secondary:hover { background: rgba(124,106,247,.15); transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. def</span>
+  <span class="progress-item" id="prog-2">2. Paramètres</span>
+  <span class="progress-item" id="prog-3">3. return</span>
+  <span class="progress-item" id="prog-4">4. Combiner</span>
+  <span class="progress-item" id="prog-5">5. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🧩 Leçon 04 — Fonctions</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Créer sa propre commande Python avec <code style="color:var(--accent2)">def</code></li>
+      <li>Lui passer des informations avec des <strong>paramètres</strong></li>
+      <li>Récupérer un résultat avec <code style="color:var(--accent2)">return</code></li>
+      <li>Réutiliser une fonction plusieurs fois dans un programme</li>
+    </ul>
+  </div>
+
+  <div class="card analogy" style="margin-top: 16px;">
+    <div class="label analogy">Pourquoi les fonctions ?</div>
+    <p>Tu connais déjà <code style="color:var(--accent2)">print()</code>, <code style="color:var(--accent2)">input()</code>, <code style="color:var(--accent2)">range()</code>… Ce sont toutes des fonctions que <em>quelqu'un d'autre</em> a créées pour toi.</p>
+    <p style="margin-top: 10px;">Aujourd'hui, tu vas apprendre à <strong>inventer tes propres fonctions</strong> — tes propres commandes Python, que tu pourras réutiliser partout dans ton programme.</p>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 20px;">⏱ Durée estimée : 30 min de présentation · 60–75 min d'exercices</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — def + appel -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Créer une fonction — <code style="font-size:.9em">def</code></h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Une fonction, c'est comme une <strong>recette de cuisine</strong>.</p>
+    <ul style="padding-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Tu <strong>écris la recette</strong> une seule fois (<code style="color:var(--accent2)">def</code>)</li>
+      <li>Ensuite tu peux <strong>cuisiner</strong> (appeler la fonction) autant de fois que tu veux</li>
+      <li>Écrire la recette ne prépare pas le plat — il faut l'appeler !</li>
+    </ul>
+  </div>
+
+  <div class="code-block"><span class="cm"># 1. On écrit la recette (la définition)</span>
+<span class="kw">def</span> <span class="fn">dire_bonjour</span>():
+    <span class="fn">print</span>(<span class="str">"Bonjour, aventurier !"</span>)
+
+<span class="cm"># 2. On utilise la recette (l'appel)</span>
+<span class="fn">dire_bonjour</span>()
+<span class="fn">dire_bonjour</span>()
+<span class="fn">dire_bonjour</span>()</div>
+
+  <div class="card info">
+    <div class="label code">Les deux étapes</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Définir</strong> : <code style="color:var(--accent2)">def nom():</code> suivi du code indenté — Python mémorise la recette, mais ne fait rien encore</li>
+      <li><strong>Appeler</strong> : écrire <code style="color:var(--accent2)">nom()</code> plus loin — Python exécute le code de la recette</li>
+      <li>On peut appeler la même fonction <strong>autant de fois qu'on veut</strong> !</li>
+    </ul>
+  </div>
+
+  <h3>🎮 Démo — La fonction pas à pas</h3>
+  <p style="color:var(--muted); font-size:.9em; margin-bottom: 12px;">Clique sur « Étape suivante » pour voir comment Python exécute une fonction.</p>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="cm"># Définition</span>
+<span class="kw">def</span> <span class="fn">cri_de_guerre</span>():
+    <span class="fn">print</span>(<span class="str">"⚔️  En avant !"</span>)
+    <span class="fn">print</span>(<span class="str">"🛡️  Pour la gloire !"</span>)
+
+<span class="cm"># Appels</span>
+<span class="fn">cri_de_guerre</span>()   <span class="cm"># appel 1</span>
+<span class="fn">cri_de_guerre</span>()   <span class="cm"># appel 2</span></div>
+
+    <div id="fn1-status" style="color: var(--muted); font-size: .9em; margin-bottom: 12px; min-height: 22px;">
+      Prêt à démarrer…
+    </div>
+
+    <div class="fn-flow" id="fn1-flow">
+      <div class="fn-step" id="fn1-s0">
+        <div class="fn-step-num">1</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Python lit la définition</div>
+          <div class="fn-step-detail">def cri_de_guerre(): — mémorisé, rien d'affiché</div>
+        </div>
+      </div>
+      <div class="fn-step" id="fn1-s1">
+        <div class="fn-step-num">2</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Appel 1 : cri_de_guerre()</div>
+          <div class="fn-step-detail">Python saute dans la fonction…</div>
+        </div>
+      </div>
+      <div class="fn-step" id="fn1-s2">
+        <div class="fn-step-num">3</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Ligne 1 de la fonction s'exécute</div>
+          <div class="fn-step-detail">▶  ⚔️  En avant !</div>
+        </div>
+      </div>
+      <div class="fn-step" id="fn1-s3">
+        <div class="fn-step-num">4</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Ligne 2 de la fonction s'exécute</div>
+          <div class="fn-step-detail">▶  🛡️  Pour la gloire !</div>
+        </div>
+      </div>
+      <div class="fn-step" id="fn1-s4">
+        <div class="fn-step-num">5</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Python revient après l'appel 1</div>
+          <div class="fn-step-detail">Prêt pour l'appel 2…</div>
+        </div>
+      </div>
+      <div class="fn-step" id="fn1-s5">
+        <div class="fn-step-num">6</div>
+        <div class="fn-step-content">
+          <div class="fn-step-title">Appel 2 : cri_de_guerre() — même résultat !</div>
+          <div class="fn-step-detail">▶  ⚔️  En avant !  /  ▶  🛡️  Pour la gloire !</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px; display: flex; gap: 8px;">
+      <button class="demo-btn" id="fn1-btn" onclick="fn1Next()">▶ Étape suivante</button>
+      <button class="demo-btn secondary" onclick="fn1Reset()">↺ Recommencer</button>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Attention — l'ordre compte !</div>
+    <p>Il faut <strong>définir</strong> la fonction <em>avant</em> de l'appeler. Si tu appelles avant de définir, Python dit qu'il ne connaît pas la fonction.</p>
+    <div class="code-block" style="margin-top:10px; border-color:rgba(243,139,168,.3);">
+<span class="fn">dire_bonjour</span>()    <span class="cm"># ⛔ Erreur ! Python ne la connaît pas encore</span>
+
+<span class="kw">def</span> <span class="fn">dire_bonjour</span>():
+    <span class="fn">print</span>(<span class="str">"Bonjour !"</span>)</div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Combien de fois "Bonjour !" est-il affiché ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">def</span> <span class="fn">saluer</span>():
+    <span class="fn">print</span>(<span class="str">"Bonjour !"</span>)
+
+<span class="fn">saluer</span>()
+<span class="fn">saluer</span>()
+<span class="fn">saluer</span>()</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">1 fois — la définition compte aussi</div>
+      <div class="quiz-option">3 fois — un appel = une exécution</div>
+      <div class="quiz-option">0 fois — on n'a pas utilisé print directement</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — Paramètres -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Les paramètres — Personnaliser la fonction</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>La recette de cuisine peut avoir des <strong>ingrédients à choisir</strong>.</p>
+    <p style="margin-top: 8px;">« Faire un gâteau au chocolat » → recette sans choix.</p>
+    <p style="margin-top: 4px;">« Faire un gâteau à la <strong>[saveur]</strong> » → tu choisis la saveur à chaque fois !</p>
+    <p style="margin-top: 10px;">Les <strong>paramètres</strong> sont les ingrédients que tu fournis quand tu appelles la fonction.</p>
+  </div>
+
+  <div class="code-block"><span class="kw">def</span> <span class="fn">saluer_heros</span>(<span class="var">nom</span>):
+    <span class="fn">print</span>(<span class="str">f"Bienvenue, {</span><span class="var">nom</span><span class="str">} ! Tu es prêt pour l'aventure."</span>)
+
+<span class="fn">saluer_heros</span>(<span class="str">"Arthur"</span>)
+<span class="fn">saluer_heros</span>(<span class="str">"Zara"</span>)
+<span class="fn">saluer_heros</span>(<span class="str">"Dragon-Maître"</span>)</div>
+
+  <div class="card info">
+    <div class="label code">Vocabulaire</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Paramètre</strong> : la variable dans la définition — <code style="color:var(--accent2)">def saluer_heros(nom):</code></li>
+      <li><strong>Argument</strong> : la valeur qu'on envoie lors de l'appel — <code style="color:var(--accent2)">saluer_heros("Arthur")</code></li>
+      <li>Le paramètre <code style="color:var(--accent2)">nom</code> reçoit la valeur <code style="color:var(--accent2)">"Arthur"</code> pour ce tour-là</li>
+    </ul>
+  </div>
+
+  <h3>Plusieurs paramètres</h3>
+  <p>Une fonction peut recevoir plusieurs informations à la fois — sépare-les par des virgules :</p>
+
+  <div class="code-block"><span class="kw">def</span> <span class="fn">attaquer</span>(<span class="var">ennemi</span>, <span class="var">degats</span>):
+    <span class="fn">print</span>(<span class="str">f"Tu attaques {</span><span class="var">ennemi</span><span class="str">} et lui infliges {</span><span class="var">degats</span><span class="str">} points de dégâts !"</span>)
+
+<span class="fn">attaquer</span>(<span class="str">"Gobelin"</span>, <span class="num">15</span>)
+<span class="fn">attaquer</span>(<span class="str">"Dragon"</span>, <span class="num">42</span>)</div>
+
+  <h3>🎮 Démo — Paramètres en action</h3>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="kw">def</span> <span class="fn">multiplier</span>(<span class="var">a</span>, <span class="var">b</span>):
+    <span class="fn">print</span>(<span class="str">f"{</span><span class="var">a</span><span class="str">} × {</span><span class="var">b</span><span class="str">} = {</span><span class="var">a</span> <span class="op">*</span> <span class="var">b</span><span class="str">}"</span>)</div>
+
+    <div class="param-display">
+      <div class="param-row">
+        <span class="param-name">a</span>
+        <input type="range" id="p-a" min="1" max="12" value="3"
+          style="width:200px;" oninput="renderParam()">
+        <span class="param-val" id="p-a-val">3</span>
+      </div>
+      <div class="param-row">
+        <span class="param-name">b</span>
+        <input type="range" id="p-b" min="1" max="12" value="7"
+          style="width:200px;" oninput="renderParam()">
+        <span class="param-val" id="p-b-val">7</span>
+      </div>
+    </div>
+
+    <div class="call-trace" id="p-trace">
+      <div class="call-line highlight" id="p-call"></div>
+      <div class="call-line result" id="p-result"></div>
+    </div>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Qu'affiche ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">def</span> <span class="fn">decrire</span>(<span class="var">animal</span>, <span class="var">son</span>):
+    <span class="fn">print</span>(<span class="str">f"Le {</span><span class="var">animal</span><span class="str">} fait {</span><span class="var">son</span><span class="str">} !"</span>)
+
+<span class="fn">decrire</span>(<span class="str">"chat"</span>, <span class="str">"miaou"</span>)</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">Le animal fait son !</div>
+      <div class="quiz-option">Le chat fait miaou !</div>
+      <div class="quiz-option">decrire(chat, miaou)</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — return -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2><code style="font-size:.9em">return</code> — La fonction qui répond</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Jusqu'ici, nos fonctions <strong>affichent</strong> des choses (comme un vendeur qui crie le résultat).</p>
+    <p style="margin-top: 8px;">Avec <code style="color:var(--accent2)">return</code>, la fonction <strong>retourne une valeur</strong> — comme une machine à calculer qui t'<em>envoie</em> le résultat pour que tu puisses l'utiliser ailleurs.</p>
+  </div>
+
+  <div class="compare-grid">
+    <div class="card" style="margin: 0; border-left: 4px solid var(--muted);">
+      <div class="label" style="background:rgba(108,112,134,.2); color:var(--muted)">Sans return</div>
+      <div class="code-block" style="margin: 8px 0; padding: 10px 14px; font-size:.85em;">
+<span class="kw">def</span> <span class="fn">double</span>(<span class="var">n</span>):
+    <span class="fn">print</span>(<span class="var">n</span> <span class="op">*</span> <span class="num">2</span>)
+
+<span class="fn">double</span>(<span class="num">5</span>)  <span class="cm"># affiche 10</span>
+
+<span class="cm"># Mais on ne peut pas stocker !</span>
+<span class="var">x</span> <span class="op">=</span> <span class="fn">double</span>(<span class="num">5</span>)
+<span class="cm"># x vaut None (rien)</span></div>
+    </div>
+    <div class="card" style="margin: 0; border-left: 4px solid var(--success);">
+      <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">Avec return</div>
+      <div class="code-block" style="margin: 8px 0; padding: 10px 14px; font-size:.85em;">
+<span class="kw">def</span> <span class="fn">double</span>(<span class="var">n</span>):
+    <span class="kw">return</span> <span class="var">n</span> <span class="op">*</span> <span class="num">2</span>
+
+<span class="var">x</span> <span class="op">=</span> <span class="fn">double</span>(<span class="num">5</span>)
+<span class="cm"># x vaut 10 — on peut le réutiliser !</span>
+<span class="fn">print</span>(<span class="var">x</span>)
+<span class="fn">print</span>(<span class="fn">double</span>(<span class="num">7</span>) <span class="op">+</span> <span class="num">1</span>)  <span class="cm"># 15</span></div>
+    </div>
+  </div>
+
+  <h3>🎰 La machine à calculer</h3>
+  <p style="color:var(--muted); font-size:.9em; margin-bottom: 12px;">Choisis une valeur — la fonction te retourne le résultat.</p>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="kw">def</span> <span class="fn">carre</span>(<span class="var">n</span>):
+    <span class="kw">return</span> <span class="var">n</span> <span class="op">*</span> <span class="var">n</span></div>
+
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+      <span style="color:var(--muted);">n =</span>
+      <input type="range" id="sq-n" min="1" max="12" value="4"
+        style="width:200px;" oninput="renderSquare()">
+      <span id="sq-n-val" style="font-family:'Courier New'; font-size:1.4em; color:var(--accent2);">4</span>
+    </div>
+
+    <div class="vending">
+      <div class="vending-slot input-slot">
+        <div class="vending-label">Entrée (n)</div>
+        <div class="vending-value" id="sq-input">4</div>
+      </div>
+      <div class="vending-arrow">→</div>
+      <div class="vending-slot fn-slot">
+        <div class="vending-label">Fonction</div>
+        <div class="vending-value">carre(n)</div>
+      </div>
+      <div class="vending-arrow">→</div>
+      <div class="vending-slot output-slot">
+        <div class="vending-label">Retour (return)</div>
+        <div class="vending-value" id="sq-output">16</div>
+      </div>
+    </div>
+
+    <div class="call-trace" style="margin-top: 16px;">
+      <div class="call-line highlight" id="sq-call">carre(4)  →  retourne 16</div>
+      <div class="call-line result" id="sq-use">resultat = carre(4)  →  resultat vaut 16</div>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ return arrête la fonction</div>
+    <p>Dès que Python rencontre <code style="color:var(--accent2)">return</code>, il quitte la fonction <em>immédiatement</em>. Tout code après le <code style="color:var(--accent2)">return</code> est ignoré.</p>
+    <div class="code-block" style="margin-top: 10px;">
+<span class="kw">def</span> <span class="fn">exemple</span>():
+    <span class="kw">return</span> <span class="num">42</span>
+    <span class="fn">print</span>(<span class="str">"Cette ligne ne s'exécute jamais !"</span>)  <span class="cm"># ignorée</span></div>
+  </div>
+
+  <!-- Quiz 3 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Quelle est la valeur de <code>resultat</code> ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">def</span> <span class="fn">ajouter</span>(<span class="var">x</span>, <span class="var">y</span>):
+    <span class="kw">return</span> <span class="var">x</span> <span class="op">+</span> <span class="var">y</span>
+
+<span class="var">resultat</span> <span class="op">=</span> <span class="fn">ajouter</span>(<span class="num">10</span>, <span class="num">3</span>)</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option">resultat vaut 10</div>
+      <div class="quiz-option">resultat vaut 13</div>
+      <div class="quiz-option">resultat vaut None (la fonction ne print rien)</div>
+    </div>
+    <div class="quiz-feedback" id="q3-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — Combiner des fonctions -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Combiner des fonctions — La vraie puissance</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Imagine des <strong>pièces de LEGO</strong> : chaque fonction est une pièce. Tu peux les assembler pour construire quelque chose de grand — sans avoir à réinventer chaque pièce.</p>
+  </div>
+
+  <p>Quand une fonction <strong>retourne</strong> une valeur, on peut l'utiliser comme ingrédient d'un calcul, ou la passer à une autre fonction :</p>
+
+  <div class="code-block"><span class="kw">def</span> <span class="fn">carre</span>(<span class="var">n</span>):
+    <span class="kw">return</span> <span class="var">n</span> <span class="op">*</span> <span class="var">n</span>
+
+<span class="kw">def</span> <span class="fn">perimetre_carre</span>(<span class="var">cote</span>):
+    <span class="kw">return</span> <span class="num">4</span> <span class="op">*</span> <span class="var">cote</span>
+
+<span class="kw">def</span> <span class="fn">describe_carre</span>(<span class="var">cote</span>):
+    <span class="var">aire</span>      <span class="op">=</span> <span class="fn">carre</span>(<span class="var">cote</span>)
+    <span class="var">perimetre</span> <span class="op">=</span> <span class="fn">perimetre_carre</span>(<span class="var">cote</span>)
+    <span class="fn">print</span>(<span class="str">f"Côté = {</span><span class="var">cote</span><span class="str">}  →  Aire = {</span><span class="var">aire</span><span class="str">}  |  Périmètre = {</span><span class="var">perimetre</span><span class="str">}"</span>)
+
+<span class="fn">describe_carre</span>(<span class="num">3</span>)
+<span class="fn">describe_carre</span>(<span class="num">5</span>)
+<span class="fn">describe_carre</span>(<span class="num">10</span>)</div>
+
+  <h3>🎮 Démo — Calculatrice de carré</h3>
+
+  <div class="demo-box">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+      <span style="color:var(--muted);">Côté =</span>
+      <input type="range" id="sq2-c" min="1" max="15" value="5"
+        style="width:220px;" oninput="renderSquare2()">
+      <span id="sq2-c-val" style="font-family:'Courier New'; font-size:1.4em; color:var(--accent2);">5</span>
+    </div>
+
+    <div class="call-trace" id="sq2-trace">
+      <div class="call-line highlight" id="sq2-l1"></div>
+      <div class="call-line highlight" id="sq2-l2"></div>
+      <div class="call-line result" id="sq2-l3"></div>
+    </div>
+  </div>
+
+  <div class="card success" style="margin-top: 20px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">Pourquoi c'est puissant ?</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Pas de répétition</strong> : tu écris le calcul une fois, tu l'utilises partout</li>
+      <li><strong>Facile à corriger</strong> : si tu corriges une fonction, tout le programme en profite</li>
+      <li><strong>Lisible</strong> : <code style="color:var(--accent2)">describe_carre(5)</code> dit clairement ce que ça fait</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>def nom():</td>
+        <td>Définit une fonction sans paramètre</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">def dire_bonjour():</td>
+      </tr>
+      <tr>
+        <td>def nom(p):</td>
+        <td>Définit une fonction avec 1 paramètre</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">def saluer(nom):</td>
+      </tr>
+      <tr>
+        <td>def nom(p1, p2):</td>
+        <td>Plusieurs paramètres séparés par des virgules</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">def attaquer(cible, degats):</td>
+      </tr>
+      <tr>
+        <td>nom()</td>
+        <td>Appelle la fonction (l'exécute)</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">dire_bonjour()</td>
+      </tr>
+      <tr>
+        <td>return valeur</td>
+        <td>Retourne une valeur et quitte la fonction</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">return n * n</td>
+      </tr>
+      <tr>
+        <td>x = nom(arg)</td>
+        <td>Stocke le résultat retourné dans une variable</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">x = carre(5)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir absolument</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li><code style="color:var(--accent2)">def</code> écrit la recette — l'appel l'exécute</li>
+      <li>Les <strong>paramètres</strong> permettent de personnaliser le comportement à chaque appel</li>
+      <li><code style="color:var(--accent2)">return</code> envoie un résultat qu'on peut stocker ou réutiliser</li>
+      <li>Sans <code style="color:var(--accent2)">return</code>, la fonction retourne <code style="color:var(--accent2)">None</code></li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 05 — Listes et dictionnaires</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Tu vas apprendre à stocker des collections d'objets — comme un vrai inventaire de jeu de rôle avec des noms, des quantités et des prix.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">✏️ Exercices</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">exercice_01.py</code> puis <code style="color:var(--text)">exercice_02.py</code> dans Thonny pour pratiquer les fonctions.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar — active section tracking
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) => {
+        document.getElementById(id).classList.toggle('active', i === idx);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) observer.observe(el);
+});
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — Function call step-by-step
+// ════════════════════════════════════════════════════════════
+let fn1Current = -1;
+const fn1Messages = [
+  'Python lit la définition et mémorise la recette — rien ne s\'affiche encore.',
+  'Python voit cri_de_guerre() — il saute dans la fonction !',
+  '▶  ⚔️  En avant !',
+  '▶  🛡️  Pour la gloire !',
+  'Python revient après la fin de la fonction. Appel 1 terminé.',
+  '▶  ⚔️  En avant !   ▶  🛡️  Pour la gloire !   ✅ Appel 2 terminé !'
+];
+
+function fn1Next() {
+  const total = 5;
+  if (fn1Current >= total) return;
+
+  if (fn1Current >= 0) {
+    document.getElementById('fn1-s' + fn1Current).classList.remove('active');
+    document.getElementById('fn1-s' + fn1Current).classList.add('done');
+  }
+
+  fn1Current++;
+  const step = document.getElementById('fn1-s' + fn1Current);
+  if (step) step.classList.add('active');
+
+  document.getElementById('fn1-status').textContent = fn1Messages[fn1Current] || '';
+
+  if (fn1Current === total) {
+    document.getElementById('fn1-btn').textContent = '✅ Terminé';
+    document.getElementById('fn1-btn').disabled = true;
+  }
+}
+
+function fn1Reset() {
+  fn1Current = -1;
+  for (let i = 0; i <= 5; i++) {
+    const s = document.getElementById('fn1-s' + i);
+    if (s) s.classList.remove('active', 'done');
+  }
+  document.getElementById('fn1-status').textContent = 'Prêt à démarrer…';
+  document.getElementById('fn1-btn').textContent = '▶ Étape suivante';
+  document.getElementById('fn1-btn').disabled = false;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Parameter demo
+// ════════════════════════════════════════════════════════════
+function renderParam() {
+  const a = parseInt(document.getElementById('p-a').value);
+  const b = parseInt(document.getElementById('p-b').value);
+  document.getElementById('p-a-val').textContent = a;
+  document.getElementById('p-b-val').textContent = b;
+  document.getElementById('p-call').textContent   = `multiplier(${a}, ${b})  →  exécute: print(f"${a} × ${b} = {a*b}")`;
+  document.getElementById('p-result').textContent = `▶  ${a} × ${b} = ${a * b}`;
+}
+renderParam();
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — Square / return demo
+// ════════════════════════════════════════════════════════════
+function renderSquare() {
+  const n = parseInt(document.getElementById('sq-n').value);
+  document.getElementById('sq-n-val').textContent  = n;
+  document.getElementById('sq-input').textContent  = n;
+  document.getElementById('sq-output').textContent = n * n;
+  document.getElementById('sq-call').textContent   = `carre(${n})  →  return ${n} * ${n}  →  ${n*n}`;
+  document.getElementById('sq-use').textContent    = `resultat = carre(${n})  →  resultat vaut ${n*n}`;
+}
+renderSquare();
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — Combined functions demo
+// ════════════════════════════════════════════════════════════
+function renderSquare2() {
+  const c = parseInt(document.getElementById('sq2-c').value);
+  document.getElementById('sq2-c-val').textContent = c;
+  const aire      = c * c;
+  const perimetre = 4 * c;
+  document.getElementById('sq2-l1').textContent = `aire      = carre(${c})            →  ${c} × ${c} = ${aire}`;
+  document.getElementById('sq2-l2').textContent = `perimetre = perimetre_carre(${c})   →  4 × ${c} = ${perimetre}`;
+  document.getElementById('sq2-l3').textContent = `▶  Côté = ${c}  →  Aire = ${aire}  |  Périmètre = ${perimetre}`;
+}
+renderSquare2();
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      const isCorrect = idx === correctIdx;
+
+      if (isCorrect) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1) fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'La définition (def) ne fait rien — compte seulement les appels.',
+  'Il y a 3 lignes saluer() — chacune exécute la fonction une fois.'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'Python remplace les paramètres par les arguments donnés à l\'appel.',
+  'animal reçoit "chat" et son reçoit "miaou" — Python les substitue dans la f-string.'
+]);
+
+makeQuiz('#q3-opts', 'q3-feedback', 1, [
+  'return x + y retourne la somme — 10 + 3 = ?',
+  'return ne print rien, mais envoie la valeur à celui qui a appelé la fonction.'
+]);
+</script>
+
+</body>
+</html>
