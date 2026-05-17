@@ -21,7 +21,7 @@
 
 1. Ouvre Thonny
 2. Complète un exercice et sauvegarde (`Ctrl+S`)
-3. Ouvre `tests.py` et clique sur ▶
+3. Clique sur ▶ — les tests se lancent automatiquement
 4. Lis les indices si un test est ❌, corrige, et relance !
 
 ## Mots importants

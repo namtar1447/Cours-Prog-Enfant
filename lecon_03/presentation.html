@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 03 — Boucles</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .output-line {
+      color: var(--accent2); display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(247,162,106,.07);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Loop visualizer ── */
+    .loop-viz {
+      display: flex; flex-direction: column; gap: 10px; margin: 16px 0;
+    }
+    .loop-step {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 16px; border-radius: 10px;
+      background: var(--surface); border: 2px solid transparent;
+      transition: all .4s; opacity: 0.4;
+    }
+    .loop-step.active {
+      border-color: var(--accent);
+      background: rgba(124,106,247,.12);
+      opacity: 1;
+      box-shadow: 0 0 16px rgba(124,106,247,.2);
+    }
+    .loop-step.done {
+      border-color: var(--success);
+      background: rgba(166,227,161,.06);
+      opacity: 0.75;
+    }
+    .step-i {
+      font-family: 'Courier New'; font-size: 1.1em;
+      color: var(--warning); font-weight: bold;
+      min-width: 72px; text-align: center; flex-shrink: 0; white-space: nowrap;
+    }
+    .step-output {
+      font-family: 'Courier New'; font-size: .95em; color: var(--accent2);
+    }
+    .step-arrow { color: var(--muted); flex-shrink: 0; }
+
+    /* ── i-tracker ── */
+    .i-tracker {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; background: rgba(124,106,247,.08);
+      border-radius: 10px; border: 1px solid rgba(124,106,247,.3);
+      margin: 10px 0;
+    }
+    .i-label { color: var(--muted); font-size: .9em; }
+    .i-value {
+      font-family: 'Courier New'; font-size: 2em;
+      color: var(--warning); font-weight: bold; min-width: 48px;
+      transition: all .3s;
+    }
+    .i-status { color: var(--muted); font-size: .9em; }
+
+    /* ── Range visualizer ── */
+    .range-viz {
+      display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0;
+    }
+    .range-num {
+      width: 42px; height: 42px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Courier New'; font-weight: bold; font-size: 1.1em;
+      transition: all .4s;
+    }
+    .range-num.included { background: rgba(124,106,247,.25); color: var(--accent); border: 2px solid var(--accent); }
+    .range-num.excluded { background: rgba(108,112,134,.1); color: var(--muted); border: 2px dashed rgba(108,112,134,.3); }
+    .range-num.current  { background: rgba(247,162,106,.3); color: var(--accent2); border: 2px solid var(--accent2);
+                          box-shadow: 0 0 12px rgba(247,162,106,.4); transform: scale(1.15); }
+
+    /* ── Multiplication table ── */
+    .mult-table {
+      display: grid; gap: 6px; margin: 16px 0;
+    }
+    .mult-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 8px;
+      font-family: 'Courier New'; font-size: 1em;
+      animation: slideIn .3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .mult-row .mult-expr { color: var(--muted); min-width: 80px; }
+    .mult-row .mult-result { color: var(--accent2); font-weight: bold; font-size: 1.1em; }
+    .mult-row:nth-child(odd) { background: rgba(124,106,247,.05); }
+
+    /* ── While visualizer ── */
+    .while-state {
+      display: flex; gap: 16px; margin: 16px 0; flex-wrap: wrap;
+    }
+    .state-box {
+      flex: 1; min-width: 120px; padding: 14px; border-radius: 10px;
+      background: var(--surface); border: 2px solid transparent;
+      text-align: center; transition: all .4s;
+    }
+    .state-box.checking { border-color: var(--accent); background: rgba(124,106,247,.1); }
+    .state-box.running  { border-color: var(--success); background: rgba(166,227,161,.08); }
+    .state-box.stopped  { border-color: var(--error); background: rgba(243,139,168,.08); }
+    .state-label { font-size: .8em; color: var(--muted); margin-bottom: 6px; }
+    .state-value { font-family: 'Courier New'; font-size: 1.6em; font-weight: bold; color: var(--warning); }
+    .state-cond  { font-family: 'Courier New'; font-size: .95em; }
+    .state-cond.true  { color: var(--success); }
+    .state-cond.false { color: var(--error); }
+
+    /* ── Countdown display ── */
+    .countdown-display {
+      font-family: 'Courier New'; font-size: 3.5em; font-weight: bold;
+      text-align: center; color: var(--accent2);
+      padding: 20px; transition: all .3s;
+    }
+    .countdown-display.boom {
+      color: var(--success); animation: boom .5s ease;
+    }
+    @keyframes boom {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── List items ── */
+    .inv-list {
+      display: flex; flex-direction: column; gap: 8px; margin: 16px 0;
+    }
+    .inv-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; border-radius: 10px;
+      background: var(--surface); border: 2px solid transparent;
+      font-family: 'Courier New'; transition: all .4s; opacity: .45;
+    }
+    .inv-item.active {
+      border-color: var(--accent2); background: rgba(247,162,106,.1);
+      opacity: 1; box-shadow: 0 0 12px rgba(247,162,106,.2);
+    }
+    .inv-item.done {
+      border-color: var(--success); background: rgba(166,227,161,.06);
+      opacity: .75;
+    }
+    .inv-icon { font-size: 1.3em; width: 30px; text-align: center; }
+    .inv-name { color: var(--accent2); font-weight: bold; }
+    .inv-i { color: var(--muted); font-size: .85em; margin-left: auto; }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0;
+      font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05);
+      vertical-align: top;
+    }
+    .summary-table td:first-child {
+      font-family: 'Courier New'; color: var(--accent2); font-weight: bold;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Exercise links ── */
+    .exercise-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .ex-btn {
+      padding: 10px 22px; border-radius: 10px; text-decoration: none;
+      font-weight: bold; font-size: .95em; transition: all .2s;
+    }
+    .ex-btn.primary { background: var(--accent); color: white; }
+    .ex-btn.primary:hover { opacity: .85; transform: translateY(-2px); }
+    .ex-btn.secondary {
+      border: 2px solid var(--accent); color: var(--accent); background: transparent;
+    }
+    .ex-btn.secondary:hover { background: rgba(124,106,247,.15); transform: translateY(-2px); }
+
+    /* ── Slider ── */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. for + range()</span>
+  <span class="progress-item" id="prog-2">2. Listes</span>
+  <span class="progress-item" id="prog-3">3. while</span>
+  <span class="progress-item" id="prog-4">4. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🔁 Leçon 03 — Boucles</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Répéter des instructions automatiquement avec <code style="color:var(--accent2)">for</code></li>
+      <li>Contrôler le nombre de répétitions avec <code style="color:var(--accent2)">range()</code></li>
+      <li>Parcourir tous les éléments d'une liste</li>
+      <li>Répéter tant qu'une condition est vraie avec <code style="color:var(--accent2)">while</code></li>
+    </ul>
+  </div>
+
+  <div class="card analogy" style="margin-top: 16px;">
+    <div class="label analogy">Pourquoi les boucles ?</div>
+    <p>Tu sais déjà faire une chose, puis une autre chose avec <code style="color:var(--accent2)">if</code>.
+    Mais si tu veux afficher les nombres de 1 à 100, tu ne vas quand même pas écrire 100 lignes de <code style="color:var(--accent2)">print()</code> ! 😅</p>
+    <p style="margin-top: 10px;">Les boucles disent à Python : <strong>« Répète ça jusqu'à ce que j'aie fini. »</strong></p>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 20px;">⏱ Durée estimée : 35 min de présentation · 60–75 min d'exercices</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — for + range() -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>La boucle <code style="font-size:.9em">for</code> — Le robot répétiteur</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Imagine un coach qui dit à un robot : <strong>« Fais 5 push-ups. »</strong></p>
+    <p style="margin-top: 8px;">Le robot exécute la même action exactement 5 fois, en comptant à chaque fois. En Python, <code style="color:var(--accent2)">for</code> joue le rôle du coach.</p>
+  </div>
+
+  <div class="code-block"><span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(<span class="str">f"Push-up numéro {</span><span class="var">i</span><span class="str">}"</span>)</div>
+
+  <div class="card info">
+    <div class="label code">Comment ça fonctionne</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><code style="color:var(--accent2)">range(5)</code> génère les nombres 0, 1, 2, 3, 4 (5 nombres, en partant de 0)</li>
+      <li>À chaque tour, Python met le nombre suivant dans la variable <code style="color:var(--accent2)">i</code></li>
+      <li>Tout ce qui est <strong>indenté</strong> (décalé avec Tab) est répété à chaque tour</li>
+    </ul>
+  </div>
+
+  <h3>🎮 Démo interactive — Le robot en action</h3>
+  <p style="color:var(--muted); font-size:.9em; margin-bottom: 12px;">Clique sur « Étape suivante » pour exécuter le code pas à pas.</p>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;"><span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(<span class="str">f"Push-up numéro {</span><span class="var">i</span><span class="str">}"</span>)</div>
+
+    <div class="i-tracker">
+      <div>
+        <div class="i-label">Variable i</div>
+        <div class="i-value" id="for1-i">—</div>
+      </div>
+      <div style="flex: 1; color: var(--muted);">
+        <div class="i-label">État</div>
+        <div class="i-status" id="for1-status">Prêt à démarrer…</div>
+      </div>
+    </div>
+
+    <div class="loop-viz" id="for1-steps">
+      <div class="loop-step" id="for1-step-0">
+        <div class="step-i">i = 0</div>
+        <div class="step-arrow">→</div>
+        <div class="step-output">print("Push-up numéro 0")</div>
+      </div>
+      <div class="loop-step" id="for1-step-1">
+        <div class="step-i">i = 1</div>
+        <div class="step-arrow">→</div>
+        <div class="step-output">print("Push-up numéro 1")</div>
+      </div>
+      <div class="loop-step" id="for1-step-2">
+        <div class="step-i">i = 2</div>
+        <div class="step-arrow">→</div>
+        <div class="step-output">print("Push-up numéro 2")</div>
+      </div>
+      <div class="loop-step" id="for1-step-3">
+        <div class="step-i">i = 3</div>
+        <div class="step-arrow">→</div>
+        <div class="step-output">print("Push-up numéro 3")</div>
+      </div>
+      <div class="loop-step" id="for1-step-4">
+        <div class="step-i">i = 4</div>
+        <div class="step-arrow">→</div>
+        <div class="step-output">print("Push-up numéro 4")</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px; display: flex; gap: 8px;">
+      <button class="demo-btn" onclick="for1Next()">▶ Étape suivante</button>
+      <button class="demo-btn secondary" onclick="for1Reset()">↺ Recommencer</button>
+    </div>
+  </div>
+
+  <h3>🔢 range() — Choisir les nombres</h3>
+
+  <p><code style="color:var(--accent2)">range()</code> peut prendre 1, 2 ou 3 arguments :</p>
+
+  <div style="display: flex; flex-direction: column; gap: 10px; margin: 16px 0;">
+
+    <div class="card info" style="margin: 0;">
+      <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <code style="color:var(--accent2); font-size:1.05em; white-space:nowrap;">range(fin)</code>
+        <span style="color:var(--muted); font-size:.85em;">1 argument</span>
+      </div>
+      <p style="margin-top: 8px;">Commence toujours à <strong>0</strong>, s'arrête juste avant <code style="color:var(--accent2)">fin</code>.</p>
+      <div class="code-block" style="margin: 8px 0 0; padding: 8px 14px;"><span class="fn">range</span>(<span class="num">5</span>)   <span class="cm"># → 0, 1, 2, 3, 4</span></div>
+    </div>
+
+    <div class="card info" style="margin: 0;">
+      <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <code style="color:var(--accent2); font-size:1.05em; white-space:nowrap;">range(début, fin)</code>
+        <span style="color:var(--muted); font-size:.85em;">2 arguments</span>
+      </div>
+      <p style="margin-top: 8px;">Commence à <code style="color:var(--accent2)">début</code>, s'arrête juste avant <code style="color:var(--accent2)">fin</code>. Utile pour ne pas partir de 0.</p>
+      <div class="code-block" style="margin: 8px 0 0; padding: 8px 14px;"><span class="fn">range</span>(<span class="num">2</span>, <span class="num">6</span>)   <span class="cm"># → 2, 3, 4, 5</span></div>
+    </div>
+
+    <div class="card info" style="margin: 0;">
+      <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <code style="color:var(--accent2); font-size:1.05em; white-space:nowrap;">range(début, fin, pas)</code>
+        <span style="color:var(--muted); font-size:.85em;">3 arguments</span>
+      </div>
+      <p style="margin-top: 8px;">Avance de <code style="color:var(--accent2)">pas</code> à chaque tour. Un pas négatif permet de compter à rebours.</p>
+      <div class="code-block" style="margin: 8px 0 0; padding: 8px 14px;"><span class="fn">range</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">2</span>)    <span class="cm"># → 0, 2, 4, 6, 8  (de 2 en 2)</span>
+<span class="fn">range</span>(<span class="num">10</span>, <span class="num">0</span>, <span class="num">-1</span>)   <span class="cm"># → 10, 9, 8, …, 1  (à rebours)</span></div>
+    </div>
+
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Important</div>
+    <p><code style="color:var(--accent2)">range(5)</code> commence à <strong>0</strong> et s'arrête à <strong>4</strong> — jamais 5 !<br>
+    La borne de fin est <strong>toujours exclue</strong>.</p>
+  </div>
+
+  <h3>🎮 Visualiseur range()</h3>
+
+  <div class="demo-box">
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+      <div>
+        <label style="color:var(--muted); font-size:.85em;">Début</label>
+        <input type="number" id="r-start" value="0" min="-5" max="15"
+          style="width:60px; background:#13131f; border:1px solid rgba(124,106,247,.3); color:var(--text);
+                 padding:4px 8px; border-radius:6px; font-size:1em; margin-left:6px;"
+          oninput="renderRange()">
+      </div>
+      <div>
+        <label style="color:var(--muted); font-size:.85em;">Fin (exclue)</label>
+        <input type="number" id="r-stop" value="8" min="-5" max="20"
+          style="width:60px; background:#13131f; border:1px solid rgba(124,106,247,.3); color:var(--text);
+                 padding:4px 8px; border-radius:6px; font-size:1em; margin-left:6px;"
+          oninput="renderRange()">
+      </div>
+      <div>
+        <label style="color:var(--muted); font-size:.85em;">Pas</label>
+        <input type="number" id="r-step" value="1" min="1" max="5"
+          style="width:50px; background:#13131f; border:1px solid rgba(124,106,247,.3); color:var(--text);
+                 padding:4px 8px; border-radius:6px; font-size:1em; margin-left:6px;"
+          oninput="renderRange()">
+      </div>
+    </div>
+    <div id="r-code" class="code-block" style="margin: 0 0 12px;"></div>
+    <div class="range-viz" id="r-viz"></div>
+    <div id="r-count" style="color: var(--muted); font-size: .9em; margin-top: 8px;"></div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-block" id="quiz1">
+    <h4>🧠 Quiz — Combien de fois s'exécute ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+    <span class="fn">print</span>(<span class="var">i</span>)</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" onclick="checkQ1(this, false)">3 fois  (0, 1, 2)</div>
+      <div class="quiz-option" onclick="checkQ1(this, true)">4 fois  (0, 1, 2, 3)</div>
+      <div class="quiz-option" onclick="checkQ1(this, false)">5 fois  (0, 1, 2, 3, 4)</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — for avec listes -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2><code style="font-size:.9em">for</code> avec une liste — L'inventaire du héros</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Au lieu de compter 0, 1, 2…, tu peux parcourir une liste d'objets directement — comme si tu fouillais ton sac à dos et regardais chaque objet un par un.</p>
+  </div>
+
+  <div class="code-block"><span class="var">inventaire</span> <span class="op">=</span> [<span class="str">"épée"</span>, <span class="str">"bouclier"</span>, <span class="str">"potion"</span>, <span class="str">"carte"</span>]
+
+<span class="kw">for</span> <span class="var">objet</span> <span class="kw">in</span> <span class="var">inventaire</span>:
+    <span class="fn">print</span>(<span class="str">f"Tu portes : {</span><span class="var">objet</span><span class="str">}"</span>)</div>
+
+  <div class="card info">
+    <div class="label code">Ce qui change</div>
+    <p>Pas de <code style="color:var(--accent2)">range()</code> — Python prend chaque élément de la liste à son tour et le met dans <code style="color:var(--accent2)">objet</code>. La variable peut s'appeler comme tu veux !</p>
+  </div>
+
+  <h3>🎮 Démo — Fouiller l'inventaire</h3>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;"><span class="var">inventaire</span> <span class="op">=</span> [<span class="str">"⚔️ épée"</span>, <span class="str">"🛡️ bouclier"</span>, <span class="str">"🧪 potion"</span>, <span class="str">"🗺️ carte"</span>]
+
+<span class="kw">for</span> <span class="var">objet</span> <span class="kw">in</span> <span class="var">inventaire</span>:
+    <span class="fn">print</span>(<span class="str">f"Tu portes : {</span><span class="var">objet</span><span class="str">}"</span>)</div>
+
+    <div class="i-tracker">
+      <div>
+        <div class="i-label">Variable objet</div>
+        <div class="i-value" id="inv-val" style="font-size:1.4em;">—</div>
+      </div>
+      <div style="flex:1;">
+        <div class="i-label">État</div>
+        <div class="i-status" id="inv-status">Prêt…</div>
+      </div>
+    </div>
+
+    <div class="inv-list" id="inv-list">
+      <div class="inv-item" id="inv-0"><div class="inv-icon">⚔️</div><div class="inv-name">épée</div><div class="inv-i">objet = "⚔️ épée"</div></div>
+      <div class="inv-item" id="inv-1"><div class="inv-icon">🛡️</div><div class="inv-name">bouclier</div><div class="inv-i">objet = "🛡️ bouclier"</div></div>
+      <div class="inv-item" id="inv-2"><div class="inv-icon">🧪</div><div class="inv-name">potion</div><div class="inv-i">objet = "🧪 potion"</div></div>
+      <div class="inv-item" id="inv-3"><div class="inv-icon">🗺️</div><div class="inv-name">carte</div><div class="inv-i">objet = "🗺️ carte"</div></div>
+    </div>
+
+    <div style="margin-top: 16px; display: flex; gap: 8px;">
+      <button class="demo-btn" onclick="invNext()">▶ Objet suivant</button>
+      <button class="demo-btn secondary" onclick="invReset()">↺ Recommencer</button>
+    </div>
+  </div>
+
+  <h3>🏆 Projet — Tables de multiplication</h3>
+  <p>On combine <code style="color:var(--accent2)">for</code> et <code style="color:var(--accent2)">range()</code> pour afficher toute une table en quelques lignes !</p>
+
+  <div class="code-block"><span class="var">n</span> <span class="op">=</span> <span class="num">7</span>
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">11</span>):
+    <span class="fn">print</span>(<span class="str">f"{</span><span class="var">n</span><span class="str">} × {</span><span class="var">i</span><span class="str">} = {</span><span class="var">n</span> <span class="op">*</span> <span class="var">i</span><span class="str">}"</span>)</div>
+
+  <div class="demo-box">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+      <span style="color: var(--muted);">Table du :</span>
+      <input type="range" id="mult-n" min="1" max="12" value="7"
+        style="width: 180px;" oninput="renderMult()">
+      <span id="mult-n-val" style="font-family:'Courier New'; font-size:1.4em; color:var(--accent2); min-width:30px;">7</span>
+      <button class="demo-btn secondary" onclick="renderMult()" style="margin:0; padding: 6px 16px;">Générer</button>
+    </div>
+    <div class="mult-table" id="mult-table"></div>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-block" id="quiz2">
+    <h4>🧠 Quiz — Quelle est la valeur de <code>i</code> au dernier tour ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">4</span>):
+    <span class="fn">print</span>(<span class="var">i</span>)</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" onclick="checkQ2(this, false)">4</div>
+      <div class="quiz-option" onclick="checkQ2(this, true)">3</div>
+      <div class="quiz-option" onclick="checkQ2(this, false)">1</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — while -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>La boucle <code style="font-size:.9em">while</code> — Tant que…</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p><strong>«  Tant que tu n'as pas fini tes devoirs, tu restes assis. »</strong></p>
+    <p style="margin-top: 8px;">Avec <code style="color:var(--accent2)">while</code>, Python ne sait pas à l'avance combien de tours il fera — il s'arrête seulement quand la condition devient <code style="color:var(--success)">False</code>.</p>
+  </div>
+
+  <div class="code-block"><span class="var">compte</span> <span class="op">=</span> <span class="num">5</span>
+
+<span class="kw">while</span> <span class="var">compte</span> <span class="op">&gt;</span> <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">f"Compte à rebours : {</span><span class="var">compte</span><span class="str">}"</span>)
+    <span class="var">compte</span> <span class="op">=</span> <span class="var">compte</span> <span class="op">-</span> <span class="num">1</span>
+
+<span class="fn">print</span>(<span class="str">"🚀 Décollage !"</span>)</div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Attention — Boucle infinie</div>
+    <p>Si la condition ne devient <strong>jamais</strong> <code style="color:var(--error)">False</code>, le programme tourne pour toujours ! Il faut toujours modifier la variable à l'intérieur de la boucle.</p>
+    <div class="code-block" style="margin-top: 10px; border-color: rgba(243,139,168,.3);">
+<span class="cm"># ⛔ Danger ! compte ne change jamais → boucle infinie</span>
+<span class="var">compte</span> <span class="op">=</span> <span class="num">5</span>
+<span class="kw">while</span> <span class="var">compte</span> <span class="op">&gt;</span> <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"Au secours !"</span>)  <span class="cm"># compte ne change jamais !</span></div>
+    <p style="margin-top: 8px; font-size:.9em; color:var(--muted)">Si ça arrive dans Thonny : clique sur le carré rouge ⛔ pour arrêter.</p>
+  </div>
+
+  <h3>🎮 Démo — Compte à rebours interactif</h3>
+
+  <div class="demo-box">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+      <span style="color:var(--muted);">Départ :</span>
+      <input type="range" id="cd-start" min="3" max="10" value="5"
+        style="width:160px;" oninput="document.getElementById('cd-start-val').textContent=this.value">
+      <span id="cd-start-val" style="font-family:'Courier New'; font-size:1.3em; color:var(--accent2);">5</span>
+    </div>
+
+    <div class="code-block" style="margin: 0 0 16px;" id="cd-code">
+<span class="var">compte</span> <span class="op">=</span> <span class="num">5</span>
+<span class="kw">while</span> <span class="var">compte</span> <span class="op">&gt;</span> <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">f"Compte à rebours : {</span><span class="var">compte</span><span class="str">}"</span>)
+    <span class="var">compte</span> <span class="op">=</span> <span class="var">compte</span> <span class="op">-</span> <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">"🚀 Décollage !"</span>)</div>
+
+    <div class="while-state">
+      <div class="state-box" id="cd-box-compte">
+        <div class="state-label">compte</div>
+        <div class="state-value" id="cd-compte">5</div>
+      </div>
+      <div class="state-box" id="cd-box-cond">
+        <div class="state-label">compte &gt; 0 ?</div>
+        <div class="state-cond true" id="cd-cond">True ✓</div>
+      </div>
+      <div class="state-box" id="cd-box-action">
+        <div class="state-label">Action</div>
+        <div class="state-cond" id="cd-action" style="color:var(--muted)">—</div>
+      </div>
+    </div>
+
+    <div class="countdown-display" id="cd-display">5</div>
+
+    <div style="margin-top: 12px; display:flex; gap:8px;">
+      <button class="demo-btn" onclick="cdStep()" id="cd-btn">▶ Tour suivant</button>
+      <button class="demo-btn secondary" onclick="cdReset()">↺ Recommencer</button>
+    </div>
+  </div>
+
+  <h3>for vs while — Quand utiliser lequel ?</h3>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+    <div class="card success">
+      <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">for</div>
+      <p>Quand tu <strong>sais à l'avance</strong> combien de fois répéter</p>
+      <p style="margin-top:8px; color:var(--muted); font-size:.9em;">« 10 push-ups », « tous les éléments de la liste », « de 1 à 100 »</p>
+    </div>
+    <div class="card info">
+      <div class="label code">while</div>
+      <p>Quand tu répètes <strong>jusqu'à ce que quelque chose change</strong></p>
+      <p style="margin-top:8px; color:var(--muted); font-size:.9em;">« Tant que l'ennemi est vivant », « Tant que l'utilisateur n'a pas deviné »</p>
+    </div>
+  </div>
+
+  <!-- Quiz 3 -->
+  <div class="quiz-block" id="quiz3">
+    <h4>🧠 Quiz — Qu'affiche ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="var">x</span> <span class="op">=</span> <span class="num">3</span>
+<span class="kw">while</span> <span class="var">x</span> <span class="op">&gt;</span> <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="var">x</span>)
+    <span class="var">x</span> <span class="op">=</span> <span class="var">x</span> <span class="op">-</span> <span class="num">1</span></div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" onclick="checkQ3(this, false)">3  2  1  0</div>
+      <div class="quiz-option" onclick="checkQ3(this, true)">3  2  1</div>
+      <div class="quiz-option" onclick="checkQ3(this, false)">2  1  0</div>
+    </div>
+    <div class="quiz-feedback" id="q3-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>for i in range(n):</td>
+        <td>Répète n fois, i va de 0 à n−1</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">range(5) → 0,1,2,3,4</td>
+      </tr>
+      <tr>
+        <td>for i in range(a, b):</td>
+        <td>Répète de a jusqu'à b−1</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">range(1,4) → 1,2,3</td>
+      </tr>
+      <tr>
+        <td>for i in range(a, b, pas):</td>
+        <td>Répète avec un certain pas</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">range(0,10,2) → 0,2,4,6,8</td>
+      </tr>
+      <tr>
+        <td>for elem in liste:</td>
+        <td>Parcourt chaque élément de la liste</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">for x in [1,2,3]</td>
+      </tr>
+      <tr>
+        <td>while condition:</td>
+        <td>Répète tant que la condition est vraie</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">while compte > 0:</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir absolument</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li><code style="color:var(--accent2)">range(n)</code> commence à <strong>0</strong>, s'arrête à <strong>n−1</strong></li>
+      <li>Tout ce qui est <strong>indenté</strong> sous le <code style="color:var(--accent2)">for</code>/<code style="color:var(--accent2)">while</code> est répété</li>
+      <li>Avec <code style="color:var(--accent2)">while</code>, il faut <strong>toujours modifier la variable</strong> sinon → boucle infinie</li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 04 — Fonctions</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Tu vas apprendre à créer tes propres commandes Python, réutilisables partout dans ton programme — comme inventer de nouvelles pièces de LEGO.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">✏️ Exercices</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">exercice_01.py</code> puis <code style="color:var(--text)">exercice_02.py</code> dans Thonny pour pratiquer les boucles.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar — active section tracking
+// ════════════════════════════════════════════════════════════
+const sections = ['sec-0','sec-1','sec-2','sec-3','sec-4'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) => {
+        document.getElementById(id).classList.toggle('active', i === idx);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+sections.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) observer.observe(el);
+});
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — for loop step-by-step
+// ════════════════════════════════════════════════════════════
+let for1Current = -1;
+
+function for1Next() {
+  if (for1Current >= 4) return;
+
+  if (for1Current >= 0) {
+    const prev = document.getElementById('for1-step-' + for1Current);
+    prev.classList.remove('active');
+    prev.classList.add('done');
+  }
+
+  for1Current++;
+
+  if (for1Current <= 4) {
+    const cur = document.getElementById('for1-step-' + for1Current);
+    cur.classList.add('active');
+    document.getElementById('for1-i').textContent = for1Current;
+    document.getElementById('for1-status').textContent =
+      for1Current < 4 ? `Tour ${for1Current + 1} sur 5 — exécution en cours…`
+                      : 'Dernier tour ! La boucle se termine.';
+  }
+
+  if (for1Current === 4) {
+    setTimeout(() => {
+      document.getElementById('for1-status').textContent = '✅ Boucle terminée ! 5 push-ups effectuées.';
+    }, 600);
+  }
+}
+
+function for1Reset() {
+  for1Current = -1;
+  for (let i = 0; i <= 4; i++) {
+    const s = document.getElementById('for1-step-' + i);
+    s.classList.remove('active', 'done');
+  }
+  document.getElementById('for1-i').textContent = '—';
+  document.getElementById('for1-status').textContent = 'Prêt à démarrer…';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — range() visualizer
+// ════════════════════════════════════════════════════════════
+function renderRange() {
+  const start = parseInt(document.getElementById('r-start').value) || 0;
+  const stop  = parseInt(document.getElementById('r-stop').value)  || 8;
+  const step  = Math.max(1, parseInt(document.getElementById('r-step').value) || 1);
+
+  const nums = [];
+  for (let i = start; i < stop; i += step) nums.push(i);
+
+  const code = step === 1
+    ? (start === 0
+       ? `<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">${stop}</span>):`
+       : `<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">${start}</span>, <span class="num">${stop}</span>):`)
+    : `<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">${start}</span>, <span class="num">${stop}</span>, <span class="num">${step}</span>):`;
+
+  document.getElementById('r-code').innerHTML = code;
+
+  const viz = document.getElementById('r-viz');
+  viz.innerHTML = '';
+  // Show a window of numbers around range
+  const allNums = [];
+  const minN = Math.min(start, stop) - 1;
+  const maxN = Math.max(start, stop);
+  for (let n = minN; n <= maxN; n++) allNums.push(n);
+
+  allNums.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'range-num ' + (nums.includes(n) ? 'included' : 'excluded');
+    div.textContent = n;
+    viz.appendChild(div);
+  });
+
+  document.getElementById('r-count').textContent =
+    `→ ${nums.length} valeur${nums.length > 1 ? 's' : ''} : ${nums.join(', ')}`;
+}
+
+renderRange();
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Inventory for loop
+// ════════════════════════════════════════════════════════════
+const invItems = ['⚔️ épée', '🛡️ bouclier', '🧪 potion', '🗺️ carte'];
+let invCurrent = -1;
+
+function invNext() {
+  if (invCurrent >= invItems.length - 1) return;
+
+  if (invCurrent >= 0) {
+    document.getElementById('inv-' + invCurrent).classList.remove('active');
+    document.getElementById('inv-' + invCurrent).classList.add('done');
+  }
+
+  invCurrent++;
+  document.getElementById('inv-' + invCurrent).classList.add('active');
+  document.getElementById('inv-val').textContent = '"' + invItems[invCurrent] + '"';
+  document.getElementById('inv-status').textContent =
+    invCurrent < invItems.length - 1
+      ? `Objet ${invCurrent + 1} sur ${invItems.length}`
+      : 'Dernier objet ! Inventaire parcouru.';
+
+  if (invCurrent === invItems.length - 1) {
+    setTimeout(() => {
+      document.getElementById('inv-status').textContent = '✅ Fini ! Tous les objets ont été lus.';
+    }, 600);
+  }
+}
+
+function invReset() {
+  invCurrent = -1;
+  invItems.forEach((_, i) => {
+    const el = document.getElementById('inv-' + i);
+    el.classList.remove('active', 'done');
+  });
+  document.getElementById('inv-val').textContent = '—';
+  document.getElementById('inv-status').textContent = 'Prêt…';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Multiplication table
+// ════════════════════════════════════════════════════════════
+function renderMult() {
+  const n = parseInt(document.getElementById('mult-n').value);
+  document.getElementById('mult-n-val').textContent = n;
+  const table = document.getElementById('mult-table');
+  table.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const row = document.createElement('div');
+    row.className = 'mult-row';
+    row.innerHTML = `<span class="mult-expr">${n} × ${i}</span><span style="color:var(--muted)"> = </span><span class="mult-result">${n * i}</span>`;
+    table.appendChild(row);
+  }
+}
+
+renderMult();
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — Countdown while loop
+// ════════════════════════════════════════════════════════════
+let cdCompte = 5;
+let cdStartVal = 5;
+let cdDone = false;
+
+function cdReset() {
+  cdStartVal = parseInt(document.getElementById('cd-start').value);
+  cdCompte = cdStartVal;
+  cdDone = false;
+  document.getElementById('cd-display').textContent = cdCompte;
+  document.getElementById('cd-display').classList.remove('boom');
+  document.getElementById('cd-compte').textContent = cdCompte;
+  document.getElementById('cd-cond').textContent = cdCompte + ' > 0 → True ✓';
+  document.getElementById('cd-cond').className = 'state-cond true';
+  document.getElementById('cd-action').textContent = '—';
+  document.getElementById('cd-action').style.color = 'var(--muted)';
+  document.getElementById('cd-btn').disabled = false;
+  document.getElementById('cd-btn').textContent = '▶ Tour suivant';
+
+  ['cd-box-compte','cd-box-cond','cd-box-action'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('checking','running','stopped');
+  });
+}
+
+function cdStep() {
+  if (cdDone) return;
+
+  if (cdCompte > 0) {
+    // Show print action
+    document.getElementById('cd-action').textContent = `print("${cdCompte}")`;
+    document.getElementById('cd-action').style.color = 'var(--accent2)';
+    document.getElementById('cd-display').textContent = cdCompte;
+
+    // Decrement
+    cdCompte--;
+
+    // Update state
+    document.getElementById('cd-compte').textContent = cdCompte;
+
+    if (cdCompte > 0) {
+      document.getElementById('cd-cond').textContent = cdCompte + ' > 0 → True ✓';
+      document.getElementById('cd-cond').className = 'state-cond true';
+    } else {
+      document.getElementById('cd-cond').textContent = '0 > 0 → False ✗';
+      document.getElementById('cd-cond').className = 'state-cond false';
+      cdDone = true;
+
+      setTimeout(() => {
+        document.getElementById('cd-display').textContent = '🚀 Décollage !';
+        document.getElementById('cd-display').classList.add('boom');
+        document.getElementById('cd-action').textContent = 'print("🚀 Décollage !")';
+        document.getElementById('cd-btn').textContent = '✅ Terminé';
+        document.getElementById('cd-btn').disabled = true;
+      }, 400);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(opts, fb, correct, messages) {
+  let attempts = 0;
+  const hints = [
+    messages[0] || '💡 Recompte les nombres générés par range().',
+    messages[1] || '💡 Écris les valeurs une par une sur du papier.',
+  ];
+
+  opts.forEach(opt => {
+    opt.addEventListener('click', function() {
+      if (this.classList.contains('correct')) return;
+      attempts++;
+
+      const isCorrect = correct === this;
+
+      if (isCorrect) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1) fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          correct.classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+// Quiz 1
+(function() {
+  const opts = document.querySelectorAll('#q1-opts .quiz-option');
+  const fb   = document.getElementById('q1-feedback');
+  makeQuiz([...opts], fb, opts[1], [
+    'range(4) génère 4 nombres, mais commence à 0 — pas à 1.',
+    'Liste-les : 0, 1, 2, 3 → ça fait bien 4 nombres.'
+  ]);
+})();
+
+// Quiz 2
+(function() {
+  const opts = document.querySelectorAll('#q2-opts .quiz-option');
+  const fb   = document.getElementById('q2-feedback');
+  makeQuiz([...opts], fb, opts[1], [
+    'range(1, 4) s\'arrête avant 4 — quelle est la dernière valeur incluse ?',
+    'range(1, 4) génère 1, 2, 3 → le dernier est 3.'
+  ]);
+})();
+
+// Quiz 3
+(function() {
+  const opts = document.querySelectorAll('#q3-opts .quiz-option');
+  const fb   = document.getElementById('q3-feedback');
+  makeQuiz([...opts], fb, opts[1], [
+    'Le while s\'arrête quand x n\'est plus > 0. À quel moment x vaut-il 0 ?',
+    'x prend les valeurs 3, 2, 1. Quand x arrive à 0, la condition est fausse → on sort.'
+  ]);
+})();
+
+// Deprecated individual handlers (replaced by makeQuiz above)
+function checkQ1() {} function checkQ2() {} function checkQ3() {}
+</script>
+
+</body>
+</html>
