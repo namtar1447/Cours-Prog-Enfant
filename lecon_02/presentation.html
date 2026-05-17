@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 02 — Conditions</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .bl  { color: #c792ea; } /* bool */
+    .output-line {
+      color: var(--accent2); display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(247,162,106,.07);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Flow diagram ── */
+    .flow {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0; margin: 20px auto; max-width: 480px;
+    }
+    .flow-box {
+      border-radius: 10px; padding: 12px 24px; text-align: center;
+      font-size: .95em; transition: all .3s; width: 100%;
+    }
+    .flow-box.condition {
+      background: rgba(124,106,247,.15); border: 2px solid var(--accent);
+      border-radius: 50px; font-family: 'Courier New', monospace;
+    }
+    .flow-box.action-true {
+      background: rgba(166,227,161,.1); border: 2px solid var(--success);
+    }
+    .flow-box.action-false {
+      background: rgba(243,139,168,.1); border: 2px solid var(--error);
+    }
+    .flow-box.action-elif {
+      background: rgba(249,226,175,.1); border: 2px solid var(--warning);
+    }
+    .flow-box.highlight-true  { background: rgba(166,227,161,.3); box-shadow: 0 0 16px rgba(166,227,161,.4); }
+    .flow-box.highlight-false { background: rgba(243,139,168,.3); box-shadow: 0 0 16px rgba(243,139,168,.4); }
+    .flow-box.highlight-elif  { background: rgba(249,226,175,.3); box-shadow: 0 0 16px rgba(249,226,175,.4); }
+    .flow-arrow {
+      color: var(--muted); font-size: 1.4em; line-height: 1;
+      padding: 2px 0;
+    }
+    .flow-split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
+    }
+    .flow-label {
+      font-size: .75em; color: var(--muted); text-align: center;
+      margin-bottom: 4px; font-weight: bold;
+    }
+
+    /* ── Operator grid ── */
+    .op-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin: 16px 0;
+    }
+    .op-card {
+      background: var(--surface); border-radius: 10px; padding: 14px;
+      text-align: center; border: 1px solid rgba(124,106,247,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .op-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .op-card.active { border-color: var(--accent); background: rgba(124,106,247,.1); }
+    .op-card .op-sym { font-size: 1.6em; font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .op-card .op-name { font-size: .8em; color: var(--muted); margin-top: 4px; }
+
+    /* ── Logic gates ── */
+    .logic-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0;
+    }
+    .logic-card {
+      background: var(--surface); border-radius: 10px; padding: 16px;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .logic-card h4 { color: var(--accent2); font-family: 'Courier New'; font-size: 1.1em; margin-bottom: 10px; }
+    .logic-toggle {
+      display: flex; align-items: center; gap: 8px; margin: 6px 0;
+      cursor: pointer;
+    }
+    .toggle-btn {
+      width: 40px; height: 22px; border-radius: 11px; border: none;
+      cursor: pointer; transition: all .2s; position: relative;
+      flex-shrink: 0;
+    }
+    .toggle-btn.on  { background: var(--success); }
+    .toggle-btn.off { background: var(--muted); }
+    .toggle-btn::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%; background: white;
+      transition: all .2s;
+    }
+    .toggle-btn.on::after { left: 21px; }
+    .logic-result {
+      margin-top: 12px; padding: 8px 12px; border-radius: 8px;
+      font-family: 'Courier New'; font-size: .9em; text-align: center;
+      font-weight: bold; transition: all .3s;
+    }
+    .logic-result.true  { background: rgba(166,227,161,.15); color: var(--success); border: 1px solid var(--success); }
+    .logic-result.false { background: rgba(243,139,168,.15); color: var(--error);   border: 1px solid var(--error); }
+
+    /* ── Calculator demo ── */
+    .calc-demo {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;
+    }
+    .calc-input-group label {
+      display: block; color: var(--muted); font-size: .85em; margin-bottom: 4px;
+    }
+    .small-input {
+      background: #13131f; border: 1px solid var(--muted); border-radius: 8px;
+      padding: 8px 12px; color: var(--text); font-size: 16px;
+      width: 100%; transition: all .2s;
+    }
+    .small-input:focus { outline: none; border-color: var(--accent); }
+    .calc-select {
+      background: #13131f; border: 1px solid var(--muted); border-radius: 8px;
+      padding: 8px 12px; color: var(--text); font-size: 16px; width: 100%;
+    }
+    .calc-result {
+      grid-column: 1 / -1;
+      background: #0d0d17; border-radius: 10px; padding: 16px;
+      font-family: 'Courier New'; font-size: 14px; line-height: 2;
+      border: 1px solid rgba(124,106,247,.2); min-height: 60px;
+    }
+
+    /* ── Quiz ── */
+    .quiz-box {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 28px 0;
+      border: 2px solid rgba(124,106,247,.3);
+    }
+    .quiz-box h4 {
+      color: var(--accent); margin-bottom: 12px;
+      font-size: .85em; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .quiz-question { font-size: 1.05em; margin-bottom: 14px; }
+    .quiz-options  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      background: #13131f; border: 1px solid var(--muted); border-radius: 8px;
+      padding: 10px 16px; cursor: pointer; transition: all .2s;
+    }
+    .quiz-option:hover    { border-color: var(--accent); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124,106,247,.1); }
+    .quiz-option.correct  { border-color: var(--success); background: rgba(166,227,161,.08); }
+    .quiz-option.wrong    { border-color: var(--error);   background: rgba(243,139,168,.08); }
+    .quiz-input {
+      background: #13131f; border: 1px solid var(--muted); border-radius: 8px;
+      padding: 10px 16px; color: var(--text); font-family: 'Courier New'; font-size: 15px;
+      width: 180px; margin-bottom: 12px; transition: all .2s;
+    }
+    .quiz-input:focus   { outline: none; border-color: var(--accent); }
+    .quiz-input.correct { border-color: var(--success); }
+    .quiz-input.wrong   { border-color: var(--error); }
+    .attempts { display: flex; gap: 6px; margin-bottom: 10px; }
+    .attempt-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); transition: all .3s; }
+    .attempt-dot.used    { background: var(--error); }
+    .attempt-dot.success { background: var(--success); }
+    .quiz-feedback { padding: 10px 14px; border-radius: 8px; margin-top: 8px; font-size: .95em; display: none; }
+    .quiz-feedback.show    { display: block; }
+    .quiz-feedback.success { background: rgba(166,227,161,.1); border: 1px solid var(--success); color: var(--success); }
+    .quiz-feedback.error   { background: rgba(243,139,168,.1); border: 1px solid var(--error);   color: var(--error); }
+    .quiz-feedback.hint    { background: rgba(249,226,175,.1); border: 1px solid var(--warning); color: var(--warning); }
+
+    /* ── Misc ── */
+    code { font-family:'Courier New',monospace; color:var(--accent2); background:#13131f; padding:2px 6px; border-radius:4px; }
+    table { width:100%; border-collapse:collapse; margin:16px 0; }
+    th { background:var(--accent); color:white; padding:10px 16px; text-align:left; }
+    td { padding:10px 16px; border-bottom:1px solid rgba(124,106,247,.2); }
+    tr:hover td { background:rgba(124,106,247,.04); }
+    td code { color:var(--accent2); background:#13131f; padding:2px 6px; border-radius:4px; }
+    .objectives { display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+    .objective  { display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--surface); border-radius:8px; }
+    .objective .icon { font-size:1.4em; }
+    .next-lesson {
+      background: linear-gradient(135deg,rgba(124,106,247,.1),rgba(247,162,106,.1));
+      border:1px solid var(--accent); border-radius:12px; padding:20px 24px; margin-top:24px;
+    }
+    .scroll-hint { text-align:center; color:var(--muted); font-size:.85em; margin-top:28px; animation:bounce 2s infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+    @media(max-width:600px) { .op-grid{grid-template-columns:repeat(2,1fr)} .logic-grid{grid-template-columns:1fr} .calc-demo{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+
+<nav id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span style="color:var(--accent);font-weight:bold;margin-right:8px;white-space:nowrap">Leçon 02</span>
+  <div class="progress-item" data-section="s0">0. Intro</div>
+  <div class="progress-item" data-section="s1">1. if / else</div>
+  <div class="progress-item" data-section="s2">2. elif</div>
+  <div class="progress-item" data-section="s3">3. Opérateurs</div>
+  <div class="progress-item" data-section="s4">4. and / or / not</div>
+  <div class="progress-item" data-section="s5">5. Calculatrice</div>
+  <div class="progress-item" data-section="s6">6. Résumé</div>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════
+     SECTION 0 — EN-TÊTE
+══════════════════════════════════════ -->
+<section class="section" id="s0">
+  <h1>🔀 Leçon 02</h1>
+  <h2 style="color:var(--accent2);margin-bottom:24px">Conditions — if, elif, else</h2>
+
+  <div class="objectives">
+    <div class="objective">
+      <span class="icon">🔀</span>
+      <span>Faire prendre des <strong>décisions</strong> à ton programme avec <code>if</code> et <code>else</code></span>
+    </div>
+    <div class="objective">
+      <span class="icon">🔢</span>
+      <span>Gérer <strong>plusieurs cas</strong> avec <code>elif</code></span>
+    </div>
+    <div class="objective">
+      <span class="icon">⚖️</span>
+      <span>Comparer des valeurs avec les <strong>opérateurs de comparaison</strong></span>
+    </div>
+    <div class="objective">
+      <span class="icon">🧠</span>
+      <span>Combiner des conditions avec <strong>and</strong>, <strong>or</strong>, <strong>not</strong></span>
+    </div>
+    <div class="objective">
+      <span class="icon">🧮</span>
+      <span>Rendre la <strong>calculatrice intelligente</strong> — détecter la division par zéro</span>
+    </div>
+  </div>
+
+  <div class="card info" style="margin-top:20px">
+    <strong>⏱️ Durée estimée :</strong> ~30 min de présentation &nbsp;+&nbsp; ~60 min d'exercices dans Thonny
+  </div>
+  <div class="scroll-hint">▼ Défile vers le bas pour commencer</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — IF / ELSE
+══════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>if / else — Choisir un chemin</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Dans un jeu RPG, quand tu arrives à un pont gardé : <em>« Si tu as 10 pièces d'or, tu passes. Sinon, tu fais demi-tour. »</em></p>
+    <p style="margin-top:10px">Le garde évalue une <strong>condition</strong> et prend un chemin ou l'autre. En Python, c'est exactement ce que fait <code>if / else</code>.</p>
+  </div>
+
+  <div class="label code">🐍 Syntaxe</div>
+  <div class="code-block"><span class="kw">if</span> <span class="var">condition</span><span class="op">:</span>
+    <span class="cm"># exécuté si la condition est VRAIE (True)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="cm"># exécuté si la condition est FAUSSE (False)</span></div>
+
+  <div class="card info">
+    <strong>Deux règles importantes :</strong>
+    <ul style="margin-top:8px;padding-left:20px;line-height:2">
+      <li>La condition se termine toujours par <code style="color:var(--accent2)">:</code></li>
+      <li>Le code à l'intérieur est <strong>indenté</strong> (décalé avec la touche <kbd style="background:var(--surface);border:1px solid var(--muted);padding:2px 8px;border-radius:4px">Tab</kbd>)</li>
+    </ul>
+  </div>
+
+  <div class="label code">🐍 Exemple concret</div>
+  <div class="code-block"><span class="var">or</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Combien de pièces d'or ? "</span>))
+
+<span class="kw">if</span> <span class="var">or</span> <span class="op">>=</span> <span class="num">10</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"Le garde te laisse passer. Bonne route !"</span>)
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"Pas assez d'or. Reviens quand tu seras riche !"</span>)</div>
+
+  <div class="label demo">🕹️ Démo — Le gardien du pont</div>
+  <div class="demo-box">
+    <p style="color:var(--muted);font-size:.9em;margin-bottom:16px">Combien de pièces d'or as-tu ? Le garde vérifie :</p>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <input type="number" id="gold-input" class="small-input" value="7" style="width:110px">
+      <span style="color:var(--muted)">pièces d'or</span>
+      <button class="demo-btn" onclick="runGate()">⚔️ Approcher du pont</button>
+      <button class="demo-btn secondary" onclick="resetGate()">🔄</button>
+    </div>
+
+    <div class="flow" id="gate-flow">
+      <div class="flow-box condition" id="gate-cond">or &gt;= 10</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-split">
+        <div>
+          <div class="flow-label" style="color:var(--success)">✅ True</div>
+          <div class="flow-box action-true" id="gate-true">Bonne route !</div>
+        </div>
+        <div>
+          <div class="flow-label" style="color:var(--error)">❌ False</div>
+          <div class="flow-box action-false" id="gate-false">Reviens plus tard !</div>
+        </div>
+      </div>
+    </div>
+    <div id="gate-msg" style="margin-top:16px;font-family:'Courier New';font-size:14px;min-height:24px"></div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 1</h4>
+    <p class="quiz-question">
+      Qu'affiche ce code si <code>vies = 0</code> ?<br><br>
+      <span style="font-family:'Courier New';font-size:.9em;line-height:2">
+        <span style="color:#c792ea">if</span> <span style="color:var(--text)">vies</span> <span style="color:var(--accent2)">></span> <span style="color:var(--warning)">0</span><span style="color:var(--accent2)">:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#82aaff">print</span>(<span style="color:var(--success)">"Tu es vivant !"</span>)<br>
+        <span style="color:#c792ea">else</span><span style="color:var(--accent2)">:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#82aaff">print</span>(<span style="color:var(--success)">"Game over..."</span>)
+      </span>
+    </p>
+    <div class="attempts" id="q1-dots">
+      <div class="attempt-dot"></div><div class="attempt-dot"></div><div class="attempt-dot"></div>
+    </div>
+    <div class="quiz-options" id="q1-options">
+      <div class="quiz-option" onclick="selectMC('q1',this,'alive')">Tu es vivant !</div>
+      <div class="quiz-option" onclick="selectMC('q1',this,'over')">Game over...</div>
+      <div class="quiz-option" onclick="selectMC('q1',this,'both')">Les deux lignes s'affichent</div>
+      <div class="quiz-option" onclick="selectMC('q1',this,'none')">Rien ne s'affiche</div>
+    </div>
+    <button class="demo-btn" onclick="checkMC('q1','over')">Vérifier</button>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — ELIF
+══════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>elif — Plusieurs chemins</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Dans un RPG, ton personnage peut avoir plusieurs états : <em>plein de vie → attaque</em>, <em>blessé → défends-toi</em>, <em>presque mort → fuis !</em></p>
+    <p style="margin-top:10px">Ce ne sont plus deux choix, mais plusieurs. C'est le rôle de <code>elif</code> (abréviation de <em>else if</em>).</p>
+  </div>
+
+  <div class="label code">🐍 Syntaxe</div>
+  <div class="code-block"><span class="kw">if</span> <span class="var">condition_1</span><span class="op">:</span>
+    <span class="cm"># si condition_1 est vraie</span>
+<span class="kw">elif</span> <span class="var">condition_2</span><span class="op">:</span>
+    <span class="cm"># si condition_1 est fausse ET condition_2 est vraie</span>
+<span class="kw">elif</span> <span class="var">condition_3</span><span class="op">:</span>
+    <span class="cm"># si les deux premières sont fausses ET condition_3 est vraie</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="cm"># si TOUTES les conditions sont fausses</span></div>
+
+  <div class="card info">
+    Python teste les conditions <strong>dans l'ordre</strong> et s'arrête à la première qui est vraie. Le bloc <code>else</code> est optionnel.
+  </div>
+
+  <div class="label code">🐍 Exemple — IA de combat RPG</div>
+  <div class="code-block"><span class="var">pv</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Combien de PV ? "</span>))
+
+<span class="kw">if</span> <span class="var">pv</span> <span class="op">>=</span> <span class="num">50</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"⚔️ Attaque ! Tu es en pleine forme."</span>)
+<span class="kw">elif</span> <span class="var">pv</span> <span class="op">>=</span> <span class="num">20</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"🛡️ Défends-toi ! Tu es blessé."</span>)
+<span class="kw">elif</span> <span class="var">pv</span> <span class="op">>=</span> <span class="num">1</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"🏃 Fuis ! Tu es en danger de mort !"</span>)
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"💀 Game over..."</span>)</div>
+
+  <div class="label demo">🕹️ Démo — IA de combat</div>
+  <div class="demo-box">
+    <p style="color:var(--muted);font-size:.9em;margin-bottom:16px">Glisse le curseur pour changer les PV et voir quelle décision l'IA prend :</p>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <input type="range" id="pv-slider" min="0" max="100" value="65"
+          oninput="updateRPG()" style="width:100%;accent-color:var(--accent)">
+      </div>
+      <div style="text-align:center;min-width:80px">
+        <span id="pv-val" style="font-size:1.4em;font-weight:bold;color:var(--accent2)">65</span>
+        <span style="color:var(--muted)"> PV</span>
+      </div>
+    </div>
+
+    <div class="flow" id="rpg-flow" style="max-width:560px">
+      <div class="flow-box condition" id="rpg-c1">pv &gt;= 50</div>
+      <div class="flow-arrow">↓ False</div>
+      <div class="flow-box condition" id="rpg-c2">pv &gt;= 20</div>
+      <div class="flow-arrow">↓ False</div>
+      <div class="flow-box condition" id="rpg-c3">pv &gt;= 1</div>
+      <div class="flow-arrow">↓ False</div>
+      <div class="flow-box action-false" id="rpg-else">💀 Game over...</div>
+    </div>
+
+    <div id="rpg-result" style="margin-top:16px;padding:12px 16px;border-radius:8px;font-size:1.05em;background:var(--surface);min-height:44px"></div>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 2</h4>
+    <p class="quiz-question">
+      Quel message s'affiche si <code>pv = 20</code> ?<br><br>
+      <span style="font-family:'Courier New';font-size:.85em;line-height:2.2">
+        <span style="color:#c792ea">if</span> <span style="color:var(--text)">pv</span> <span style="color:var(--accent2)">>=</span> <span style="color:var(--warning)">50</span><span style="color:var(--accent2)">:</span> <span style="color:#82aaff">print</span>(<span style="color:var(--success)">"Attaque"</span>)<br>
+        <span style="color:#c792ea">elif</span> <span style="color:var(--text)">pv</span> <span style="color:var(--accent2)">>=</span> <span style="color:var(--warning)">20</span><span style="color:var(--accent2)">:</span> <span style="color:#82aaff">print</span>(<span style="color:var(--success)">"Défends"</span>)<br>
+        <span style="color:#c792ea">else</span><span style="color:var(--accent2)">:</span> <span style="color:#82aaff">print</span>(<span style="color:var(--success)">"Fuis"</span>)
+      </span>
+    </p>
+    <div class="attempts" id="q2-dots">
+      <div class="attempt-dot"></div><div class="attempt-dot"></div><div class="attempt-dot"></div>
+    </div>
+    <div class="quiz-options" id="q2-options">
+      <div class="quiz-option" onclick="selectMC('q2',this,'a')">Attaque</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'d')">Défends</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'f')">Fuis</div>
+      <div class="quiz-option" onclick="selectMC('q2',this,'ad')">Attaque et Défends</div>
+    </div>
+    <button class="demo-btn" onclick="checkMC('q2','d')">Vérifier</button>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — OPÉRATEURS
+══════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Opérateurs de comparaison</h2>
+  </div>
+
+  <p>Pour écrire une condition, on compare des valeurs. Voici les 6 opérateurs disponibles. Clique sur chacun pour voir un exemple :</p>
+
+  <div class="op-grid">
+    <div class="op-card" onclick="showOp('eq',this)">
+      <div class="op-sym">==</div>
+      <div class="op-name">égal à</div>
+    </div>
+    <div class="op-card" onclick="showOp('ne',this)">
+      <div class="op-sym">!=</div>
+      <div class="op-name">différent de</div>
+    </div>
+    <div class="op-card" onclick="showOp('lt',this)">
+      <div class="op-sym">&lt;</div>
+      <div class="op-name">plus petit que</div>
+    </div>
+    <div class="op-card" onclick="showOp('gt',this)">
+      <div class="op-sym">&gt;</div>
+      <div class="op-name">plus grand que</div>
+    </div>
+    <div class="op-card" onclick="showOp('le',this)">
+      <div class="op-sym">&lt;=</div>
+      <div class="op-name">≤ (plus petit ou égal)</div>
+    </div>
+    <div class="op-card" onclick="showOp('ge',this)">
+      <div class="op-sym">&gt;=</div>
+      <div class="op-name">≥ (plus grand ou égal)</div>
+    </div>
+  </div>
+
+  <div id="op-detail" class="card" style="display:none"></div>
+
+  <div class="card warning" style="margin-top:20px">
+    <strong>⚠️ Piège classique :</strong> <code>==</code> compare deux valeurs, <code>=</code> en assigne une.<br>
+    <span style="font-family:'Courier New';font-size:.9em">
+      <span style="color:var(--text)">score</span> <span style="color:var(--accent2)">=</span> <span style="color:var(--warning)">10</span>
+      &nbsp;&nbsp;<span style="color:var(--muted)">← met 10 dans score</span><br>
+      <span style="color:var(--text)">score</span> <span style="color:var(--accent2)">==</span> <span style="color:var(--warning)">10</span>
+      &nbsp;&nbsp;<span style="color:var(--muted)">← vérifie si score vaut 10 → True ou False</span>
+    </span>
+  </div>
+
+  <div class="label demo">🕹️ Comparateur en direct</div>
+  <div class="demo-box">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <input type="number" id="cmp-a" class="small-input" value="5" style="width:90px">
+      <select id="cmp-op" class="calc-select" style="width:100px" onchange="runCmp()">
+        <option>==</option><option>!=</option>
+        <option>&lt;</option><option>&gt;</option>
+        <option>&lt;=</option><option>&gt;=</option>
+      </select>
+      <input type="number" id="cmp-b" class="small-input" value="3" style="width:90px">
+      <button class="demo-btn" onclick="runCmp()">→ Résultat</button>
+    </div>
+    <div id="cmp-result" style="font-family:'Courier New';font-size:1.1em;min-height:32px"></div>
+  </div>
+
+  <!-- Quiz 3 -->
+  <div class="quiz-box">
+    <h4>🧠 Quiz — Section 3</h4>
+    <p class="quiz-question">Quelle est la valeur de cette expression ?<br><br>
+      <code style="font-size:1.1em">10 == 10.0</code>
+    </p>
+    <div class="attempts" id="q3-dots">
+      <div class="attempt-dot"></div><div class="attempt-dot"></div><div class="attempt-dot"></div>
+    </div>
+    <div class="quiz-options" id="q3-options">
+      <div class="quiz-option" onclick="selectMC('q3',this,'true')"><code>True</code> — 10 et 10.0 sont égaux pour Python</div>
+      <div class="quiz-option" onclick="selectMC('q3',this,'false')"><code>False</code> — int et float ne peuvent pas être comparés</div>
+      <div class="quiz-option" onclick="selectMC('q3',this,'err')">Erreur — on ne peut pas comparer deux types différents</div>
+    </div>
+    <button class="demo-btn" onclick="checkMC('q3','true')">Vérifier</button>
+    <div class="quiz-feedback" id="q3-feedback"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — AND / OR / NOT
+══════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>and, or, not — Combiner les conditions</h2>
+  </div>
+
+  <div class="label analogy">🎮 Analogie</div>
+  <div class="card analogy">
+    <p>Pour entrer dans un donjon : <em>« Tu dois avoir une torche <strong>ET</strong> une épée. »</em></p>
+    <p style="margin-top:6px">Pour déclencher une alarme : <em>« Si la porte s'ouvre <strong>OU</strong> si la fenêtre se brise. »</em></p>
+    <p style="margin-top:6px">Pour un passage secret : <em>« Si tu n'es <strong>PAS</strong> un ennemi. »</em></p>
+  </div>
+
+  <div class="label demo">🕹️ Démo interactive — Active les interrupteurs</div>
+  <div class="demo-box">
+    <div class="logic-grid">
+      <!-- AND -->
+      <div class="logic-card">
+        <h4>and</h4>
+        <p style="color:var(--muted);font-size:.85em;margin-bottom:12px">Les DEUX doivent être True</p>
+        <div class="logic-toggle">
+          <button class="toggle-btn on" id="and-a" onclick="toggleLogic('and','a')"></button>
+          <span id="and-a-lbl" style="font-family:'Courier New';font-size:.9em">A = True</span>
+        </div>
+        <div class="logic-toggle">
+          <button class="toggle-btn on" id="and-b" onclick="toggleLogic('and','b')"></button>
+          <span id="and-b-lbl" style="font-family:'Courier New';font-size:.9em">B = True</span>
+        </div>
+        <div class="logic-result true" id="and-result">A and B → True</div>
+      </div>
+      <!-- OR -->
+      <div class="logic-card">
+        <h4>or</h4>
+        <p style="color:var(--muted);font-size:.85em;margin-bottom:12px">Au moins UNE doit être True</p>
+        <div class="logic-toggle">
+          <button class="toggle-btn on" id="or-a" onclick="toggleLogic('or','a')"></button>
+          <span id="or-a-lbl" style="font-family:'Courier New';font-size:.9em">A = True</span>
+        </div>
+        <div class="logic-toggle">
+          <button class="toggle-btn off" id="or-b" onclick="toggleLogic('or','b')"></button>
+          <span id="or-b-lbl" style="font-family:'Courier New';font-size:.9em">B = False</span>
+        </div>
+        <div class="logic-result true" id="or-result">A or B → True</div>
+      </div>
+      <!-- NOT -->
+      <div class="logic-card">
+        <h4>not</h4>
+        <p style="color:var(--muted);font-size:.85em;margin-bottom:12px">Inverse la condition</p>
+        <div class="logic-toggle">
+          <button class="toggle-btn on" id="not-a" onclick="toggleLogic('not','a')"></button>
+          <span id="not-a-lbl" style="font-family:'Courier New';font-size:.9em">A = True</span>
+        </div>
+        <div style="height:34px"></div>
+        <div class="logic-result false" id="not-result">not A → False</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="label code">🐍 Dans le code</div>
+  <div class="code-block"><span class="var">torche</span> <span class="op">=</span> <span class="bl">True</span>
+<span class="var">epee</span>   <span class="op">=</span> <span class="bl">False</span>
+<span class="var">ennemi</span> <span class="op">=</span> <span class="bl">False</span>
+
+<span class="kw">if</span> <span class="var">torche</span> <span class="kw">and</span> <span class="var">epee</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"Tu peux entrer dans le donjon !"</span>)
+
+<span class="kw">if</span> <span class="kw">not</span> <span class="var">ennemi</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"Tu peux passer le portail."</span>)</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — CALCULATRICE INTELLIGENTE
+══════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Calculatrice intelligente</h2>
+  </div>
+
+  <p>On reprend la calculatrice de la leçon 01 et on la rend plus résistante aux erreurs grâce aux conditions.</p>
+
+  <h3>Problème 1 — Division par zéro</h3>
+  <p>Que se passe-t-il si l'utilisateur tape 0 comme diviseur ?</p>
+
+  <div class="code-block"><span class="var">a</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Numérateur : "</span>))
+<span class="var">b</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Dénominateur : "</span>))
+
+<span class="kw">if</span> <span class="var">b</span> <span class="op">==</span> <span class="num">0</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"⚠️ Impossible de diviser par zéro !"</span>)
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">f"</span><span class="op">{</span><span class="var">a</span><span class="op">}</span><span class="str"> ÷ </span><span class="op">{</span><span class="var">b</span><span class="op">}</span><span class="str"> = </span><span class="op">{</span><span class="var">a</span> <span class="op">/</span> <span class="var">b</span><span class="op">}</span><span class="str">"</span>)</div>
+
+  <h3>Problème 2 — Nombre négatif dans une racine carrée</h3>
+  <div class="code-block"><span class="var">n</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Racine carrée de : "</span>))
+
+<span class="kw">if</span> <span class="var">n</span> <span class="op"><</span> <span class="num">0</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">"⚠️ Pas de racine carrée d'un nombre négatif !"</span>)
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span>(<span class="str">f"√</span><span class="op">{</span><span class="var">n</span><span class="op">}</span><span class="str"> = </span><span class="op">{</span><span class="var">n</span> <span class="op">**</span> <span class="num">0.5</span><span class="op">}</span><span class="str">"</span>)</div>
+
+  <div class="label demo">🕹️ Calculatrice intelligente — Essaie !</div>
+  <div class="demo-box">
+    <div class="calc-demo">
+      <div class="calc-input-group">
+        <label>Nombre a</label>
+        <input type="number" id="smart-a" class="small-input" value="10">
+      </div>
+      <div class="calc-input-group">
+        <label>Opération</label>
+        <select id="smart-op" class="calc-select">
+          <option>+</option><option>-</option>
+          <option>×</option><option>÷</option>
+          <option>√a</option>
+        </select>
+      </div>
+      <div class="calc-input-group">
+        <label>Nombre b <span style="color:var(--muted);font-size:.8em">(inutile pour √)</span></label>
+        <input type="number" id="smart-b" class="small-input" value="0">
+      </div>
+      <div></div>
+    </div>
+    <button class="demo-btn" onclick="runSmartCalc()">▶ Calculer</button>
+    <button class="demo-btn secondary" onclick="document.getElementById('smart-result').innerHTML=''">Effacer</button>
+    <div class="calc-result" id="smart-result"></div>
+  </div>
+
+  <div class="card info" style="margin-top:16px">
+    <strong>📌 À retenir :</strong> vérifier les conditions <em>avant</em> de faire le calcul évite les erreurs qui font planter le programme. C'est le principe de la <strong>validation</strong>.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — RÉSUMÉ
+══════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <div class="section-number" style="background:var(--success);color:#1e1e2e">✓</div>
+    <h2>Résumé — Ce qu'on a appris</h2>
+  </div>
+
+  <table>
+    <tr><th>Concept</th><th>Syntaxe</th><th>À quoi ça sert</th></tr>
+    <tr><td>Condition simple</td><td><code>if cond:</code></td><td>Exécuter du code seulement si vrai</td></tr>
+    <tr><td>Sinon</td><td><code>else:</code></td><td>Exécuter si la condition est fausse</td></tr>
+    <tr><td>Sinon si</td><td><code>elif cond:</code></td><td>Tester un autre cas</td></tr>
+    <tr><td>Égalité</td><td><code>==</code></td><td>Vérifier si deux valeurs sont égales</td></tr>
+    <tr><td>Différence</td><td><code>!=</code></td><td>Vérifier si deux valeurs sont différentes</td></tr>
+    <tr><td>Comparaison</td><td><code>&lt; &gt; &lt;= &gt;=</code></td><td>Comparer des nombres</td></tr>
+    <tr><td>Et</td><td><code>and</code></td><td>Les deux conditions doivent être vraies</td></tr>
+    <tr><td>Ou</td><td><code>or</code></td><td>Au moins une condition doit être vraie</td></tr>
+    <tr><td>Non</td><td><code>not</code></td><td>Inverser une condition</td></tr>
+  </table>
+
+  <div class="card" style="margin-top:24px;background:rgba(166,227,161,.06);border:1px solid var(--success)">
+    <strong style="color:var(--success)">📁 Tes exercices :</strong>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--success);color:#1e1e2e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">1</div>
+        <div>Ouvre <code>exercice_01.py</code> — conditions simples avec un personnage RPG</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--success);color:#1e1e2e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">2</div>
+        <div>Ouvre <code>exercice_02.py</code> — calculatrice avec détection d'erreurs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-lesson">
+    <strong style="color:var(--accent)">⏭️ Prochaine leçon :</strong>
+    <p style="margin-top:8px"><strong>Leçon 03 — Boucles (<code>for</code> et <code>while</code>)</strong></p>
+    <p style="color:var(--muted);margin-top:6px">
+      On apprendra à répéter des actions automatiquement — tables de multiplication, compte à rebours, et bien plus.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ── Progress bar ─────────────────────────────────────────
+const sectionIds = ['s0','s1','s2','s3','s4','s5','s6'];
+const progItems  = document.querySelectorAll('.progress-item');
+function updateProgress() {
+  let current = 's0';
+  for (const id of sectionIds) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 80) current = id;
+  }
+  progItems.forEach(i => i.classList.toggle('active', i.dataset.section === current));
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ── Gardien du pont ──────────────────────────────────────
+function runGate() {
+  const or = parseFloat(document.getElementById('gold-input').value) || 0;
+  const cond = document.getElementById('gate-cond');
+  const t    = document.getElementById('gate-true');
+  const f    = document.getElementById('gate-false');
+  const msg  = document.getElementById('gate-msg');
+
+  cond.textContent = `or (${or}) >= 10`;
+  t.classList.remove('highlight-true'); f.classList.remove('highlight-false');
+
+  if (or >= 10) {
+    t.classList.add('highlight-true');
+    msg.innerHTML = `<span style="color:var(--success)">▶  Bonne route ! (${or} >= 10 → True)</span>`;
+  } else {
+    f.classList.add('highlight-false');
+    msg.innerHTML = `<span style="color:var(--error)">▶  Reviens plus tard ! (${or} >= 10 → False)</span>`;
+  }
+}
+function resetGate() {
+  document.getElementById('gold-input').value = 7;
+  ['gate-true','gate-false'].forEach(id => {
+    document.getElementById(id).classList.remove('highlight-true','highlight-false');
+  });
+  document.getElementById('gate-cond').textContent = 'or >= 10';
+  document.getElementById('gate-msg').innerHTML = '';
+}
+
+// ── RPG AI slider ────────────────────────────────────────
+function updateRPG() {
+  const pv  = parseInt(document.getElementById('pv-slider').value);
+  const val = document.getElementById('pv-val');
+  const c1  = document.getElementById('rpg-c1');
+  const c2  = document.getElementById('rpg-c2');
+  const c3  = document.getElementById('rpg-c3');
+  const el  = document.getElementById('rpg-else');
+  const res = document.getElementById('rpg-result');
+
+  val.textContent = pv;
+  val.style.color = pv >= 50 ? 'var(--success)' : pv >= 20 ? 'var(--warning)' : pv >= 1 ? 'var(--accent2)' : 'var(--error)';
+
+  [c1,c2,c3,el].forEach(e => {
+    e.classList.remove('highlight-true','highlight-false','highlight-elif');
+  });
+
+  if (pv >= 50) {
+    c1.classList.add('highlight-true');
+    res.innerHTML = `<span style="color:var(--success)">⚔️ Attaque ! Tu es en pleine forme. (pv=${pv} ≥ 50)</span>`;
+    res.style.borderColor = 'var(--success)';
+  } else if (pv >= 20) {
+    c2.classList.add('highlight-elif');
+    res.innerHTML = `<span style="color:var(--warning)">🛡️ Défends-toi ! Tu es blessé. (pv=${pv} ≥ 20)</span>`;
+    res.style.borderColor = 'var(--warning)';
+  } else if (pv >= 1) {
+    c3.classList.add('highlight-elif');
+    res.innerHTML = `<span style="color:var(--accent2)">🏃 Fuis ! Tu es en danger de mort ! (pv=${pv} ≥ 1)</span>`;
+    res.style.borderColor = 'var(--accent2)';
+  } else {
+    el.classList.add('highlight-false');
+    res.innerHTML = `<span style="color:var(--error)">💀 Game over... (pv=${pv})</span>`;
+    res.style.borderColor = 'var(--error)';
+  }
+}
+updateRPG();
+
+// ── Operator detail ──────────────────────────────────────
+const opData = {
+  eq: { sym:'==', name:'égal à',             ex:'5 == 5',   res:'True',  ex2:'5 == 3',   res2:'False', note:'Attention : ne pas confondre avec = (assignation) !' },
+  ne: { sym:'!=', name:'différent de',        ex:'5 != 3',   res:'True',  ex2:'5 != 5',   res2:'False', note:'Utile pour vérifier qu\'une valeur a changé.' },
+  lt: { sym:'<',  name:'strictement plus petit que', ex:'3 < 5', res:'True', ex2:'5 < 5', res2:'False', note:'Strict : 5 < 5 est False.' },
+  gt: { sym:'>',  name:'strictement plus grand que', ex:'5 > 3', res:'True', ex2:'3 > 5', res2:'False', note:'Strict : 5 > 5 est False.' },
+  le: { sym:'<=', name:'plus petit ou égal à', ex:'3 <= 3',  res:'True',  ex2:'6 <= 3',   res2:'False', note:'Inclut l\'égalité : 5 <= 5 est True.' },
+  ge: { sym:'>=', name:'plus grand ou égal à', ex:'5 >= 3',  res:'True',  ex2:'2 >= 3',   res2:'False', note:'Inclut l\'égalité : 5 >= 5 est True.' },
+};
+let lastOpCard = null;
+function showOp(key, card) {
+  if (lastOpCard) lastOpCard.classList.remove('active');
+  card.classList.add('active');
+  lastOpCard = card;
+  const d = opData[key];
+  const col = r => r === 'True' ? 'var(--success)' : 'var(--error)';
+  document.getElementById('op-detail').style.display = 'block';
+  document.getElementById('op-detail').innerHTML = `
+    <strong style="color:var(--accent2);font-family:'Courier New'">${d.sym}</strong> — ${d.name}<br><br>
+    <span style="font-family:'Courier New'">
+      ${d.ex} &nbsp;→&nbsp; <strong style="color:${col(d.res)}">${d.res}</strong><br>
+      ${d.ex2} &nbsp;→&nbsp; <strong style="color:${col(d.res2)}">${d.res2}</strong>
+    </span>
+    <br><br><span style="color:var(--muted);font-size:.9em">💡 ${d.note}</span>`;
+}
+
+// ── Comparateur live ─────────────────────────────────────
+function runCmp() {
+  const a  = parseFloat(document.getElementById('cmp-a').value);
+  const b  = parseFloat(document.getElementById('cmp-b').value);
+  const op = document.getElementById('cmp-op').value;
+  let res;
+  switch(op) {
+    case '==': res = a === b; break;
+    case '!=': res = a !== b; break;
+    case '<':  res = a < b;   break;
+    case '>':  res = a > b;   break;
+    case '<=': res = a <= b;  break;
+    case '>=': res = a >= b;  break;
+  }
+  const color = res ? 'var(--success)' : 'var(--error)';
+  document.getElementById('cmp-result').innerHTML =
+    `<span style="color:var(--text)">${a} ${op} ${b}</span> &nbsp;→&nbsp; <strong style="color:${color}">${res}</strong>`;
+}
+runCmp();
+document.getElementById('cmp-a').addEventListener('input', runCmp);
+document.getElementById('cmp-b').addEventListener('input', runCmp);
+
+// ── Logic toggles ────────────────────────────────────────
+const logicState = { and:{a:true,b:true}, or:{a:true,b:false}, not:{a:true} };
+
+function toggleLogic(gate, input) {
+  logicState[gate][input] = !logicState[gate][input];
+  const btn = document.getElementById(`${gate}-${input}`);
+  const lbl = document.getElementById(`${gate}-${input}-lbl`);
+  const val = logicState[gate][input];
+  btn.className = `toggle-btn ${val ? 'on' : 'off'}`;
+  lbl.textContent = `${input.toUpperCase()} = ${val}`;
+  updateLogicResult(gate);
+}
+
+function updateLogicResult(gate) {
+  const s = logicState[gate];
+  let res;
+  if      (gate === 'and') res = s.a && s.b;
+  else if (gate === 'or')  res = s.a || s.b;
+  else                     res = !s.a;
+
+  const el = document.getElementById(`${gate}-result`);
+  const expr = gate === 'not'
+    ? `not A → ${res}`
+    : `A ${gate} B → ${res}`;
+  el.textContent = expr;
+  el.className = `logic-result ${res ? 'true' : 'false'}`;
+}
+
+// ── Smart calculator ─────────────────────────────────────
+function runSmartCalc() {
+  const a  = parseFloat(document.getElementById('smart-a').value) || 0;
+  const b  = parseFloat(document.getElementById('smart-b').value) || 0;
+  const op = document.getElementById('smart-op').value;
+  const out = document.getElementById('smart-result');
+  let lines = [];
+
+  const W = n => `<span style="color:var(--warning)">${n}</span>`;
+  const G = s => `<span style="color:var(--success)">${s}</span>`;
+  const E = s => `<span style="color:var(--error)">⚠️ ${s}</span>`;
+
+  lines.push(`<span style="color:var(--muted)">a = ${a},  op = "${op}"${op !== '√a' ? `,  b = ${b}` : ''}</span>`);
+
+  if (op === '+') lines.push(`${W(a)} + ${W(b)} = ${G(a + b)}`);
+  else if (op === '-') lines.push(`${W(a)} − ${W(b)} = ${G(a - b)}`);
+  else if (op === '×') lines.push(`${W(a)} × ${W(b)} = ${G(a * b)}`);
+  else if (op === '÷') {
+    if (b === 0) lines.push(E('Impossible de diviser par zéro !'));
+    else lines.push(`${W(a)} ÷ ${W(b)} = ${G((a / b).toFixed(6).replace(/\.?0+$/, ''))}`);
+  } else if (op === '√a') {
+    if (a < 0) lines.push(E('Pas de racine carrée d\'un nombre négatif !'));
+    else lines.push(`√${W(a)} = ${G(Math.sqrt(a).toFixed(6).replace(/\.?0+$/, ''))}`);
+  }
+
+  out.innerHTML = lines.join('<br>');
+}
+
+// ── Quiz system ──────────────────────────────────────────
+const QS = {
+  q1: { tries:0, done:false, sel:null,
+        hints: ['vies vaut 0 — est-ce que 0 > 0 est vrai ou faux ?',
+                '0 > 0 est False, donc Python exécute le bloc else.'],
+        answer:'over', explain:'vies = 0, donc 0 > 0 est False. Python saute le if et exécute le else : "Game over..."' },
+  q2: { tries:0, done:false, sel:null,
+        hints: ['pv = 20. Est-ce que 20 >= 50 est vrai ?',
+                '20 >= 50 est False, on teste elif : 20 >= 20 est-il vrai ?'],
+        answer:'d', explain:'20 >= 50 est False, on passe au elif : 20 >= 20 est True → "Défends".' },
+  q3: { tries:0, done:false, sel:null,
+        hints: ['Python compare les valeurs numériques, pas les types.',
+                'Pour Python, 10 (int) et 10.0 (float) ont la même valeur numérique.'],
+        answer:'true', explain:'Python compare les valeurs numériques : 10 et 10.0 valent la même chose, donc 10 == 10.0 est True.' },
+};
+
+function dots(id) { return document.getElementById(`${id}-dots`).children; }
+function fb(id)   { return document.getElementById(`${id}-feedback`); }
+function showFB(el, type, msg) { el.className = `quiz-feedback show ${type}`; el.innerHTML = msg; }
+function markDot(id, idx, cls) {
+  const d = dots(id);
+  if (idx < 3) { d[idx].classList.remove('used','success'); d[idx].classList.add(cls); }
+}
+
+function selectMC(id, el, val) {
+  if (QS[id].done) return;
+  QS[id].sel = val;
+  document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function checkMC(id, correct) {
+  const s = QS[id];
+  if (s.done || !s.sel) return;
+  s.tries++;
+  markDot(id, s.tries - 1, 'used');
+
+  if (s.sel === correct) {
+    s.done = true;
+    markDot(id, s.tries - 1, 'success');
+    document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => {
+      if (o.getAttribute('onclick').includes(`'${correct}'`)) o.classList.add('correct');
+    });
+    showFB(fb(id), 'success', '✅ Bravo ! ' + s.explain);
+    return;
+  }
+
+  document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => o.classList.remove('selected'));
+  s.sel = null;
+
+  if (s.tries < 3) {
+    showFB(fb(id), 'hint', '💡 ' + s.hints[s.tries - 1]);
+  } else {
+    s.done = true;
+    document.querySelectorAll(`#${id}-options .quiz-option`).forEach(o => {
+      if (o.getAttribute('onclick').includes(`'${correct}'`)) o.classList.add('correct');
+    });
+    showFB(fb(id), 'error', '❌ ' + s.explain);
+  }
+}
+</script>
+</body>
+</html>
