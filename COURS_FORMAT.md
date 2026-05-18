@@ -25,8 +25,7 @@ cours-python/
 │   ├── presentation.html    ← support visuel animé par le père
 │   ├── exercice_01.py       ← code à compléter
 │   ├── exercice_02.py
-│   ├── tests.py             ← validation automatique de tous les exercices
-│   └── README.md            ← résumé de la leçon + objectifs
+│   └── tests.py             ← validation automatique de tous les exercices
 ├── lecon_02/
 │   └── ...
 └── projets/
@@ -286,36 +285,12 @@ if __name__ == "__main__":
 
 ---
 
-## 5. Fichier `README.md` (par leçon)
+## 5. Fichier `README.md` — ❌ Ne pas générer
 
-Court fichier de référence pour l'apprenant.
-
-```markdown
-# Leçon XX — Titre
-
-## Ce qu'on a appris
-- Concept 1
-- Concept 2
-
-## Fichiers de cette leçon
-| Fichier | Description |
-|---|---|
-| `presentation.html` | Support visuel de la leçon |
-| `exercice_01.py` | Exercice 1 — [titre court] |
-| `exercice_02.py` | Exercice 2 — [titre court] |
-| `tests.py` | Pour vérifier tes exercices |
-
-## Comment tester
-1. Ouvre Thonny
-2. Complète un exercice
-3. Ouvre `tests.py` et clique sur ▶️
-
-## Mots importants
-| Mot | Signification |
-|---|---|
-| `variable` | Une boîte qui stocke une valeur |
-| `print()` | Affiche quelque chose à l'écran |
-```
+Les README.md ne font **pas** partie des livrables d'une leçon. L'apprenant travaille avec
+la présentation HTML ouverte dans le navigateur et Thonny — un fichier Markdown texte n'ajoute
+aucune valeur dans ce contexte. Le résumé de leçon et le glossaire sont intégrés directement
+dans la section **Résumé** de `presentation.html`.
 
 ---
 

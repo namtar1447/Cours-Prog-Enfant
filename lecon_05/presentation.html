@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 05 — Listes et dictionnaires</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+    .demo-btn.danger {
+      background: transparent; border: 1px solid var(--error); color: var(--error);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── List visualizer ── */
+    .list-viz {
+      display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0; align-items: flex-end;
+    }
+    .list-cell {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      transition: all .35s;
+    }
+    .list-cell-val {
+      background: var(--surface); border: 2px solid rgba(124,106,247,.3);
+      border-radius: 8px; padding: 10px 14px;
+      font-family: 'Courier New'; font-weight: bold; font-size: 1em;
+      color: var(--text); min-width: 52px; text-align: center;
+      transition: all .35s;
+    }
+    .list-cell.highlight .list-cell-val {
+      border-color: var(--accent2); background: rgba(247,162,106,.15);
+      color: var(--accent2); transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(247,162,106,.25);
+    }
+    .list-cell.new-item .list-cell-val {
+      border-color: var(--success); background: rgba(166,227,161,.12);
+      color: var(--success);
+      animation: popIn .35s ease;
+    }
+    .list-cell.removed .list-cell-val {
+      border-color: var(--error); background: rgba(243,139,168,.1);
+      color: var(--error); opacity: 0; transform: scale(.7);
+    }
+    @keyframes popIn {
+      0%   { transform: scale(.6) translateY(-8px); opacity: 0; }
+      70%  { transform: scale(1.1) translateY(-6px); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .list-cell-idx {
+      font-family: 'Courier New'; font-size: .75em; color: var(--muted);
+    }
+
+    /* ── Dict visualizer ── */
+    .dict-viz {
+      display: flex; flex-direction: column; gap: 6px; margin: 16px 0;
+    }
+    .dict-row {
+      display: flex; align-items: center; gap: 0;
+      border-radius: 8px; overflow: hidden;
+      border: 2px solid transparent; transition: all .35s;
+    }
+    .dict-row.highlight {
+      border-color: var(--accent2);
+      box-shadow: 0 0 12px rgba(247,162,106,.2);
+    }
+    .dict-row.new-row {
+      border-color: var(--success);
+      animation: popIn .35s ease;
+    }
+    .dict-key {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      font-family: 'Courier New'; font-weight: bold; font-size: .95em;
+      padding: 10px 16px; min-width: 140px; flex-shrink: 0;
+    }
+    .dict-arrow {
+      background: rgba(124,106,247,.08); color: var(--muted);
+      padding: 10px 10px; font-size: .9em;
+    }
+    .dict-val {
+      background: var(--surface); color: var(--accent2);
+      font-family: 'Courier New'; font-size: .95em;
+      padding: 10px 16px; flex: 1;
+      transition: all .35s;
+    }
+    .dict-row.highlight .dict-val { color: var(--warning); font-weight: bold; }
+
+    /* ── History list ── */
+    .history-list {
+      display: flex; flex-direction: column; gap: 6px; margin: 12px 0;
+      max-height: 220px; overflow-y: auto;
+    }
+    .history-entry {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--surface); font-family: 'Courier New'; font-size: .9em;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .history-idx { color: var(--muted); min-width: 28px; font-size: .85em; }
+    .history-op  { color: var(--accent2); flex: 1; }
+    .history-res { color: var(--success); font-weight: bold; }
+
+    /* ── Comparison grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05);
+      vertical-align: top;
+    }
+    .summary-table td:first-child {
+      font-family: 'Courier New'; color: var(--accent2); font-weight: bold;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Input field ── */
+    .demo-input {
+      background: #13131f; border: 1px solid rgba(124,106,247,.4);
+      color: var(--text); padding: 7px 12px; border-radius: 8px;
+      font-family: 'Courier New'; font-size: .95em; width: 160px;
+      outline: none;
+    }
+    .demo-input:focus { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. Listes</span>
+  <span class="progress-item" id="prog-2">2. Opérations</span>
+  <span class="progress-item" id="prog-3">3. Dictionnaires</span>
+  <span class="progress-item" id="prog-4">4. Combo</span>
+  <span class="progress-item" id="prog-5">5. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>📦 Leçon 05 — Listes et dictionnaires</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Stocker plusieurs valeurs dans une <strong>liste</strong></li>
+      <li>Ajouter, lire et supprimer des éléments d'une liste</li>
+      <li>Associer des <strong>clés</strong> à des valeurs avec un <strong>dictionnaire</strong></li>
+      <li>Combiner listes et fonctions pour garder un historique de calculs</li>
+    </ul>
+  </div>
+
+  <div class="card analogy" style="margin-top: 16px;">
+    <div class="label analogy">Pourquoi listes et dictionnaires ?</div>
+    <p>Jusqu'ici, chaque variable ne stocke <strong>qu'une seule valeur</strong> à la fois. Si tu veux garder les 10 derniers calculs de ta calculatrice, il te faudrait 10 variables différentes !</p>
+    <p style="margin-top: 10px;">Les listes et les dictionnaires te permettent de stocker <strong>autant de valeurs que tu veux</strong> dans une seule variable.</p>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 20px;">⏱ Durée estimée : 35 min de présentation · 60–75 min d'exercices</p>
+
+  <!-- ── Rappel leçon 04 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçon 04</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">def + appel</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">def</span> <span class="fn">doubler</span>(<span class="var">n</span>):
+    <span class="kw">return</span> <span class="var">n</span> <span class="op">*</span> <span class="num">2</span>
+
+<span class="fn">doubler</span>(<span class="num">5</span>)  <span class="cm"># → 10</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Paramètres</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">def</span> <span class="fn">add</span>(<span class="var">a</span>, <span class="var">b</span>):
+    <span class="kw">return</span> <span class="var">a</span> <span class="op">+</span> <span class="var">b</span>
+
+<span class="fn">add</span>(<span class="num">3</span>, <span class="num">4</span>)  <span class="cm"># → 7</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">return</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">x</span> <span class="op">=</span> <span class="fn">doubler</span>(<span class="num">6</span>)
+<span class="cm"># x vaut 12</span>
+<span class="cm"># on peut le réutiliser !</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — Listes -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Les listes — Le sac à dos du héros</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Une liste, c'est comme un <strong>sac à dos numéroté</strong> : chaque compartiment a un numéro (0, 1, 2…) et contient un objet. Tu peux ajouter des objets, en retirer, et regarder ce qu'il y a dans chaque compartiment.</p>
+  </div>
+
+  <div class="code-block"><span class="cm"># Créer une liste</span>
+<span class="var">inventaire</span> <span class="op">=</span> [<span class="str">"épée"</span>, <span class="str">"bouclier"</span>, <span class="str">"potion"</span>]
+
+<span class="cm"># Lire un élément par son index (commence à 0 !)</span>
+<span class="fn">print</span>(<span class="var">inventaire</span>[<span class="num">0</span>])   <span class="cm"># ▶  épée</span>
+<span class="fn">print</span>(<span class="var">inventaire</span>[<span class="num">2</span>])   <span class="cm"># ▶  potion</span>
+
+<span class="cm"># Connaître la taille</span>
+<span class="fn">print</span>(<span class="fn">len</span>(<span class="var">inventaire</span>))  <span class="cm"># ▶  3</span></div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Index commence à 0 !</div>
+    <p>Le premier élément est toujours à l'index <code style="color:var(--accent2)">0</code>, pas <code style="color:var(--accent2)">1</code>. Une liste de 3 éléments a les index 0, 1 et 2.</p>
+  </div>
+
+  <h3>🎮 Démo — Clique sur un compartiment</h3>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="var">inventaire</span> <span class="op">=</span> [<span class="str">"⚔️ épée"</span>, <span class="str">"🛡️ bouclier"</span>, <span class="str">"🧪 potion"</span>, <span class="str">"🗺️ carte"</span>]</div>
+
+    <div class="list-viz" id="list1-viz"></div>
+
+    <div id="list1-info" style="margin-top: 14px; font-family: 'Courier New'; font-size: .95em; color: var(--muted); min-height: 24px;">
+      ← Clique sur un compartiment pour le lire
+    </div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Quelle est la valeur de <code>scores[1]</code> ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="var">scores</span> <span class="op">=</span> [<span class="num">100</span>, <span class="num">250</span>, <span class="num">75</span>]</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">100  (index 0, le premier)</div>
+      <div class="quiz-option">250  (index 1, le deuxième)</div>
+      <div class="quiz-option">75   (index 2, le troisième)</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — Opérations sur les listes -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Modifier une liste — append, pop, for</h2>
+  </div>
+
+  <div class="code-block"><span class="var">inventaire</span> <span class="op">=</span> [<span class="str">"épée"</span>, <span class="str">"bouclier"</span>]
+
+<span class="cm"># Ajouter à la fin</span>
+<span class="var">inventaire</span>.<span class="fn">append</span>(<span class="str">"potion"</span>)
+<span class="cm"># → ["épée", "bouclier", "potion"]</span>
+
+<span class="cm"># Supprimer et récupérer le dernier élément</span>
+<span class="var">dernier</span> <span class="op">=</span> <span class="var">inventaire</span>.<span class="fn">pop</span>()
+<span class="cm"># dernier = "potion"  /  inventaire = ["épée", "bouclier"]</span>
+
+<span class="cm"># Parcourir tous les éléments</span>
+<span class="kw">for</span> <span class="var">objet</span> <span class="kw">in</span> <span class="var">inventaire</span>:
+    <span class="fn">print</span>(<span class="var">objet</span>)</div>
+
+  <h3>🎮 Démo — Construis ta liste</h3>
+
+  <div class="demo-box">
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+      <input class="demo-input" id="add-val" placeholder="Nom d'objet…" maxlength="16"
+        onkeydown="if(event.key==='Enter') listAdd()">
+      <button class="demo-btn" onclick="listAdd()">+ append()</button>
+      <button class="demo-btn danger" onclick="listPop()" id="pop-btn">− pop()</button>
+      <button class="demo-btn secondary" onclick="listReset()">↺ Reset</button>
+    </div>
+
+    <div class="list-viz" id="list2-viz"></div>
+
+    <div id="list2-code" class="code-block" style="margin: 12px 0 0; padding: 10px 14px; font-size: .9em;"></div>
+    <div id="list2-msg" style="color: var(--muted); font-size: .85em; margin-top: 8px; min-height: 20px;"></div>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Que contient la liste après ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="var">fruits</span> <span class="op">=</span> [<span class="str">"pomme"</span>, <span class="str">"banane"</span>]
+<span class="var">fruits</span>.<span class="fn">append</span>(<span class="str">"kiwi"</span>)
+<span class="var">fruits</span>.<span class="fn">pop</span>()</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">["pomme", "banane", "kiwi"]</div>
+      <div class="quiz-option">["pomme", "banane"]</div>
+      <div class="quiz-option">["banane", "kiwi"]</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — Dictionnaires -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Les dictionnaires — La fiche du héros</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie</div>
+    <p>Un dictionnaire, c'est comme la <strong>fiche de personnage d'un jeu de rôle</strong> : chaque information a un <em>nom</em> (la clé) et une <em>valeur</em>.</p>
+    <p style="margin-top: 8px;">Au lieu de chercher par numéro (index 0, 1, 2…), tu cherches par <strong>nom</strong> : <code style="color:var(--accent2)">"pv"</code>, <code style="color:var(--accent2)">"force"</code>, <code style="color:var(--accent2)">"niveau"</code>.</p>
+  </div>
+
+  <div class="code-block"><span class="cm"># Créer un dictionnaire</span>
+<span class="var">heros</span> <span class="op">=</span> {
+    <span class="str">"nom"</span>    <span class="op">:</span> <span class="str">"Arthur"</span>,
+    <span class="str">"pv"</span>     <span class="op">:</span> <span class="num">100</span>,
+    <span class="str">"force"</span>  <span class="op">:</span> <span class="num">42</span>,
+    <span class="str">"niveau"</span> <span class="op">:</span> <span class="num">5</span>,
+}
+
+<span class="cm"># Lire une valeur</span>
+<span class="fn">print</span>(<span class="var">heros</span>[<span class="str">"nom"</span>])    <span class="cm"># ▶  Arthur</span>
+<span class="fn">print</span>(<span class="var">heros</span>[<span class="str">"pv"</span>])     <span class="cm"># ▶  100</span>
+
+<span class="cm"># Modifier une valeur</span>
+<span class="var">heros</span>[<span class="str">"pv"</span>] <span class="op">=</span> <span class="num">85</span>
+
+<span class="cm"># Ajouter une nouvelle clé</span>
+<span class="var">heros</span>[<span class="str">"magie"</span>] <span class="op">=</span> <span class="num">20</span></div>
+
+  <div class="compare-grid">
+    <div class="card" style="margin: 0; border-left: 4px solid var(--muted);">
+      <div class="label" style="background:rgba(108,112,134,.2); color:var(--muted)">Liste</div>
+      <p style="font-size:.9em; margin-top: 6px;">Accès par <strong>numéro</strong> : <code style="color:var(--accent2)">liste[0]</code></p>
+      <p style="font-size:.85em; color:var(--muted); margin-top: 6px;">Pratique pour des séquences ordonnées</p>
+    </div>
+    <div class="card" style="margin: 0; border-left: 4px solid var(--accent);">
+      <div class="label code">Dictionnaire</div>
+      <p style="font-size:.9em; margin-top: 6px;">Accès par <strong>nom</strong> : <code style="color:var(--accent2)">dico["clé"]</code></p>
+      <p style="font-size:.85em; color:var(--muted); margin-top: 6px;">Pratique pour décrire un objet avec des propriétés</p>
+    </div>
+  </div>
+
+  <h3>🎮 Démo — La fiche de personnage</h3>
+
+  <div class="demo-box">
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="var">heros</span> <span class="op">=</span> { <span class="str">"nom"</span>: <span class="str">"Arthur"</span>, <span class="str">"pv"</span>: <span class="num">100</span>, <span class="str">"force"</span>: <span class="num">42</span>, <span class="str">"niveau"</span>: <span class="num">5</span> }</div>
+
+    <div class="dict-viz" id="dict-viz"></div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;">
+      <button class="demo-btn secondary" onclick="dictAction('attaque')">⚔️ Attaque (−15 pv)</button>
+      <button class="demo-btn secondary" onclick="dictAction('soin')">🧪 Soin (+20 pv)</button>
+      <button class="demo-btn secondary" onclick="dictAction('niveau')">⬆️ Niveau +1</button>
+      <button class="demo-btn secondary" onclick="dictAction('reset')">↺ Reset</button>
+    </div>
+    <div id="dict-code" class="code-block" style="margin: 14px 0 0; padding: 10px 14px; font-size: .9em; min-height: 28px;"></div>
+  </div>
+
+  <!-- Quiz 3 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Comment lire la valeur associée à <code>"force"</code> ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="var">stats</span> <span class="op">=</span> { <span class="str">"force"</span>: <span class="num">42</span>, <span class="str">"agilite"</span>: <span class="num">30</span> }</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option">stats[0]</div>
+      <div class="quiz-option">stats["force"]</div>
+      <div class="quiz-option">stats.force</div>
+    </div>
+    <div class="quiz-feedback" id="q3-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — Combo : liste + fonction -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Combo — Historique de calculs</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Objectif</div>
+    <p>On va combiner tout ce qu'on a appris : une <strong>liste</strong> pour garder l'historique, une <strong>fonction</strong> pour ajouter un calcul, et une <strong>boucle</strong> pour tout afficher.</p>
+    <p style="margin-top: 8px;">C'est exactement comme ça que fonctionne l'historique d'une vraie calculatrice !</p>
+  </div>
+
+  <div class="code-block"><span class="var">historique</span> <span class="op">=</span> []   <span class="cm"># liste vide au départ</span>
+
+<span class="kw">def</span> <span class="fn">calculer</span>(<span class="var">a</span>, <span class="var">op</span>, <span class="var">b</span>):
+    <span class="kw">if</span>   <span class="var">op</span> <span class="op">==</span> <span class="str">"+"</span><span class="op">:</span> <span class="var">resultat</span> <span class="op">=</span> <span class="var">a</span> <span class="op">+</span> <span class="var">b</span>
+    <span class="kw">elif</span> <span class="var">op</span> <span class="op">==</span> <span class="str">"-"</span><span class="op">:</span> <span class="var">resultat</span> <span class="op">=</span> <span class="var">a</span> <span class="op">-</span> <span class="var">b</span>
+    <span class="kw">elif</span> <span class="var">op</span> <span class="op">==</span> <span class="str">"*"</span><span class="op">:</span> <span class="var">resultat</span> <span class="op">=</span> <span class="var">a</span> <span class="op">*</span> <span class="var">b</span>
+    <span class="kw">else</span><span class="op">:</span>           <span class="var">resultat</span> <span class="op">=</span> <span class="var">a</span> <span class="op">/</span> <span class="var">b</span>
+
+    <span class="var">entree</span> <span class="op">=</span> <span class="str">f"{</span><span class="var">a</span><span class="str">} {</span><span class="var">op</span><span class="str">} {</span><span class="var">b</span><span class="str">} = {</span><span class="var">resultat</span><span class="str">}"</span>
+    <span class="var">historique</span>.<span class="fn">append</span>(<span class="var">entree</span>)   <span class="cm"># on sauvegarde</span>
+    <span class="kw">return</span> <span class="var">resultat</span>
+
+<span class="cm"># Quelques calculs…</span>
+<span class="fn">calculer</span>(<span class="num">10</span>, <span class="str">"+"</span>, <span class="num">5</span>)
+<span class="fn">calculer</span>(<span class="num">8</span>,  <span class="str">"*"</span>, <span class="num">3</span>)
+<span class="fn">calculer</span>(<span class="num">20</span>, <span class="str">"-"</span>, <span class="num">7</span>)
+
+<span class="cm"># Afficher l'historique</span>
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">entree</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">historique</span>):
+    <span class="fn">print</span>(<span class="str">f"[{</span><span class="var">i</span><span class="str">+1}] {</span><span class="var">entree</span><span class="str">}"</span>)</div>
+
+  <div class="card info" style="margin-top: 0;">
+    <div class="label code">Nouveau : enumerate()</div>
+    <p><code style="color:var(--accent2)">for i, elem in enumerate(liste):</code> donne en même temps le <strong>numéro</strong> (<code style="color:var(--accent2)">i</code>) et la <strong>valeur</strong> (<code style="color:var(--accent2)">elem</code>) — pratique pour afficher un historique numéroté.</p>
+  </div>
+
+  <h3>🎮 Démo — Calculatrice avec historique</h3>
+
+  <div class="demo-box">
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+      <input class="demo-input" id="calc-a" type="number" value="10" style="width:80px;">
+      <select id="calc-op" style="background:#1e1e2e; border:1px solid rgba(124,106,247,.4); color:var(--text); padding:7px 10px; border-radius:8px; font-size:.95em;">
+        <option>+</option><option>-</option><option>*</option><option>/</option>
+      </select>
+      <input class="demo-input" id="calc-b" type="number" value="5" style="width:80px;">
+      <button class="demo-btn" onclick="calcAdd()">=  Calculer</button>
+      <button class="demo-btn secondary" onclick="calcClear()">🗑️ Vider</button>
+    </div>
+
+    <div class="history-list" id="calc-history">
+      <div style="color: var(--muted); font-size: .9em; padding: 8px;">Aucun calcul pour l'instant…</div>
+    </div>
+
+    <div id="calc-code" class="code-block" style="margin: 14px 0 0; padding: 10px 14px; font-size: .9em; min-height: 28px; color: var(--muted);">historique = []</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>[a, b, c]</td>
+        <td>Crée une liste avec 3 éléments</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">["épée", "bouclier"]</td>
+      </tr>
+      <tr>
+        <td>liste[i]</td>
+        <td>Lit l'élément à l'index i (commence à 0)</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">inventaire[0]</td>
+      </tr>
+      <tr>
+        <td>liste.append(x)</td>
+        <td>Ajoute x à la fin de la liste</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">inventaire.append("arc")</td>
+      </tr>
+      <tr>
+        <td>liste.pop()</td>
+        <td>Retire et retourne le dernier élément</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">dernier = liste.pop()</td>
+      </tr>
+      <tr>
+        <td>len(liste)</td>
+        <td>Retourne le nombre d'éléments</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">len(inventaire) → 3</td>
+      </tr>
+      <tr>
+        <td>{"clé": valeur}</td>
+        <td>Crée un dictionnaire</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">{"pv": 100, "force": 42}</td>
+      </tr>
+      <tr>
+        <td>dico["clé"]</td>
+        <td>Lit la valeur associée à la clé</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">heros["pv"] → 100</td>
+      </tr>
+      <tr>
+        <td>dico["clé"] = val</td>
+        <td>Modifie ou ajoute une entrée</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">heros["pv"] = 85</td>
+      </tr>
+      <tr>
+        <td>enumerate(liste)</td>
+        <td>Donne index + valeur à chaque tour de boucle</td>
+        <td style="color:var(--muted);font-family:'Courier New';font-size:.85em;">for i, x in enumerate(liste)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir absolument</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Les index des listes commencent à <strong>0</strong></li>
+      <li><code style="color:var(--accent2)">append()</code> ajoute à la fin, <code style="color:var(--accent2)">pop()</code> retire le dernier</li>
+      <li>Un dictionnaire s'accède par <strong>clé</strong> : <code style="color:var(--accent2)">dico["clé"]</code></li>
+      <li>On peut stocker n'importe quoi dans une liste : des nombres, des mots, même d'autres listes !</li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 06 — Modules et import</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Tu vas importer des super-pouvoirs dans Python : <code style="color:var(--text)">mpmath</code> pour les grands nombres et la tétration, vers la calculatrice avancée.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">✏️ Exercices</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">exercice_01.py</code> puis <code style="color:var(--text)">exercice_02.py</code> dans Thonny pour pratiquer.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — Static list click demo
+// ════════════════════════════════════════════════════════════
+const list1Items = ['⚔️ épée', '🛡️ bouclier', '🧪 potion', '🗺️ carte'];
+
+function buildList1() {
+  const viz = document.getElementById('list1-viz');
+  viz.innerHTML = '';
+  list1Items.forEach((val, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'list-cell';
+    cell.innerHTML = `<div class="list-cell-val">${val}</div><div class="list-cell-idx">[${i}]</div>`;
+    cell.style.cursor = 'pointer';
+    cell.addEventListener('click', () => {
+      document.querySelectorAll('#list1-viz .list-cell').forEach(c => c.classList.remove('highlight'));
+      cell.classList.add('highlight');
+      document.getElementById('list1-info').innerHTML =
+        `<span style="color:var(--text)">inventaire[</span><span style="color:var(--warning)">${i}</span><span style="color:var(--text)">]</span>` +
+        `<span style="color:var(--muted)"> → </span>` +
+        `<span style="color:var(--accent2)">"${val}"</span>`;
+    });
+    viz.appendChild(cell);
+  });
+}
+buildList1();
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Dynamic list builder
+// ════════════════════════════════════════════════════════════
+let list2 = ['⚔️ épée', '🛡️ bouclier'];
+
+function renderList2() {
+  const viz = document.getElementById('list2-viz');
+  viz.innerHTML = '';
+  list2.forEach((val, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'list-cell';
+    cell.innerHTML = `<div class="list-cell-val">${val}</div><div class="list-cell-idx">[${i}]</div>`;
+    viz.appendChild(cell);
+  });
+  if (list2.length === 0) {
+    viz.innerHTML = '<span style="color:var(--muted); font-family:\'Courier New\'; font-size:.9em;">[]  ← liste vide</span>';
+  }
+  const items = list2.map(v => `"${v}"`).join(', ');
+  document.getElementById('list2-code').textContent = `inventaire = [${items}]  # len = ${list2.length}`;
+  document.getElementById('pop-btn').disabled = list2.length === 0;
+}
+
+function listAdd() {
+  const inp = document.getElementById('add-val');
+  const val = inp.value.trim();
+  if (!val) return;
+  list2.push(val);
+  inp.value = '';
+  renderList2();
+  const cells = document.querySelectorAll('#list2-viz .list-cell');
+  if (cells.length) cells[cells.length - 1].classList.add('new-item');
+  document.getElementById('list2-msg').textContent = `append("${val}") → ajouté en position [${list2.length - 1}]`;
+}
+
+function listPop() {
+  if (list2.length === 0) return;
+  const cells = document.querySelectorAll('#list2-viz .list-cell');
+  const last = cells[cells.length - 1];
+  if (last) {
+    last.classList.add('removed');
+    const removed = list2.pop();
+    setTimeout(() => { renderList2(); document.getElementById('list2-msg').textContent = `pop() → "${removed}" retiré`; }, 350);
+  }
+}
+
+function listReset() {
+  list2 = ['⚔️ épée', '🛡️ bouclier'];
+  renderList2();
+  document.getElementById('list2-msg').textContent = '';
+}
+
+renderList2();
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — Dict hero demo
+// ════════════════════════════════════════════════════════════
+let hero = { nom: 'Arthur', pv: 100, force: 42, niveau: 5 };
+
+function renderDict() {
+  const viz = document.getElementById('dict-viz');
+  viz.innerHTML = '';
+  Object.entries(hero).forEach(([k, v]) => {
+    const row = document.createElement('div');
+    row.className = 'dict-row';
+    row.id = `drow-${k}`;
+    row.innerHTML = `<div class="dict-key">"${k}"</div><div class="dict-arrow">:</div><div class="dict-val" id="dval-${k}">${typeof v === 'string' ? '"' + v + '"' : v}</div>`;
+    viz.appendChild(row);
+  });
+}
+
+function dictAction(action) {
+  let code = '';
+  const flash = (key) => {
+    const row = document.getElementById(`drow-${key}`);
+    if (row) { row.classList.add('highlight'); setTimeout(() => row.classList.remove('highlight'), 900); }
+  };
+  if (action === 'attaque') {
+    hero.pv = Math.max(0, hero.pv - 15);
+    code = `heros["pv"] = heros["pv"] - 15  →  ${hero.pv}`;
+    renderDict(); flash('pv');
+  } else if (action === 'soin') {
+    hero.pv = Math.min(100, hero.pv + 20);
+    code = `heros["pv"] = heros["pv"] + 20  →  ${hero.pv}`;
+    renderDict(); flash('pv');
+  } else if (action === 'niveau') {
+    hero.niveau++;
+    hero.force += 3;
+    code = `heros["niveau"] += 1  →  ${hero.niveau}  /  heros["force"] += 3  →  ${hero.force}`;
+    renderDict(); flash('niveau'); flash('force');
+  } else {
+    hero = { nom: 'Arthur', pv: 100, force: 42, niveau: 5 };
+    code = 'heros réinitialisé';
+    renderDict();
+  }
+  document.getElementById('dict-code').textContent = code;
+}
+
+renderDict();
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — Calc history demo
+// ════════════════════════════════════════════════════════════
+let calcHistory = [];
+
+function calcAdd() {
+  const a  = parseFloat(document.getElementById('calc-a').value) || 0;
+  const op = document.getElementById('calc-op').value;
+  const b  = parseFloat(document.getElementById('calc-b').value) || 0;
+
+  let res;
+  if (op === '+') res = a + b;
+  else if (op === '-') res = a - b;
+  else if (op === '*') res = a * b;
+  else res = b !== 0 ? +(a / b).toFixed(4) : 'Erreur (÷0)';
+
+  const entry = `${a} ${op} ${b} = ${res}`;
+  calcHistory.push(entry);
+  renderCalcHistory();
+}
+
+function calcClear() {
+  calcHistory = [];
+  renderCalcHistory();
+}
+
+function renderCalcHistory() {
+  const el = document.getElementById('calc-history');
+  const code = document.getElementById('calc-code');
+
+  if (calcHistory.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:.9em;padding:8px;">Aucun calcul pour l\'instant…</div>';
+    code.textContent = 'historique = []';
+    return;
+  }
+
+  el.innerHTML = calcHistory.map((e, i) => `
+    <div class="history-entry">
+      <span class="history-idx">[${i + 1}]</span>
+      <span class="history-op">${e.split('=')[0].trim()}</span>
+      <span class="history-res">= ${e.split('=')[1].trim()}</span>
+    </div>`).join('');
+
+  const preview = calcHistory.slice(-3).map(e => `"${e}"`).join(', ');
+  code.textContent = calcHistory.length <= 3
+    ? `historique = [${calcHistory.map(e => '"' + e + '"').join(', ')}]`
+    : `historique = […, ${preview}]  # ${calcHistory.length} entrées`;
+
+  el.scrollTop = el.scrollHeight;
+}
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      const isCorrect = idx === correctIdx;
+      if (isCorrect) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1) fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'Les index commencent à 0 — scores[0] = 100, scores[1] = ?',
+  'scores[1] est le deuxième élément : 250.'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'append() ajoute "kiwi", puis pop() retire le dernier élément ajouté — lequel ?',
+  'pop() retire "kiwi" (le dernier), il reste ["pomme", "banane"].'
+]);
+
+makeQuiz('#q3-opts', 'q3-feedback', 1, [
+  'Un dictionnaire ne s\'accède pas par numéro — comment s\'appelle l\'information ?',
+  'On utilise la clé entre crochets et guillemets : stats["force"].'
+]);
+</script>
+
+</body>
+</html>
