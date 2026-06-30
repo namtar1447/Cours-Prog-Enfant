@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 06 — Modules et mpmath</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+    .card.install { border-left: 4px solid var(--accent2); background: rgba(247,162,106,.06); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+    .label.install { background: rgba(247,162,106,.2); color: var(--accent2); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+    .output-line {
+      color: var(--accent2); display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(247,162,106,.07);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    /* ── Staircase (opérations) ── */
+    .op-stair {
+      display: flex; flex-direction: column; gap: 8px; margin: 16px 0;
+    }
+    .op-row {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 12px 16px; border-radius: 10px; background: var(--surface);
+      border-left: 4px solid transparent; transition: all .3s;
+    }
+    .op-row.active { border-left-color: var(--accent); background: rgba(124,106,247,.1); }
+    .op-symbol { font-size: 1.6em; min-width: 36px; text-align: center; }
+    .op-name   { color: var(--accent2); font-weight: bold; min-width: 110px; }
+    .op-def    { font-family: 'Courier New'; font-size: .9em; color: var(--muted); }
+    .op-ex     { font-family: 'Courier New'; font-size: .9em; color: var(--warning); }
+
+    /* ── Tower display ── */
+    .tower-box {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px; margin: 12px 0; text-align: center;
+    }
+    .tower-expr {
+      font-family: 'Courier New'; font-size: 1.1em;
+      color: var(--accent2); margin-bottom: 16px;
+    }
+    .tower-steps {
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'Courier New'; font-size: .95em; text-align: left;
+      max-width: 420px; margin: 0 auto;
+    }
+    .tower-step {
+      padding: 6px 12px; border-radius: 6px; border-left: 3px solid transparent;
+      transition: all .4s; opacity: 0; transform: translateX(-8px);
+    }
+    .tower-step.visible { opacity: 1; transform: none; border-left-color: var(--accent); background: rgba(124,106,247,.08); }
+    .tower-step.final   { border-left-color: var(--success); background: rgba(166,227,161,.08); color: var(--success); }
+
+    /* ── Digit counter ── */
+    .digit-counter {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      padding: 14px 20px; background: rgba(124,106,247,.08);
+      border-radius: 10px; border: 1px solid rgba(124,106,247,.3); margin: 12px 0;
+    }
+    .digit-n    { font-family: 'Courier New'; font-size: 1.4em; color: var(--accent2); font-weight: bold; }
+    .digit-val  { font-family: 'Courier New'; font-size: .85em; color: var(--text); word-break: break-all; max-width: 480px; }
+    .digit-count { font-family: 'Courier New'; color: var(--success); font-size: 1.1em; white-space: nowrap; }
+
+    /* ── Slider ── */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Exercise links ── */
+    .exercise-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .ex-btn {
+      padding: 10px 22px; border-radius: 10px; text-decoration: none;
+      font-weight: bold; font-size: .95em; transition: all .2s;
+    }
+    .ex-btn.primary { background: var(--accent); color: white; }
+    .ex-btn.primary:hover { opacity: .85; transform: translateY(-2px); }
+    .ex-btn.secondary {
+      border: 2px solid var(--accent); color: var(--accent); background: transparent;
+    }
+    .ex-btn.secondary:hover { background: rgba(124,106,247,.15); transform: translateY(-2px); }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. import</span>
+  <span class="progress-item" id="prog-2">2. math</span>
+  <span class="progress-item" id="prog-3">3. mpmath</span>
+  <span class="progress-item" id="prog-4">4. Tétration</span>
+  <span class="progress-item" id="prog-5">5. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🔢 Leçon 06 — Modules et mpmath</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Utiliser <code style="color:var(--accent2)">import</code> pour ajouter des outils à Python</li>
+      <li>Explorer le module <code style="color:var(--accent2)">math</code> (racines, π, factorielles…)</li>
+      <li>Calculer avec <code style="color:var(--accent2)">mpmath</code> — précision au choix, nombres géants</li>
+      <li>Programmer la <strong>tétration</strong> — l'opération après les puissances</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 60–75 min d'exercices</p>
+
+  <!-- ── Rappel leçon 05 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçon 05</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Listes</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">inv</span> <span class="op">=</span> [<span class="str">"épée"</span>, <span class="str">"potion"</span>]
+<span class="var">inv</span>.<span class="fn">append</span>(<span class="str">"arc"</span>)
+<span class="var">retiré</span> <span class="op">=</span> <span class="var">inv</span>.<span class="fn">pop</span>()</div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Dictionnaires</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">h</span> <span class="op">=</span> {<span class="str">"nom"</span>: <span class="str">"Arthur"</span>, <span class="str">"pv"</span>: <span class="num">100</span>}
+<span class="fn">print</span>(<span class="var">h</span>[<span class="str">"nom"</span>])
+<span class="var">h</span>[<span class="str">"pv"</span>] <span class="op">-=</span> <span class="num">15</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">enumerate</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">x</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">inv</span>):
+    <span class="fn">print</span>(<span class="str">f"[{</span><span class="var">i</span><span class="str">}] {</span><span class="var">x</span><span class="str">}"</span>)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — import -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2><code style="font-size:.9em">import</code> — les boîtes à outils</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — boîtes à outils</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🐍 Python seul &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; couteau suisse de base</span>
+      <span>📦 <code style="color:var(--accent2)">import math</code> &nbsp;&nbsp;&nbsp;→&nbsp; ouvrir la boîte « calculs »</span>
+      <span>📦 <code style="color:var(--accent2)">import random</code> &nbsp;→&nbsp; ouvrir la boîte « hasard »</span>
+    </div>
+  </div>
+
+  <p>Il y a <strong>deux façons</strong> d'importer :</p>
+
+  <div class="compare-grid">
+    <div class="card" style="margin: 0; border-left: 4px solid var(--accent);">
+      <div class="label code">Importer tout</div>
+      <div class="code-block" style="margin: 8px 0; padding: 10px 14px; font-size:.85em;">
+<span class="kw">import</span> <span class="mod">math</span>
+
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">sqrt</span>(<span class="num">16</span>))
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="var">pi</span>)
+<span class="cm"># préfixe math. obligatoire</span></div>
+    </div>
+    <div class="card" style="margin: 0; border-left: 4px solid var(--accent2);">
+      <div class="label" style="background:rgba(247,162,106,.2); color:var(--accent2)">Importer des outils précis</div>
+      <div class="code-block" style="margin: 8px 0; padding: 10px 14px; font-size:.85em;">
+<span class="kw">from</span> <span class="mod">math</span> <span class="kw">import</span> <span class="fn">sqrt</span>, <span class="var">pi</span>
+
+<span class="fn">print</span>(<span class="fn">sqrt</span>(<span class="num">16</span>))
+<span class="fn">print</span>(<span class="var">pi</span>)
+<span class="cm"># pas besoin de préfixe</span></div>
+    </div>
+  </div>
+
+  <!-- Quiz 1 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Qu'affiche ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px;">
+<span class="kw">import</span> <span class="mod">math</span>
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">sqrt</span>(<span class="num">25</span>))</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">25</div>
+      <div class="quiz-option">5.0</div>
+      <div class="quiz-option">sqrt(25)</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — math et les nombres géants -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Le module <code style="font-size:.9em">math</code> — et les nombres géants</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — calculatrice scientifique</div>
+    <span style="font-size:.95em;">🧮 <code style="color:var(--accent2)">import math</code> &nbsp;→&nbsp; calculator with √  π  sin  cos  log</span>
+  </div>
+
+  <div class="code-block"><span class="kw">import</span> <span class="mod">math</span>
+
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">sqrt</span>(<span class="num">144</span>))      <span class="cm"># ▶  12.0</span>
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="var">pi</span>)            <span class="cm"># ▶  3.141592653589793</span>
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">factorial</span>(<span class="num">10</span>))  <span class="cm"># ▶  3628800</span></div>
+
+  <div class="card success">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">⚡ Python integer = infini !</div>
+    <div style="display:flex; flex-direction:column; gap:8px; font-size:.95em;">
+      <span>En C / Java : les entiers ont une limite (2 milliards max).</span>
+      <span style="color: var(--success); font-weight: bold;">En Python : les entiers n'ont aucune limite !</span>
+    </div>
+    <div class="code-block" style="margin-top: 12px; font-size:.85em;">
+<span class="kw">import</span> <span class="mod">math</span>
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">factorial</span>(<span class="num">100</span>))
+<span class="cm"># ▶  93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000</span>
+<span class="cm">#    (158 chiffres — exact, pas d'arrondi !)</span></div>
+  </div>
+
+  <h3>🎮 Démo — Compteur de factorielles</h3>
+  <p style="color:var(--muted); font-size:.9em; margin-bottom:12px;">Déplace le curseur pour voir grandir les nombres.</p>
+
+  <div class="demo-box">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+      <span style="color:var(--muted);">n =</span>
+      <input type="range" id="fact-n" min="0" max="25" value="5"
+        style="width:260px;" oninput="renderFact()">
+      <span id="fact-n-val" style="font-family:'Courier New'; font-size:1.4em; color:var(--accent2); min-width:30px;">5</span>
+    </div>
+
+    <div class="digit-counter">
+      <div class="digit-n" id="fact-label">5! =</div>
+      <div style="flex:1;">
+        <div class="digit-val" id="fact-result"></div>
+        <div style="margin-top:6px;">
+          <span class="digit-count" id="fact-digits"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — mpmath -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2><code style="font-size:.9em">mpmath</code> — décimales à volonté</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — règle de précision</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📏 Python <code style="color:var(--muted)">float</code> &nbsp;&nbsp;→&nbsp; règle normale — ~15 décimales</span>
+      <span>🔬 <code style="color:var(--accent2)">mpmath</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; règle micrométrique — tu choisis</span>
+    </div>
+  </div>
+
+  <h3>Le problème des flottants</h3>
+
+  <div class="demo-box">
+    <p style="color:var(--muted); font-size:.9em; margin-bottom:12px;">Essaie ce calcul en Python :</p>
+    <div class="code-block" style="margin: 0 0 16px;">
+<span class="fn">print</span>(<span class="num">0.1</span> <span class="op">+</span> <span class="num">0.2</span>)</div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <button class="demo-btn" onclick="showFloat()">▶ Voir le résultat</button>
+      <button class="demo-btn secondary" onclick="showMpmath()">🔬 Voir avec mpmath</button>
+      <button class="demo-btn secondary" onclick="resetFloat()">↺</button>
+    </div>
+
+    <div id="float-result" style="margin-top:16px; font-family:'Courier New'; min-height:60px;">
+    </div>
+  </div>
+
+  <h3>Utiliser mpmath</h3>
+
+  <div class="card install">
+    <div class="label install">📦 Installation (une seule fois dans Thonny)</div>
+    <p style="font-size:.9em;">Outils → Gérer les paquets → chercher <code style="color:var(--accent2)">mpmath</code> → Installer</p>
+  </div>
+
+  <div class="code-block"><span class="kw">from</span> <span class="mod">mpmath</span> <span class="kw">import</span> <span class="var">mp</span>, <span class="fn">mpf</span>, <span class="fn">sqrt</span>
+
+<span class="var">mp</span>.<span class="var">dps</span> <span class="op">=</span> <span class="num">50</span>          <span class="cm"># 50 décimales de précision</span>
+
+<span class="fn">print</span>(<span class="var">mp</span>.<span class="var">pi</span>)         <span class="cm"># ▶  3.1415926535897932384626433832795028841971693993751</span>
+<span class="fn">print</span>(<span class="fn">sqrt</span>(<span class="num">2</span>))       <span class="cm"># ▶  1.4142135623730950488016887242096980785696718753769</span>
+<span class="fn">print</span>(<span class="fn">mpf</span>(<span class="str">'0.1'</span>) <span class="op">+</span> <span class="fn">mpf</span>(<span class="str">'0.2'</span>))  <span class="cm"># ▶  0.30000000000000000000000000000000000000000000000000</span></div>
+
+  <div class="card info">
+    <div class="label code">mp.dps</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>dps</strong> = <em>decimal places</em> — nombre de décimales exactes</li>
+      <li><code style="color:var(--accent2)">mp.dps = 15</code> &nbsp;→&nbsp; précision normale de Python</li>
+      <li><code style="color:var(--accent2)">mp.dps = 1000</code> →&nbsp; mille décimales exactes !</li>
+    </ul>
+  </div>
+
+  <!-- Quiz 2 -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — À quoi sert <code>mp.dps = 100</code> ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">Calculer 100 fois plus vite</div>
+      <div class="quiz-option">Obtenir 100 décimales exactes après la virgule</div>
+      <div class="quiz-option">Limiter la mémoire utilisée à 100 mégaoctets</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — Tétration -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Tétration — au-delà des puissances</h2>
+  </div>
+
+  <p>Tu connais déjà l'escalier des opérations :</p>
+
+  <div class="op-stair" id="op-stair">
+    <div class="op-row" id="op-0">
+      <div class="op-symbol" style="color:var(--accent);">➕</div>
+      <div class="op-name">Addition</div>
+      <div class="op-def">a + a + … (b fois)</div>
+      <div class="op-ex">&nbsp;=&nbsp; a × b</div>
+    </div>
+    <div class="op-row" id="op-1">
+      <div class="op-symbol" style="color:var(--accent2);">✖️</div>
+      <div class="op-name">Multiplication</div>
+      <div class="op-def">a × a × … (b fois)</div>
+      <div class="op-ex">&nbsp;=&nbsp; a<sup>b</sup></div>
+    </div>
+    <div class="op-row" id="op-2">
+      <div class="op-symbol" style="color:var(--warning);">⬆️</div>
+      <div class="op-name">Exponentiation</div>
+      <div class="op-def">a<sup>a<sup>a<sup>…</sup></sup></sup> (b fois)</div>
+      <div class="op-ex">&nbsp;=&nbsp; a↑↑b</div>
+    </div>
+    <div class="op-row active" id="op-3">
+      <div class="op-symbol" style="color:var(--success);">🚀</div>
+      <div class="op-name" style="color:var(--success);">Tétration</div>
+      <div class="op-def" style="color:var(--success);">a↑↑b — la suite !</div>
+      <div class="op-ex" style="color:var(--success);">&nbsp;← on est ici</div>
+    </div>
+  </div>
+
+  <div class="card info" style="margin-top: 20px;">
+    <div class="label code">Notation</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><code style="color:var(--accent2)">a↑↑1</code> &nbsp;= a</li>
+      <li><code style="color:var(--accent2)">a↑↑2</code> &nbsp;= a<sup>a</sup></li>
+      <li><code style="color:var(--accent2)">a↑↑3</code> &nbsp;= a<sup>(a<sup>a</sup>)</sup></li>
+      <li><code style="color:var(--accent2)">a↑↑4</code> &nbsp;= a<sup>(a<sup>(a<sup>a</sup>)</sup>)</sup></li>
+    </ul>
+  </div>
+
+  <h3>🐍 En Python</h3>
+
+  <div class="code-block"><span class="kw">def</span> <span class="fn">tetration</span>(<span class="var">a</span>, <span class="var">b</span>):
+    <span class="kw">if</span> <span class="var">b</span> <span class="op">==</span> <span class="num">0</span>: <span class="kw">return</span> <span class="num">1</span>         <span class="cm"># cas de base</span>
+    <span class="kw">if</span> <span class="var">b</span> <span class="op">==</span> <span class="num">1</span>: <span class="kw">return</span> <span class="var">a</span>         <span class="cm"># cas de base</span>
+    <span class="kw">return</span> <span class="var">a</span> <span class="op">**</span> <span class="fn">tetration</span>(<span class="var">a</span>, <span class="var">b</span> <span class="op">-</span> <span class="num">1</span>)  <span class="cm"># appel récursif</span>
+
+<span class="fn">print</span>(<span class="fn">tetration</span>(<span class="num">2</span>, <span class="num">4</span>))  <span class="cm"># ▶  65536</span>
+<span class="fn">print</span>(<span class="fn">tetration</span>(<span class="num">3</span>, <span class="num">3</span>))  <span class="cm"># ▶  7625597484987</span></div>
+
+  <h3>🎮 Démo — Tour de puissances</h3>
+  <p style="color:var(--muted); font-size:.9em; margin-bottom:12px;">Choisis a et b, puis regarde comment la tour s'évalue étape par étape.</p>
+
+  <div class="demo-box">
+    <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:20px; align-items:center;">
+      <div>
+        <span style="color:var(--muted); font-size:.9em;">a = </span>
+        <select id="tet-a" onchange="resetTower()" style="background:var(--surface); color:var(--text); border:1px solid var(--accent); border-radius:6px; padding:4px 10px; font-size:1em; margin-left:4px;">
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+      <div>
+        <span style="color:var(--muted); font-size:.9em;">b = </span>
+        <select id="tet-b" onchange="resetTower()" style="background:var(--surface); color:var(--text); border:1px solid var(--accent); border-radius:6px; padding:4px 10px; font-size:1em; margin-left:4px;">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tower-box" id="tower-box">
+      <div class="tower-expr" id="tower-expr">—</div>
+      <div class="tower-steps" id="tower-steps"></div>
+    </div>
+
+    <div style="margin-top:16px; display:flex; gap:8px;">
+      <button class="demo-btn" id="tower-btn" onclick="towerNext()">▶ Étape suivante</button>
+      <button class="demo-btn secondary" onclick="resetTower()">↺ Recommencer</button>
+    </div>
+  </div>
+
+  <div class="card warning" style="margin-top: 20px;">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Ça grandit vite… très vite</div>
+    <div class="code-block" style="margin-top: 10px; font-size:.85em;">
+<span class="cm"># 2↑↑5 = 2^65536 → un nombre à 19 728 chiffres</span>
+<span class="cm"># 2↑↑6 → un nombre à 2^65536 chiffres (plus que d'atomes dans l'univers)</span>
+<span class="cm"># Ne jamais calculer 2↑↑6 dans Python — ça ne finira jamais !</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>import math</td>
+        <td>Charge la boîte à outils math</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">import math</td>
+      </tr>
+      <tr>
+        <td>from X import Y</td>
+        <td>Prend seulement l'outil Y de la boîte X</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">from math import sqrt, pi</td>
+      </tr>
+      <tr>
+        <td>math.sqrt(n)</td>
+        <td>Racine carrée de n</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">math.sqrt(144) → 12.0</td>
+      </tr>
+      <tr>
+        <td>math.factorial(n)</td>
+        <td>n! (résultat entier exact, illimité)</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">math.factorial(100) → 158 chiffres</td>
+      </tr>
+      <tr>
+        <td>mp.dps = N</td>
+        <td>Fixer la précision à N décimales</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">mp.dps = 50</td>
+      </tr>
+      <tr>
+        <td>mp.pi</td>
+        <td>π avec mp.dps décimales exactes</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">mp.dps=50 → 50 décimales</td>
+      </tr>
+      <tr>
+        <td>a↑↑b (tétration)</td>
+        <td>Tour de puissances a^(a^(…)) b fois</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">2↑↑4 = 65 536</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li><code style="color:var(--accent2)">import</code> charge des outils — comme ouvrir une boîte</li>
+      <li>Les entiers Python n'ont <strong>aucune limite</strong> de taille</li>
+      <li><code style="color:var(--accent2)">mp.dps</code> = nombre de décimales exactes dans mpmath</li>
+      <li>La tétration grandit <em>astronomiquement</em> plus vite que les puissances</li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 06b — Calculatrice graphique (Projet)</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Tu vas assembler tout ce que tu as appris pour construire une vraie calculatrice avec boutons et graphiques — style TI-83 — avec <code>customtkinter</code> et <code>matplotlib</code>.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">✏️ Exercices</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">exercice_01.py</code> puis <code style="color:var(--text)">exercice_02.py</code> dans Thonny.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Factorial demo (JavaScript BigInt)
+// ════════════════════════════════════════════════════════════
+function factorial(n) {
+  let r = 1n;
+  for (let i = 2n; i <= BigInt(n); i++) r *= i;
+  return r;
+}
+
+function renderFact() {
+  const n = parseInt(document.getElementById('fact-n').value);
+  document.getElementById('fact-n-val').textContent = n;
+  document.getElementById('fact-label').textContent = n + '! =';
+
+  const val = factorial(n);
+  const str = val.toString();
+  const digits = str.length;
+
+  // Show full number for small n, truncate for large
+  const display = digits > 60 ? str.slice(0, 30) + ' … ' + str.slice(-20) : str;
+  document.getElementById('fact-result').textContent = display;
+  document.getElementById('fact-digits').textContent =
+    digits === 1 ? '(1 chiffre)' : `(${digits} chiffres)`;
+}
+renderFact();
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — Float precision demo
+// ════════════════════════════════════════════════════════════
+// Pre-computed mpmath results (mp.dps=50)
+const PI_50 = '3.1415926535897932384626433832795028841971693993751';
+const FLOAT_BUG = (0.1 + 0.2).toPrecision(17);
+
+function showFloat() {
+  const el = document.getElementById('float-result');
+  el.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="font-size:.9em; color:var(--muted);">print(0.1 + 0.2)</div>
+      <div style="font-family:'Courier New'; font-size:1.2em; color:var(--error);">▶  ${FLOAT_BUG}</div>
+      <div style="font-size:.85em; color:var(--muted); margin-top:4px;">
+        Les flottants Python ont ~15-17 chiffres significatifs — et une petite erreur de représentation.
+      </div>
+    </div>`;
+}
+
+function showMpmath() {
+  const el = document.getElementById('float-result');
+  el.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="font-size:.9em; color:var(--muted);">mp.dps = 50 · mpf('0.1') + mpf('0.2')</div>
+      <div style="font-family:'Courier New'; font-size:1.1em; color:var(--success);">▶  0.30000000000000000000000000000000000000000000000000</div>
+      <div style="font-size:.85em; color:var(--muted); margin-top:4px;">
+        mpmath représente les nombres exactement — pas d'erreur de virgule flottante.
+      </div>
+    </div>`;
+}
+
+function resetFloat() {
+  document.getElementById('float-result').innerHTML = '';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — Tetration tower demo
+// ════════════════════════════════════════════════════════════
+function tet(a, b) {
+  // Use BigInt for exactness; guard against huge values
+  const ab = BigInt(a);
+  if (b === 0) return 1n;
+  if (b === 1) return ab;
+  const inner = tet(a, b - 1);
+  if (inner > 100n) return null; // too large to compute in browser
+  return ab ** inner;
+}
+
+// Pre-build evaluation steps for all (a,b) combinations
+const towerData = {
+  '2-1': { steps: ['2↑↑1 = 2', '= 2'], final: '= 2' },
+  '2-2': { steps: ['2↑↑2 = 2^2', '= 4'], final: '= 4' },
+  '2-3': { steps: ['2↑↑3 = 2^(2^2)', '2^2 = 4', '2^4 = 16'], final: '= 16' },
+  '2-4': { steps: ['2↑↑4 = 2^(2^(2^2))', '2^2 = 4', '2^4 = 16', '2^16 = 65 536'], final: '= 65 536' },
+  '3-1': { steps: ['3↑↑1 = 3', '= 3'], final: '= 3' },
+  '3-2': { steps: ['3↑↑2 = 3^3', '= 27'], final: '= 27' },
+  '3-3': { steps: ['3↑↑3 = 3^(3^3)', '3^3 = 27', '3^27 = 7 625 597 484 987'], final: '= 7 625 597 484 987' },
+  '3-4': { steps: ['3↑↑4 = 3^(3^(3^3))', '3^3 = 27', '3^27 = 7 625 597 484 987', '3^(7 625 597 484 987) → nombre avec 3,6 milliards de milliards de chiffres 🤯'], final: '→ astronomique !' },
+};
+
+let towerStep = -1;
+let towerSteps = [];
+
+function resetTower() {
+  towerStep = -1;
+  const a = document.getElementById('tet-a').value;
+  const b = document.getElementById('tet-b').value;
+  const key = `${a}-${b}`;
+  const data = towerData[key] || { steps: [], final: '?' };
+  towerSteps = data.steps;
+
+  const expr = `${a}↑↑${b}`;
+  document.getElementById('tower-expr').textContent = expr;
+
+  const stepsEl = document.getElementById('tower-steps');
+  stepsEl.innerHTML = towerSteps.map((s, i) =>
+    `<div class="tower-step" id="ts-${i}">${s}</div>`
+  ).join('');
+
+  const btn = document.getElementById('tower-btn');
+  btn.textContent = '▶ Étape suivante';
+  btn.disabled = false;
+}
+
+function towerNext() {
+  towerStep++;
+  const total = towerSteps.length;
+  if (towerStep < total) {
+    const el = document.getElementById('ts-' + towerStep);
+    if (el) {
+      el.classList.add('visible');
+      if (towerStep === total - 1) el.classList.add('final');
+    }
+  }
+  if (towerStep >= total - 1) {
+    document.getElementById('tower-btn').textContent = '✅ Terminé';
+    document.getElementById('tower-btn').disabled = true;
+  }
+}
+
+resetTower();
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      const isCorrect = idx === correctIdx;
+      if (isCorrect) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'sqrt(25) calcule la racine carrée de 25 — quelle est la racine de 25 ?',
+  'math.sqrt() retourne toujours un flottant (nombre à virgule).'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'dps = decimal places — c\'est le nombre de chiffres après la virgule.',
+  'mp.dps contrôle la précision des calculs mpmath — 100 = 100 décimales exactes.'
+]);
+</script>
+
+</body>
+</html>
