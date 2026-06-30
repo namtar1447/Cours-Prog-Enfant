@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 06b — Calculatrice graphique</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+    .card.install { border-left: 4px solid var(--accent2); background: rgba(247,162,106,.06); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.install { background: rgba(247,162,106,.2); color: var(--accent2); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    /* ── Simulated CTk window ── */
+    .sim-window {
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid rgba(124,106,247,.4);
+      max-width: 300px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .sim-titlebar {
+      background: #3b3b5c; padding: 10px 16px;
+      font-size: .8em; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sim-titlebar::before { content: '●  '; color: var(--error); font-size: .7em; }
+    .sim-body {
+      background: var(--bg); padding: 20px;
+      min-height: 110px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+
+    /* ── Matplotlib canvas ── */
+    #plot-canvas {
+      display: block; margin: 0 auto;
+      border-radius: 8px; border: 1px solid rgba(124,106,247,.3);
+    }
+    .curve-btn {
+      padding: 6px 16px; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--accent); background: transparent; color: var(--accent);
+      font-size: .9em; transition: all .2s; margin: 4px;
+    }
+    .curve-btn.active { background: var(--accent); color: white; }
+    .curve-btn:hover  { background: rgba(124,106,247,.2); }
+
+    /* ── try/except flow ── */
+    .flow-box {
+      border-radius: 8px; padding: 10px 16px; margin: 4px 0;
+      font-family: 'Courier New'; font-size: .88em;
+      opacity: .2; transform: translateX(-6px);
+      transition: all .35s;
+    }
+    .flow-box.active { opacity: 1; transform: translateX(0); }
+    .flow-try    { background: rgba(124,106,247,.12); border-left: 3px solid var(--accent); }
+    .flow-except { background: rgba(249,226,175,.08); border-left: 3px solid var(--warning); }
+    .flow-ok     { background: rgba(166,227,161,.08); border-left: 3px solid var(--success); }
+    .flow-err    { background: rgba(243,139,168,.08); border-left: 3px solid var(--error); }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .92em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+
+    /* ── Calc mockup ── */
+    .calc-key {
+      background: rgba(124,106,247,.2); border: 1px solid var(--accent);
+      border-radius: 6px; padding: 8px 4px; text-align: center;
+      font-family: 'Courier New'; font-size: .85em; color: var(--text);
+    }
+    .calc-key.op  { background: rgba(247,162,106,.2); border-color: var(--accent2); color: var(--accent2); }
+    .calc-key.eq  { background: var(--accent); border-color: var(--accent); color: white; }
+    .calc-key.fn  { background: rgba(166,227,161,.15); border-color: var(--success); color: var(--success); font-size: .75em; }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. customtkinter</span>
+  <span class="progress-item" id="prog-2">2. matplotlib</span>
+  <span class="progress-item" id="prog-3">3. try/except</span>
+  <span class="progress-item" id="prog-4">4. Projet</span>
+  <span class="progress-item" id="prog-5">5. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🖥️ Leçon 06b — Calculatrice graphique</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Créer une fenêtre avec boutons — <code style="color:var(--accent2)">customtkinter</code></li>
+      <li>Tracer des courbes mathématiques — <code style="color:var(--accent2)">matplotlib</code></li>
+      <li>Protéger le programme contre les erreurs — <code style="color:var(--accent2)">try / except</code></li>
+      <li>Assembler tout ça en une <strong>calculatrice graphique</strong> style TI-83</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 90 min de projet</p>
+
+  <!-- ── Rappel leçon 06 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçon 06</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">import</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">import</span> <span class="mod">math</span>
+<span class="fn">print</span>(<span class="mod">math</span>.<span class="fn">sqrt</span>(<span class="num">16</span>))  <span class="cm"># 4.0</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">mpmath</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">from</span> <span class="mod">mpmath</span> <span class="kw">import</span> <span class="var">mp</span>
+<span class="var">mp</span>.<span class="var">dps</span> <span class="op">=</span> <span class="num">50</span>
+<span class="fn">print</span>(<span class="var">mp</span>.<span class="var">pi</span>)</div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Tétration</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">def</span> <span class="fn">tet</span>(<span class="var">a</span>, <span class="var">b</span>):
+    <span class="kw">if</span> <span class="var">b</span> <span class="op">==</span> <span class="num">1</span>: <span class="kw">return</span> <span class="var">a</span>
+    <span class="kw">return</span> <span class="var">a</span><span class="op">**</span><span class="fn">tet</span>(<span class="var">a</span>,<span class="var">b</span><span class="op">-</span><span class="num">1</span>)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — customtkinter -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>customtkinter — fenêtres et boutons</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — LEGO pour interfaces</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏠 <code style="color:var(--accent2)">CTk()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; la plaque de base (la fenêtre)</span>
+      <span>🔤 <code style="color:var(--accent2)">CTkLabel()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une étiquette de texte</span>
+      <span>🔵 <code style="color:var(--accent2)">CTkButton()</code> &nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; un bouton cliquable</span>
+      <span>📝 <code style="color:var(--accent2)">CTkEntry()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une case de saisie</span>
+    </div>
+  </div>
+
+  <div class="card install">
+    <div class="label install">📦 Installation (une seule fois dans Thonny)</div>
+    <p style="font-size:.9em;">Outils → Gérer les paquets → chercher <code style="color:var(--accent2)">customtkinter</code> → Installer</p>
+  </div>
+
+  <div class="code-block"><span class="kw">import</span> <span class="mod">customtkinter</span> <span class="kw">as</span> <span class="mod">ctk</span>
+
+<span class="var">fenetre</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTk</span>()                     <span class="cm"># créer la fenêtre</span>
+<span class="var">fenetre</span>.<span class="fn">title</span>(<span class="str">"Ma calculatrice"</span>)         <span class="cm"># titre</span>
+<span class="var">fenetre</span>.<span class="fn">geometry</span>(<span class="str">"400x300"</span>)             <span class="cm"># largeur × hauteur px</span>
+
+<span class="var">label</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkLabel</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"Résultat : 0"</span>)
+<span class="var">label</span>.<span class="fn">pack</span>(<span class="var">pady</span><span class="op">=</span><span class="num">20</span>)                    <span class="cm"># placer dans la fenêtre</span>
+
+<span class="var">btn</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkButton</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"="</span>, <span class="var">command</span><span class="op">=</span><span class="var">calculer</span>)
+<span class="var">btn</span>.<span class="fn">pack</span>()
+
+<span class="var">fenetre</span>.<span class="fn">mainloop</span>()                     <span class="cm"># lancer — attend les clics</span></div>
+
+  <div class="card info">
+    <div class="label code">command=</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><code style="color:var(--accent2)">command=calculer</code> → appelle <code>calculer()</code> au clic</li>
+      <li><code style="color:var(--accent2)">command=lambda: ...</code> → action courte en une ligne</li>
+      <li><strong>Pas de parenthèses</strong> après le nom de la fonction !</li>
+    </ul>
+  </div>
+
+  <h3>🎮 Démo — Construction d'une fenêtre</h3>
+
+  <div class="demo-box">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+      <button class="demo-btn" id="ctk-next-btn" onclick="ctkNext()">▶ Étape suivante</button>
+      <button class="demo-btn secondary" onclick="ctkReset()">↺ Recommencer</button>
+    </div>
+
+    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+      <div class="sim-window" style="flex: 0 0 auto;">
+        <div class="sim-titlebar">Ma calculatrice — 400×300</div>
+        <div class="sim-body" id="ctk-sim-body">
+          <div style="color:var(--muted); font-size:.8em; font-style:italic;">— fenêtre vide —</div>
+        </div>
+      </div>
+      <div id="ctk-step-info" style="flex:1; min-width:160px; font-size:.9em; color:var(--muted); padding-top:8px;">
+        Clique sur "Étape suivante" pour assembler la fenêtre pièce par pièce.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — matplotlib -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>matplotlib — dessiner des courbes</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — papier millimétré numérique</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📊 <code style="color:var(--accent2)">matplotlib</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; dessine les courbes</span>
+      <span>📐 <code style="color:var(--accent2)">numpy</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; génère les points x</span>
+    </div>
+  </div>
+
+  <div class="card install">
+    <div class="label install">📦 Installation (une seule fois dans Thonny)</div>
+    <p style="font-size:.9em;">
+      Outils → Gérer les paquets → <code style="color:var(--accent2)">matplotlib</code> → Installer<br>
+      puis → <code style="color:var(--accent2)">numpy</code> → Installer
+    </p>
+  </div>
+
+  <h3>Tracer une courbe (version simple)</h3>
+
+  <div class="code-block"><span class="kw">import</span> <span class="mod">matplotlib.pyplot</span> <span class="kw">as</span> <span class="mod">plt</span>
+<span class="kw">import</span> <span class="mod">numpy</span> <span class="kw">as</span> <span class="mod">np</span>
+
+<span class="var">x</span> <span class="op">=</span> <span class="mod">np</span>.<span class="fn">linspace</span>(<span class="op">-</span><span class="num">5</span>, <span class="num">5</span>, <span class="num">200</span>)   <span class="cm"># 200 points entre -5 et 5</span>
+<span class="var">y</span> <span class="op">=</span> <span class="var">x</span><span class="op">**</span><span class="num">2</span>                         <span class="cm"># f(x) = x²</span>
+
+<span class="mod">plt</span>.<span class="fn">plot</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">color</span><span class="op">=</span><span class="str">'#7c6af7'</span>)
+<span class="mod">plt</span>.<span class="fn">title</span>(<span class="str">"y = x²"</span>)
+<span class="mod">plt</span>.<span class="fn">show</span>()                        <span class="cm"># ouvre une fenêtre avec le graphique</span></div>
+
+  <h3>Intégrer le graphique dans la fenêtre CTk</h3>
+
+  <div class="code-block"><span class="kw">from</span> <span class="mod">matplotlib.figure</span> <span class="kw">import</span> <span class="fn">Figure</span>
+<span class="kw">from</span> <span class="mod">matplotlib.backends.backend_tkagg</span> <span class="kw">import</span> <span class="fn">FigureCanvasTkAgg</span>
+
+<span class="var">fig</span> <span class="op">=</span> <span class="fn">Figure</span>(<span class="var">figsize</span><span class="op">=</span>(<span class="num">5</span>, <span class="num">4</span>), <span class="var">dpi</span><span class="op">=</span><span class="num">100</span>)  <span class="cm"># la feuille de papier</span>
+<span class="var">ax</span>  <span class="op">=</span> <span class="var">fig</span>.<span class="fn">add_subplot</span>(<span class="num">111</span>)               <span class="cm"># la zone de dessin</span>
+<span class="var">ax</span>.<span class="fn">plot</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">color</span><span class="op">=</span><span class="str">'#7c6af7'</span>)
+
+<span class="var">canvas</span> <span class="op">=</span> <span class="fn">FigureCanvasTkAgg</span>(<span class="var">fig</span>, <span class="var">master</span><span class="op">=</span><span class="var">fenetre</span>)  <span class="cm"># coller dans CTk</span>
+<span class="var">canvas</span>.<span class="fn">draw</span>()
+<span class="var">canvas</span>.<span class="fn">get_tk_widget</span>().<span class="fn">pack</span>()</div>
+
+  <h3>🎮 Démo — Courbes mathématiques</h3>
+
+  <div class="demo-box">
+    <div style="margin-bottom:14px; display:flex; gap:6px; flex-wrap:wrap;">
+      <button class="curve-btn active" id="btn-quad" onclick="drawCurve('quad')">y = x²</button>
+      <button class="curve-btn"        id="btn-sin"  onclick="drawCurve('sin')">y = sin(x)</button>
+      <button class="curve-btn"        id="btn-abs"  onclick="drawCurve('abs')">y = |x|</button>
+      <button class="curve-btn"        id="btn-cube" onclick="drawCurve('cube')">y = x³</button>
+    </div>
+    <canvas id="plot-canvas" width="580" height="280" style="max-width:100%;"></canvas>
+    <p style="color:var(--muted); font-size:.8em; margin-top:10px; text-align:center;">
+      Aperçu du graphique que matplotlib affichera dans ta fenêtre.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — try/except -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>try / except — attraper les erreurs</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — filet de sécurité</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>😰 Sans filet → une erreur → tout s'arrête en rouge</span>
+      <span>🎪 <code style="color:var(--accent2)">try / except</code> → le filet attrape l'erreur sans tomber</span>
+    </div>
+  </div>
+
+  <h3>Sans try/except vs. avec try/except</h3>
+
+  <div class="compare-grid">
+    <div>
+      <div class="code-block" style="font-size:.84em; border-left: 3px solid var(--error); margin: 0;">
+<span class="cm"># L'utilisateur tape "abc"</span>
+<span class="var">n</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nombre : "</span>))
+<span class="cm"># ❌ ValueError — programme planté</span></div>
+      <p style="color:var(--error); font-size:.82em; margin-top:8px;">❌ Traceback rouge dans Thonny</p>
+    </div>
+    <div>
+      <div class="code-block" style="font-size:.84em; border-left: 3px solid var(--success); margin: 0;">
+<span class="kw">try</span>:
+    <span class="var">n</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nombre : "</span>))
+<span class="kw">except</span> <span class="fn">ValueError</span>:
+    <span class="fn">print</span>(<span class="str">"❌ Ce n'est pas un nombre !"</span>)</div>
+      <p style="color:var(--success); font-size:.82em; margin-top:8px;">✅ Message clair — programme continue</p>
+    </div>
+  </div>
+
+  <h3>Les deux erreurs à connaître</h3>
+
+  <div class="code-block"><span class="kw">try</span>:
+    <span class="var">n</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Entrez un nombre : "</span>))
+    <span class="var">résultat</span> <span class="op">=</span> <span class="num">10</span> <span class="op">/</span> <span class="var">n</span>
+    <span class="fn">print</span>(<span class="str">f"10 ÷ {</span><span class="var">n</span><span class="str">} = {</span><span class="var">résultat</span><span class="str">}"</span>)
+<span class="kw">except</span> <span class="fn">ValueError</span>:
+    <span class="fn">print</span>(<span class="str">"❌ Ce n'est pas un nombre !"</span>)       <span class="cm"># ex: "abc", "salut"</span>
+<span class="kw">except</span> <span class="fn">ZeroDivisionError</span>:
+    <span class="fn">print</span>(<span class="str">"❌ Impossible de diviser par zéro !"</span>)  <span class="cm"># ex: 0</span></div>
+
+  <h3>🎮 Démo — Que se passe-t-il ?</h3>
+
+  <div class="demo-box">
+    <p style="color:var(--muted); font-size:.9em; margin-bottom:14px;">L'utilisateur entre :</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+      <button class="demo-btn"           onclick="tryDemo('ok')">Taper "5"</button>
+      <button class="demo-btn secondary" onclick="tryDemo('zero')">Taper "0"</button>
+      <button class="demo-btn secondary" onclick="tryDemo('bad')">Taper "abc"</button>
+      <button class="demo-btn secondary" onclick="tryReset()">↺</button>
+    </div>
+
+    <div id="try-flow">
+      <div class="flow-box flow-try"    id="tf-try">try :</div>
+      <div class="flow-box flow-try"    id="tf-int">&nbsp;&nbsp;&nbsp;&nbsp;n = int(input("Nombre : "))</div>
+      <div class="flow-box flow-try"    id="tf-div">&nbsp;&nbsp;&nbsp;&nbsp;résultat = 10 / n</div>
+      <div class="flow-box flow-ok"     id="tf-ok" >&nbsp;&nbsp;&nbsp;&nbsp;print(f"10 ÷ n = résultat")&nbsp; ✅</div>
+      <div class="flow-box flow-except" id="tf-ve" ><span style="color:var(--warning);">except ValueError :</span></div>
+      <div class="flow-box flow-err"    id="tf-vem">&nbsp;&nbsp;&nbsp;&nbsp;print("❌ Ce n'est pas un nombre !")</div>
+      <div class="flow-box flow-except" id="tf-ze" ><span style="color:var(--warning);">except ZeroDivisionError :</span></div>
+      <div class="flow-box flow-err"    id="tf-zem">&nbsp;&nbsp;&nbsp;&nbsp;print("❌ Impossible de diviser par zéro !")</div>
+    </div>
+    <div id="try-output" style="margin-top:16px; font-family:'Courier New'; font-size:.9em; min-height:28px;"></div>
+  </div>
+
+  <!-- Quiz -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — L'utilisateur tape "bonjour". Qu'affiche ce code ?</h4>
+    <div class="code-block" style="margin: 0 0 14px; padding: 10px 16px; font-size:.88em;">
+<span class="kw">try</span>:
+    <span class="var">x</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nombre : "</span>))
+    <span class="fn">print</span>(<span class="var">x</span> <span class="op">*</span> <span class="num">2</span>)
+<span class="kw">except</span> <span class="fn">ValueError</span>:
+    <span class="fn">print</span>(<span class="str">"Erreur de saisie !"</span>)</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">bonjour</div>
+      <div class="quiz-option">Erreur de saisie !</div>
+      <div class="quiz-option">Le programme plante avec un traceback rouge</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — PROJET -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Le projet — Calculatrice TI-83</h2>
+  </div>
+
+  <div class="card success">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">🏆 Projet final du bloc 1</div>
+    <p>Tu vas assembler <strong>tout ce que tu as appris</strong> depuis la leçon 01 pour construire une vraie calculatrice graphique.</p>
+  </div>
+
+  <h3>Maquette</h3>
+
+  <div class="demo-box" style="text-align:center;">
+    <div class="sim-window" style="max-width:380px; margin:0 auto;">
+      <div class="sim-titlebar">Calculatrice graphique — v1.0</div>
+      <div class="sim-body" style="padding:14px; gap:8px; align-items:stretch;">
+        <!-- Display -->
+        <div style="background:#0d0d1a; border:1px solid var(--accent); border-radius:6px; padding:10px 14px; text-align:right;">
+          <div style="color:var(--muted); font-size:.75em; margin-bottom:2px;">10 / 2</div>
+          <div style="color:var(--accent2); font-size:1.4em; font-family:'Courier New';">5.0</div>
+        </div>
+        <!-- Button grid -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;">
+          <div class="calc-key">7</div><div class="calc-key">8</div><div class="calc-key">9</div><div class="calc-key op">÷</div>
+          <div class="calc-key">4</div><div class="calc-key">5</div><div class="calc-key">6</div><div class="calc-key op">×</div>
+          <div class="calc-key">1</div><div class="calc-key">2</div><div class="calc-key">3</div><div class="calc-key op">−</div>
+          <div class="calc-key">0</div><div class="calc-key">.</div><div class="calc-key op">C</div><div class="calc-key op">+</div>
+          <div class="calc-key fn" style="grid-column:span 2;">📊 Graphique</div>
+          <div class="calc-key eq" style="grid-column:span 2;">=</div>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted); font-size:.8em; margin-top:12px;">Maquette — ton projet final ressemblera à ça !</p>
+  </div>
+
+  <h3>Modules à importer</h3>
+
+  <div class="code-block" style="font-size:.88em;"><span class="kw">import</span> <span class="mod">customtkinter</span> <span class="kw">as</span> <span class="mod">ctk</span>                          <span class="cm"># boutons, labels, fenêtre</span>
+<span class="kw">from</span> <span class="mod">matplotlib.figure</span> <span class="kw">import</span> <span class="fn">Figure</span>                   <span class="cm"># figure embarquée</span>
+<span class="kw">from</span> <span class="mod">matplotlib.backends.backend_tkagg</span> <span class="kw">import</span> <span class="fn">FigureCanvasTkAgg</span>
+<span class="kw">import</span> <span class="mod">numpy</span> <span class="kw">as</span> <span class="mod">np</span>                                    <span class="cm"># points pour les courbes</span>
+<span class="kw">from</span> <span class="mod">mpmath</span> <span class="kw">import</span> <span class="var">mp</span>, <span class="fn">mpf</span>                            <span class="cm"># précision choisie</span></div>
+
+  <div class="card info" style="margin-top:8px;">
+    <div class="label code">Fonctionnalités à construire</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>✅ Boutons 0–9, +, −, ×, ÷, = et C (effacer)</li>
+      <li>✅ Affichage de l'expression et du résultat</li>
+      <li>✅ Gestion des erreurs avec <code>try/except</code></li>
+      <li>✅ Bouton "Graphique" → trace f(x) dans la fenêtre</li>
+      <li>⭐ Bonus : historique des derniers calculs</li>
+      <li>⭐ Bonus : choisir la fonction (x², sin, cos…)</li>
+    </ul>
+  </div>
+
+  <div class="card warning" style="margin-top:12px;">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Astuce de mise en page</div>
+    <div class="code-block" style="margin-top: 10px; font-size:.85em;">
+<span class="cm"># .grid() est mieux que .pack() pour une grille de boutons</span>
+<span class="var">btn</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkButton</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"7"</span>)
+<span class="var">btn</span>.<span class="fn">grid</span>(<span class="var">row</span><span class="op">=</span><span class="num">0</span>, <span class="var">column</span><span class="op">=</span><span class="num">0</span>, <span class="var">padx</span><span class="op">=</span><span class="num">4</span>, <span class="var">pady</span><span class="op">=</span><span class="num">4</span>)</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>import customtkinter as ctk</td>
+        <td>Charge la bibliothèque de fenêtres</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">ctk.CTk() → fenêtre</td>
+      </tr>
+      <tr>
+        <td>CTkButton(command=f)</td>
+        <td>Bouton — appelle f() au clic</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">CTkButton(text="=", command=calc)</td>
+      </tr>
+      <tr>
+        <td>fenetre.mainloop()</td>
+        <td>Lance la boucle d'événements</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">toujours à la fin</td>
+      </tr>
+      <tr>
+        <td>np.linspace(a, b, n)</td>
+        <td>n points réguliers entre a et b</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">linspace(-5, 5, 200)</td>
+      </tr>
+      <tr>
+        <td>ax.plot(x, y)</td>
+        <td>Trace la courbe dans la figure</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">ax.plot(x, x**2)</td>
+      </tr>
+      <tr>
+        <td>FigureCanvasTkAgg(fig, master=f)</td>
+        <td>Intègre matplotlib dans CTk</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">canvas.get_tk_widget().pack()</td>
+      </tr>
+      <tr>
+        <td>try / except ValueError</td>
+        <td>Attrape une saisie invalide</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">int("abc") → ValueError</td>
+      </tr>
+      <tr>
+        <td>except ZeroDivisionError</td>
+        <td>Attrape une division par zéro</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">10 / 0 → ZeroDivisionError</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li><code style="color:var(--accent2)">CTkButton(command=f)</code> → <strong>pas de parenthèses</strong> après f</li>
+      <li><code style="color:var(--accent2)">np.linspace</code> génère les points x pour tracer une courbe</li>
+      <li><code style="color:var(--accent2)">FigureCanvasTkAgg</code> colle matplotlib dans la fenêtre CTk</li>
+      <li><code style="color:var(--accent2)">try/except</code> empêche le programme de planter sur une erreur de saisie</li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 07 — Introduction à pygame</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Fenêtre graphique, boucle de jeu, événements, sprites — les bases du jeu vidéo en Python.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">✏️ Projet</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">projet.py</code> dans Thonny et lis <code style="color:var(--text)">PROJET.md</code> avec ton père.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar — IntersectionObserver
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — CTk window builder demo
+// ════════════════════════════════════════════════════════════
+const CTK_STEPS = [
+  {
+    info: '① <strong style="color:var(--accent2)">CTk()</strong> — la fenêtre est créée. Elle est encore vide.',
+    widget: null
+  },
+  {
+    info: '② <strong style="color:var(--accent2)">title() / geometry()</strong> — on lui donne un nom et une taille.',
+    widget: null
+  },
+  {
+    info: '③ <strong style="color:var(--accent2)">CTkLabel()</strong> — une étiquette apparaît dans la fenêtre.',
+    widget: `<div style="color:var(--text); background:rgba(124,106,247,.1); padding:8px 16px; border-radius:6px; font-size:.9em; border:1px solid rgba(124,106,247,.2);">Résultat : 0</div>`
+  },
+  {
+    info: '④ <strong style="color:var(--accent2)">CTkButton()</strong> — un bouton cliquable est ajouté.',
+    widget: `<div style="background:var(--accent); color:white; padding:8px 24px; border-radius:8px; font-size:.9em; cursor:default;">=</div>`
+  },
+  {
+    info: '⑤ <strong style="color:var(--accent2)">mainloop()</strong> — la fenêtre est prête ! Elle attend les clics.',
+    widget: null
+  }
+];
+
+let ctkStep = -1;
+let ctkWidgets = [];
+
+function ctkNext() {
+  ctkStep++;
+  if (ctkStep >= CTK_STEPS.length) return;
+
+  const step = CTK_STEPS[ctkStep];
+  document.getElementById('ctk-step-info').innerHTML =
+    `<div style="color:var(--text); line-height:1.5;">${step.info}</div>`;
+
+  if (step.widget) {
+    ctkWidgets.push(step.widget);
+    document.getElementById('ctk-sim-body').innerHTML = ctkWidgets.join('');
+  }
+
+  if (ctkStep === CTK_STEPS.length - 1) {
+    const btn = document.getElementById('ctk-next-btn');
+    btn.textContent = '✅ Terminé';
+    btn.disabled = true;
+  }
+}
+
+function ctkReset() {
+  ctkStep = -1;
+  ctkWidgets = [];
+  document.getElementById('ctk-sim-body').innerHTML =
+    '<div style="color:var(--muted); font-size:.8em; font-style:italic;">— fenêtre vide —</div>';
+  document.getElementById('ctk-step-info').textContent =
+    'Clique sur "Étape suivante" pour assembler la fenêtre pièce par pièce.';
+  const btn = document.getElementById('ctk-next-btn');
+  btn.textContent = '▶ Étape suivante';
+  btn.disabled = false;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — Matplotlib curve demo (HTML5 Canvas)
+// ════════════════════════════════════════════════════════════
+function drawCurve(type) {
+  ['quad','sin','abs','cube'].forEach(t =>
+    document.getElementById('btn-' + t).classList.toggle('active', t === type));
+
+  const canvas = document.getElementById('plot-canvas');
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0d0d1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const ml = 52, mr = 16, mt = 16, mb = 36;
+  const pw = W - ml - mr, ph = H - mt - mb;
+
+  let xMin = -5, xMax = 5;
+  const ranges = { quad: [-1, 27], sin: [-1.6, 1.6], abs: [-0.5, 5.5], cube: [-130, 130] };
+  const [yMin, yMax] = ranges[type];
+
+  function cx(x) { return ml + (x - xMin) / (xMax - xMin) * pw; }
+  function cy(y) { return mt + (1 - (y - yMin) / (yMax - yMin)) * ph; }
+
+  // Grid
+  ctx.strokeStyle = 'rgba(124,106,247,0.08)';
+  ctx.lineWidth = 1;
+  for (let gx = -5; gx <= 5; gx++) {
+    ctx.beginPath(); ctx.moveTo(cx(gx), mt); ctx.lineTo(cx(gx), mt + ph); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(108,112,134,0.5)';
+  ctx.lineWidth = 1.2;
+  const ay = cy(0);
+  if (ay >= mt && ay <= mt + ph) {
+    ctx.beginPath(); ctx.moveTo(ml, ay); ctx.lineTo(ml + pw, ay); ctx.stroke();
+  }
+  const ax = cx(0);
+  if (ax >= ml && ax <= ml + pw) {
+    ctx.beginPath(); ctx.moveTo(ax, mt); ctx.lineTo(ax, mt + ph); ctx.stroke();
+  }
+
+  // Axis tick labels
+  ctx.fillStyle = '#6c7086';
+  ctx.font = '11px Courier New';
+  ctx.textAlign = 'center';
+  for (let gx = -4; gx <= 4; gx += 2) {
+    if (gx === 0) continue;
+    ctx.fillText(gx, cx(gx), mt + ph + 16);
+  }
+
+  // Curve
+  const N = 500;
+  ctx.strokeStyle = '#7c6af7';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  let first = true;
+  for (let i = 0; i <= N; i++) {
+    const x = xMin + (xMax - xMin) * i / N;
+    let y;
+    switch (type) {
+      case 'quad': y = x * x; break;
+      case 'sin':  y = Math.sin(x); break;
+      case 'abs':  y = Math.abs(x); break;
+      case 'cube': y = x * x * x; break;
+    }
+    const px = cx(x), py = cy(y);
+    if (py < mt - 4 || py > mt + ph + 4) { first = true; continue; }
+    if (first) { ctx.moveTo(px, py); first = false; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Title
+  const titles = { quad: 'y = x²', sin: 'y = sin(x)', abs: 'y = |x|', cube: 'y = x³' };
+  ctx.fillStyle = '#f7a26a';
+  ctx.font = 'bold 13px Courier New';
+  ctx.textAlign = 'left';
+  ctx.fillText(titles[type], ml + 8, mt + 16);
+}
+
+drawCurve('quad');
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — try/except flow demo
+// ════════════════════════════════════════════════════════════
+const ALL_FLOW_IDS = ['tf-try','tf-int','tf-div','tf-ok','tf-ve','tf-vem','tf-ze','tf-zem'];
+
+function tryReset() {
+  ALL_FLOW_IDS.forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('try-output').textContent = '';
+}
+
+function tryDemo(scenario) {
+  tryReset();
+  const delay = 340;
+
+  const sequences = {
+    ok: {
+      ids: ['tf-try', 'tf-int', 'tf-div', 'tf-ok'],
+      output: '▶  10 ÷ 5 = 2.0',
+      color: 'var(--success)'
+    },
+    zero: {
+      ids: ['tf-try', 'tf-int', 'tf-div', 'tf-ze', 'tf-zem'],
+      output: '▶  ❌ Impossible de diviser par zéro !',
+      color: 'var(--warning)'
+    },
+    bad: {
+      ids: ['tf-try', 'tf-int', 'tf-ve', 'tf-vem'],
+      output: '▶  ❌ Ce n\'est pas un nombre !',
+      color: 'var(--error)'
+    }
+  };
+
+  const seq = sequences[scenario];
+  seq.ids.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.add('active');
+      if (i === seq.ids.length - 1) {
+        document.getElementById('try-output').textContent = seq.output;
+        document.getElementById('try-output').style.color = seq.color;
+      }
+    }, i * delay);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// Quiz
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  '"bonjour" ne peut pas être converti en entier — int() va déclencher une erreur.',
+  'int("bonjour") déclenche ValueError → c\'est le bloc except qui s\'exécute !'
+]);
+</script>
+
+</body>
+</html>
