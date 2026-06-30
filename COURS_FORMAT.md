@@ -86,16 +86,80 @@ Support visuel que le père projette/partage et anime lui-même. L'apprenant **r
 
 ### Conventions de contenu
 
-**Analogies d'abord** : chaque nouveau concept est introduit par une analogie concrète avant le code.
-> Ex. : "Une variable, c'est comme une boîte avec une étiquette."
+#### Principe directeur — support d'enseignement, pas document de lecture
 
-**Blocs de code** : fond légèrement plus sombre que `--surface`, coins arrondis, syntaxe colorée manuellement avec `<span>`.
+La présentation est **animée par le père** — l'écran montre les ancres visuelles,
+la voix porte l'explication. Le texte à l'écran ne doit pas remplacer ce que le
+père dit : si on peut lire la carte en silence et tout comprendre sans lui, c'est
+trop long.
 
-**Visualisations interactives** : quand un concept le permet (boucles, listes, appels de fonctions), inclure une animation ou démonstration cliquable en JavaScript pur. Ex. : bouton "Étape suivante" qui montre l'état d'une variable à chaque itération.
+#### Cartes analogie
 
-**Quiz intégré** (optionnel par section) : 1-3 questions pour valider la compréhension avant de passer à la suite. Voir format quiz ci-dessous.
+Format : `icône  code/concept  →  métaphore  (précision optionnelle en muted)`
 
-**Pas de murs de texte** : maximum 4-5 lignes de texte consécutives. Alterner texte / code / visuel.
+```html
+<div class="card analogy">
+  <div class="label analogy">Analogie — [thème]</div>
+  <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+    <span>🍳 <code style="color:var(--accent2)">def nom():</code> &nbsp;→&nbsp; écrire la recette <span style="color:var(--muted)">(une seule fois)</span></span>
+    <span>🍽️ <code style="color:var(--accent2)">nom()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; cuisiner <span style="color:var(--muted)">(autant de fois qu'on veut)</span></span>
+  </div>
+</div>
+```
+
+Règles :
+- Maximum 2-3 lignes icône+flèche
+- Pas de paragraphes, pas de "c'est comme si…" développé — le père le dit
+- Le label nomme le thème de l'analogie, pas juste "Analogie"
+
+#### Cartes info
+
+Bullets courts — 5 mots max par bullet, ancres pour la parole du père.
+
+```html
+<div class="card info">
+  <div class="label code">Titre</div>
+  <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+    <li><strong>Mot-clé</strong> &nbsp;<code>syntaxe</code> — effet en 3 mots</li>
+    <li><strong>Mot-clé</strong> &nbsp;<code>syntaxe</code> — effet en 3 mots</li>
+  </ul>
+</div>
+```
+
+#### Cartes warning
+
+Label court + bloc de code uniquement — pas de paragraphe explicatif.
+
+```html
+<div class="card warning">
+  <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Règle en 5 mots</div>
+  <div class="code-block" style="margin-top:10px;">...</div>
+</div>
+```
+
+#### Ce qui reste complet (ne pas raccourcir)
+
+- **Blocs de code** : complets, syntaxe colorée avec `<span>`, fond `#13131f`
+- **Visualisations interactives** : animation cliquable JS pur — "Étape suivante", sliders, démos
+- **Quiz** : 3 tentatives, 2 niveaux d'indice (voir section quiz ci-dessous)
+- **Section Résumé** : tableau complet + carte "À retenir"
+- **Section Rappel** : 3 blocs de code compacts en grille responsive
+
+#### Blocs de code
+
+Fond légèrement plus sombre que `--surface`, coins arrondis, syntaxe colorée manuellement avec `<span>`.
+
+#### Visualisations interactives
+
+Quand un concept le permet (boucles, listes, appels de fonctions), inclure une
+animation ou démonstration cliquable en JavaScript pur. Ex. : bouton "Étape
+suivante" qui montre l'état d'une variable à chaque itération.
+
+#### Quiz intégré
+
+Optionnel par section, 1-2 questions max.
+
+**Pas de murs de texte** : maximum 3 lignes de texte consécutives hors cartes. Alterner texte / code / visuel.
 
 ### Format des quiz dans le HTML
 
