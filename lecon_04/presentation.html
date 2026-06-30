@@ -330,8 +330,8 @@
 
   <div class="card analogy" style="margin-top: 16px;">
     <div class="label analogy">Pourquoi les fonctions ?</div>
-    <p>Tu connais déjà <code style="color:var(--accent2)">print()</code>, <code style="color:var(--accent2)">input()</code>, <code style="color:var(--accent2)">range()</code>… Ce sont toutes des fonctions que <em>quelqu'un d'autre</em> a créées pour toi.</p>
-    <p style="margin-top: 10px;">Aujourd'hui, tu vas apprendre à <strong>inventer tes propres fonctions</strong> — tes propres commandes Python, que tu pourras réutiliser partout dans ton programme.</p>
+    <p style="font-size:.95em;"><code style="color:var(--accent2)">print()</code> &nbsp;<code style="color:var(--accent2)">input()</code> &nbsp;<code style="color:var(--accent2)">range()</code> &nbsp;— des fonctions que quelqu'un a créées.</p>
+    <p style="margin-top: 10px; color: var(--accent2); font-weight: bold;">→ Aujourd'hui, tu crées les tiennes.</p>
   </div>
 
   <p style="color:var(--muted); margin-top: 20px;">⏱ Durée estimée : 30 min de présentation · 60–75 min d'exercices</p>
@@ -381,13 +381,11 @@
   </div>
 
   <div class="card analogy">
-    <div class="label analogy">Analogie</div>
-    <p>Une fonction, c'est comme une <strong>recette de cuisine</strong>.</p>
-    <ul style="padding-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-      <li>Tu <strong>écris la recette</strong> une seule fois (<code style="color:var(--accent2)">def</code>)</li>
-      <li>Ensuite tu peux <strong>cuisiner</strong> (appeler la fonction) autant de fois que tu veux</li>
-      <li>Écrire la recette ne prépare pas le plat — il faut l'appeler !</li>
-    </ul>
+    <div class="label analogy">Analogie — recette de cuisine</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🍳 <code style="color:var(--accent2)">def nom():</code> &nbsp;&nbsp;→&nbsp; écrire la recette <span style="color:var(--muted)">(une seule fois)</span></span>
+      <span>🍽️ <code style="color:var(--accent2)">nom()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; cuisiner <span style="color:var(--muted)">(autant de fois qu'on veut)</span></span>
+    </div>
   </div>
 
   <div class="code-block"><span class="cm"># 1. On écrit la recette (la définition)</span>
@@ -402,9 +400,9 @@
   <div class="card info">
     <div class="label code">Les deux étapes</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-      <li><strong>Définir</strong> : <code style="color:var(--accent2)">def nom():</code> suivi du code indenté — Python mémorise la recette, mais ne fait rien encore</li>
-      <li><strong>Appeler</strong> : écrire <code style="color:var(--accent2)">nom()</code> plus loin — Python exécute le code de la recette</li>
-      <li>On peut appeler la même fonction <strong>autant de fois qu'on veut</strong> !</li>
+      <li><strong>Définir</strong> &nbsp;<code style="color:var(--accent2)">def nom():</code> — Python mémorise, <em>rien ne se passe</em></li>
+      <li><strong>Appeler</strong> &nbsp;<code style="color:var(--accent2)">nom()</code> — Python exécute</li>
+      <li>Même fonction → autant d'appels qu'on veut</li>
     </ul>
   </div>
 
@@ -478,8 +476,7 @@
   </div>
 
   <div class="card warning">
-    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Attention — l'ordre compte !</div>
-    <p>Il faut <strong>définir</strong> la fonction <em>avant</em> de l'appeler. Si tu appelles avant de définir, Python dit qu'il ne connaît pas la fonction.</p>
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Définir <em>avant</em> d'appeler</div>
     <div class="code-block" style="margin-top:10px; border-color:rgba(243,139,168,.3);">
 <span class="fn">dire_bonjour</span>()    <span class="cm"># ⛔ Erreur ! Python ne la connaît pas encore</span>
 
@@ -516,11 +513,11 @@
   </div>
 
   <div class="card analogy">
-    <div class="label analogy">Analogie</div>
-    <p>La recette de cuisine peut avoir des <strong>ingrédients à choisir</strong>.</p>
-    <p style="margin-top: 8px;">« Faire un gâteau au chocolat » → recette sans choix.</p>
-    <p style="margin-top: 4px;">« Faire un gâteau à la <strong>[saveur]</strong> » → tu choisis la saveur à chaque fois !</p>
-    <p style="margin-top: 10px;">Les <strong>paramètres</strong> sont les ingrédients que tu fournis quand tu appelles la fonction.</p>
+    <div class="label analogy">Analogie — ingrédients à choisir</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎂 « gâteau au <strong>chocolat</strong> »&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; sans paramètre <span style="color:var(--muted)">(recette fixe)</span></span>
+      <span>🎂 « gâteau à la <strong>[saveur]</strong> »&nbsp;&nbsp;→&nbsp; avec paramètre <span style="color:var(--muted)">(tu choisis à chaque appel)</span></span>
+    </div>
   </div>
 
   <div class="code-block"><span class="kw">def</span> <span class="fn">saluer_heros</span>(<span class="var">nom</span>):
@@ -533,9 +530,8 @@
   <div class="card info">
     <div class="label code">Vocabulaire</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-      <li><strong>Paramètre</strong> : la variable dans la définition — <code style="color:var(--accent2)">def saluer_heros(nom):</code></li>
-      <li><strong>Argument</strong> : la valeur qu'on envoie lors de l'appel — <code style="color:var(--accent2)">saluer_heros("Arthur")</code></li>
-      <li>Le paramètre <code style="color:var(--accent2)">nom</code> reçoit la valeur <code style="color:var(--accent2)">"Arthur"</code> pour ce tour-là</li>
+      <li><strong>Paramètre</strong> — dans la <em>définition</em> : <code style="color:var(--accent2)">def saluer_heros(<u>nom</u>):</code></li>
+      <li><strong>Argument</strong> — à l'<em>appel</em> : <code style="color:var(--accent2)">saluer_heros(<u>"Arthur"</u>)</code></li>
     </ul>
   </div>
 
@@ -604,8 +600,10 @@
 
   <div class="card analogy">
     <div class="label analogy">Analogie</div>
-    <p>Jusqu'ici, nos fonctions <strong>affichent</strong> des choses (comme un vendeur qui crie le résultat).</p>
-    <p style="margin-top: 8px;">Avec <code style="color:var(--accent2)">return</code>, la fonction <strong>retourne une valeur</strong> — comme une machine à calculer qui t'<em>envoie</em> le résultat pour que tu puisses l'utiliser ailleurs.</p>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📢 <code style="color:var(--muted)">print()</code> dans la fonction &nbsp;→&nbsp; le vendeur <em>crie</em> le résultat</span>
+      <span>📦 <code style="color:var(--accent2)">return</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; la machine <em>envoie</em> le résultat</span>
+    </div>
   </div>
 
   <div class="compare-grid">
@@ -673,8 +671,7 @@
   </div>
 
   <div class="card warning">
-    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ return arrête la fonction</div>
-    <p>Dès que Python rencontre <code style="color:var(--accent2)">return</code>, il quitte la fonction <em>immédiatement</em>. Tout code après le <code style="color:var(--accent2)">return</code> est ignoré.</p>
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ return quitte la fonction immédiatement</div>
     <div class="code-block" style="margin-top: 10px;">
 <span class="kw">def</span> <span class="fn">exemple</span>():
     <span class="kw">return</span> <span class="num">42</span>
@@ -708,8 +705,8 @@
   </div>
 
   <div class="card analogy">
-    <div class="label analogy">Analogie</div>
-    <p>Imagine des <strong>pièces de LEGO</strong> : chaque fonction est une pièce. Tu peux les assembler pour construire quelque chose de grand — sans avoir à réinventer chaque pièce.</p>
+    <div class="label analogy">Analogie — pièces de LEGO</div>
+    <span style="font-size:.95em;">🧱 chaque fonction = une pièce &nbsp;→&nbsp; assembler = programme complet</span>
   </div>
 
   <p>Quand une fonction <strong>retourne</strong> une valeur, on peut l'utiliser comme ingrédient d'un calcul, ou la passer à une autre fonction :</p>

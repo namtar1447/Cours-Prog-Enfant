@@ -306,7 +306,7 @@ dans la section **Résumé** de `presentation.html`.
 ### Thématiques des leçons
 - Choisir des thèmes **concrets et motivants** pour un garçon de 9 ans passionné de jeux
 - Exemples acceptables : jeux vidéo, inventaires de RPG, scores, mondes, créatures, magie
-- Progression vers les projets cibles : **calculatrice graphique** (grands nombres, tétration, tracé de fonctions avec matplotlib) et **mod Luanti**
+- Progression vers les projets cibles : **calculatrice graphique** (interface style TI-83 avec `customtkinter` + tracé de fonctions avec `matplotlib` + grands nombres avec `mpmath`) et **mod Luanti**
 
 ### Longueur du contenu
 - Chaque leçon doit être réalisable en **maximum 2 heures**
@@ -353,7 +353,7 @@ Elles ne contiennent pas de code — elles alimentent la réflexion et la discus
 | 04 | Fonctions, paramètres, `return` | Fonctions mathématiques réutilisables |
 | 05 | Listes, dictionnaires | Historique de calculs |
 | 06 | Modules, `import`, `mpmath` | Calculatrice avancée (grands nombres, tétration) |
-| 06b | `matplotlib` — tracer des fonctions | **Projet : calculatrice graphique complète** |
+| 06b | `customtkinter` + `matplotlib` — interface TI-83 | **Projet : calculatrice graphique complète** |
 
 ### Bloc 2 — Jeux 2D avec pygame (leçons 7–13) — IDE : Thonny
 | Leçon | Sujet principal | Game design |
