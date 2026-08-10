@@ -176,7 +176,7 @@ Optionnel par section, 1-2 questions max.
 ## 2. Fichiers `exercice_XX.py`
 
 ### Rôle
-Code Python que l'apprenant ouvre dans **Thonny** (leçons 1–13) ou **VS Code** (leçons 14–20) et complète.
+Code Python que l'apprenant ouvre dans **Thonny** (leçons 1–14) ou **VS Code** (leçons 15–21) et complète.
 
 ### Format général
 
@@ -279,7 +279,7 @@ Présent uniquement quand la leçon se termine par un projet libre.
 
 > ⚠️ **Le bloc 2 (pygame) est exempt** — pas de `tests.py`. Une boucle de jeu n'a ni
 > `stdout` capturable ni fin, et le résultat est visuel. La validation s'y fait par
-> checklist observable dans `presentation.html` — voir la **section 9.5**.
+> checklist observable dans `presentation.html` — voir la **section 9.7**.
 
 ### Rôle
 `tests.py` a **deux usages** :
@@ -436,33 +436,34 @@ Elles ne contiennent pas de code — elles alimentent la réflexion et la discus
 | 06 | Modules, `import`, `mpmath` | Calculatrice avancée (grands nombres, tétration) |
 | 06b | `customtkinter` + `matplotlib` — interface TI-83 | **Projet : calculatrice graphique complète** |
 
-### Bloc 2 — Jeux 2D avec pygame (leçons 7–13) — IDE : Thonny
+### Bloc 2 — Jeux 2D avec pygame (leçons 7–14) — IDE : Thonny
 
-**Fil rouge unique** : une seule et même partie construite de 07 à 13 — *Le Dragonneau*,
+**Fil rouge unique** : une seule et même partie construite de 07 à 14 — *Le Dragonneau*,
 un jeu à un bouton inspiré de *Tiny Wings*. Voir la **section 9** pour la spécification
-complète (physique, thèmes, contraintes matérielles, découpage détaillé).
+complète (physique, zoom, îles et nuit, thèmes, contraintes matérielles, découpage).
 
 | Leçon | Sujet principal | Game design |
 |---|---|---|
 | 07 | Fenêtre, boucle de jeu, gravité | 🎮 La boucle update → draw → repeat |
 | 08 | Le bouton unique, sprites, animation | 🎮 Un seul verbe, beaucoup de profondeur |
-| 09 | Le terrain : `sin`, colonnes, caméra | 🎮 Le monde qui défile |
-| 09b | Glisser sur la pente, décoller | 🎮 Tension et risque |
-| 10 | Vitesse, distance, score, HUD | 🎮 Progression et feedback |
-| 11 | Écrans multiples + système de thèmes | 🎮 Structure d'un jeu complet |
-| 12 | Sons, particules, screen shake | 🎮 Le polish |
-| 13 | **Projet : polish + port MakeCode Arcade** | 🎮 Même jeu, deux moteurs |
+| 09 | Le terrain-tremplin : colonnes, caméra | 🎮 Le monde qui défile |
+| 09b | Glisser, décoller, **atterrir** | 🎮 Là où se gagne la vitesse |
+| 10 | Caméra qui dézoome, HUD | 🎮 Voir pour décider |
+| 11 | Îles et tombée de la nuit | 🎮 Donner une fin au jeu |
+| 12 | Écrans multiples + système de thèmes | 🎮 Structure d'un jeu complet |
+| 13 | Sons, particules, screen shake | 🎮 Le polish |
+| 14 | **Projet : port MakeCode Arcade** | 🎮 Même jeu, deux moteurs |
 
-### Bloc 3 — Lua & Luanti (leçons 14–20) — IDE : VS Code
+### Bloc 3 — Lua & Luanti (leçons 15–21) — IDE : VS Code
 | Leçon | Sujet principal | Game design |
 |---|---|---|
-| 14 | Lua vs Python — mêmes idées, syntaxe différente | — |
-| 15 | Structure d'un mod, API Luanti de base | 🎮 Minecraft : règles simples, profondeur émergente |
-| 16 | Événements, triggers, `on_place` / `on_use` | — |
-| 17 | Tables avancées, craft recipes | — |
-| 18 | Entités et mobs simples | 🎮 Les mobs comme mécaniques |
-| 19 | Génération de terrain, biomes | — |
-| 20 | **Projet : mini-mod Luanti complet** | 🎮 Bilan : concevoir une expérience |
+| 15 | Lua vs Python — mêmes idées, syntaxe différente | — |
+| 16 | Structure d'un mod, API Luanti de base | 🎮 Minecraft : règles simples, profondeur émergente |
+| 17 | Événements, triggers, `on_place` / `on_use` | — |
+| 18 | Tables avancées, craft recipes | — |
+| 19 | Entités et mobs simples | 🎮 Les mobs comme mécaniques |
+| 20 | Génération de terrain, biomes | — |
+| 21 | **Projet : mini-mod Luanti complet** | 🎮 Bilan : concevoir une expérience |
 
 ---
 
@@ -523,18 +524,34 @@ Tout le jeu tient dans ces lignes. Elles sont introduites progressivement de 07 
 
 ```python
 LARGEUR, HAUTEUR = 160, 120
+
+L_COLLINE        = 200      # longueur d'une colline, en px
+R_DESCENTE       = 0.68     # part de la colline occupée par la descente
+CRETE            = 46       # y du sommet (constant : les collines se raccordent)
+D_MIN, D_MAX     = 30, 65   # dénivelé — tiré au sort par colline
+
 GRAVITE          = 0.14     # chute normale (planer)
-GRAVITE_PLONGEON = 0.50     # bouton tenu
-ACCEL_DESCENTE   = 0.18     # gain de vitesse en descente
-FREIN_MONTEE     = 0.23     # perte en montée — VOLONTAIREMENT > ACCEL_DESCENTE
+GRAVITE_PLONGEON = 0.80     # bouton tenu
+ACCEL_DESCENTE   = 0.22     # gain de vitesse en descente
+FREIN_MONTEE     = 0.28     # perte en montée — VOLONTAIREMENT > ACCEL_DESCENTE
 FRICTION         = 0.997
-VX_MIN, VX_MAX   = 1.2, 8.0
+VX_MIN, VX_MAX   = 1.2, 9.0
 SUIVI_CAMERA     = 0.14
 HAUTEUR_VISEE    = 60       # où le héros se stabilise à l'écran
 
+
 def hauteur_du_sol(x):
-    """Renvoie le y du sol à la position x. y=0 en haut de l'écran."""
-    return 76 + 32 * math.sin(x / 38) + 11 * math.sin(x / 17)
+    """Le y du sol à la position x. y=0 en haut de l'écran.
+       Chaque colline est un TREMPLIN : longue descente douce,
+       puis rampe droite qui casse net au sommet."""
+    i = int(x // L_COLLINE)                          # numéro de la colline
+    d = D_MIN + (D_MAX - D_MIN) * ((i * 7919) % 1000) / 1000
+    t = (x % L_COLLINE) / L_COLLINE
+    if t < R_DESCENTE:                               # la descente, en cosinus
+        u = t / R_DESCENTE
+        return CRETE + d * (1 - math.cos(math.pi * u)) / 2
+    u = (t - R_DESCENTE) / (1 - R_DESCENTE)          # la rampe, toute droite
+    return CRETE + d * (1 - u)
 ```
 
 À chaque image :
@@ -547,54 +564,151 @@ sol = hauteur_du_sol(camera_x)
 if y >= sol:                                       # au sol
     y = sol
     pente = hauteur_du_sol(camera_x + 1) - sol     # > 0 = ça descend
+
+    if not au_sol_avant:                           # ATTERRISSAGE
+        vx = (vx + vy * pente) / (1 + pente * pente)
+        vx = max(VX_MIN, min(VX_MAX, vx))
+
     vy = pente * vx                                # suivre la pente
     vx += pente * (ACCEL_DESCENTE if pente > 0 else FREIN_MONTEE)
     vx = max(VX_MIN, min(VX_MAX, vx * FRICTION))
 
+au_sol_avant = y >= sol
 camera_x += vx
 camera_y += ((y - HAUTEUR_VISEE) - camera_y) * SUIVI_CAMERA
 ```
 
-Tout ce qui se dessine est ensuite décalé de `- camera_y` : le sol et le héros. Deux
-soustractions, pas plus.
+Tout ce qui se dessine est ensuite décalé de `- camera_y` : le sol et le héros.
 
-**Le décollage n'est pas codé — il émerge.** Au sommet d'une colline, la tangente suivie
-par le dragonneau passe au-dessus du terrain qui se dérobe : `y < sol`, donc plus de
-contact, donc la gravité reprend. Dans un creux, `y >= sol` reste vrai à chaque image et
-la vitesse monte. Aucun cas particulier à écrire.
+#### Les trois mécanismes, et pourquoi ils sont là
 
-**Pourquoi `FREIN_MONTEE > ACCEL_DESCENTE`.** C'est le cœur du game design, pas un détail
-de réglage. Si monter coûtait moins que descendre ne rapporte, rester collé au sol serait
-toujours gagnant et le jeu se gagnerait en tenant le bouton — sans aucune décision. En
-rendant la montée plus chère, la seule façon de progresser est de **décoller au sommet et
-survoler la côte suivante**. C'est exactement la compétence que *Tiny Wings* demande.
+**1. L'angle au sommet, c'est lui qui projette.** On quitte le sol quand
+`courbure × vx² / 2 > gravité` — donc au point de **courbure maximale**. Sur une colline
+arrondie (un sinus), ce point est le sommet exact, là où la pente vaut 0 : le dragonneau
+décolle avec `vy = pente × vx ≈ 0`, c'est-à-dire pas du tout. C'est une propriété de la
+forme, aucun réglage de constantes ne la corrige.
+
+La rampe droite met une **cassure** au sommet : la courbure y est infinie, et le
+dragonneau part avec la pleine pente de la rampe (25° à 45° selon le dénivelé). C'est un
+tremplin de saut à ski, et c'est la seule géométrie qui produit de vrais sauts.
+
+**2. `FREIN_MONTEE > ACCEL_DESCENTE`.** Si monter coûtait moins que descendre ne rapporte,
+rester collé au sol serait toujours gagnant. En rendant la montée plus chère, la seule
+façon de progresser est de **survoler la côte suivante**.
+
+**3. L'atterrissage, c'est là qu'est la compétence.**
+`vx = (vx + vy × pente) / (1 + pente²)` — seule la composante de la vitesse **parallèle au
+sol** survit à l'impact ; la composante perpendiculaire est perdue.
+
+- Retomber *aligné* sur une descente → `vy × pente > 0` → on **gagne** de la vitesse
+- S'écraser de plein fouet dans une rampe → `pente < 0` → on perd presque tout
+
+Sans cette ligne, le jeu n'a aucune profondeur : ne jamais toucher le bouton donne 85 % de
+temps en vol et fait presque aussi bien que le jeu optimal. Avec elle, l'écart passe de
+1,12× à 3,15×. **C'est la ligne la plus importante du jeu.**
 
 **Le bouton ne fait effet qu'en vol** — au sol, la branche `if` réécrit `vy` à chaque
-image. C'est fidèle à l'original : on ne pilote pas la glisse, on choisit *où retomber*.
+image. Fidèle à l'original : on ne pilote pas la glisse, on choisit *où retomber*.
 
-Les deux `sin` ont des périodes premières entre elles (38 et 17) : le terrain ne se répète
-qu'au bout de 4 059 px, soit plus de 15 secondes de jeu à pleine vitesse. Adam peut
-modifier les quatre nombres de `hauteur_du_sol` en direct et voir le monde changer.
+**Les collines varient.** Le dénivelé est tiré par numéro de colline. Avec des collines
+identiques, le joueur se cale dans un rythme régulier et n'a plus rien à décider — mesuré :
+l'écart avec le jeu habile tombe à 1,12×. La variation force à viser chaque atterrissage.
 
-#### 9.3.1 Résultats mesurés (simulation sur 3 000 images)
+#### 9.3.1 Résultats mesurés (simulation sur 6 000 images)
 
 Ces chiffres servent de test de non-régression : si un réglage change, les revérifier.
+Le « jeu habile » est un pilote qui simule les deux choix jusqu'à l'atterrissage et garde
+celui qui donne la meilleure vitesse — un substitut correct d'un joueur qui vise.
 
-| Stratégie | Distance | % en vol | Vols |
+| Stratégie | Distance | % en vol | Vitesse finale |
 |---|---|---|---|
-| Ne jamais appuyer | 5 762 | 26 % | 41 |
-| Bouton toujours tenu | 7 036 | 0,5 % | 0 |
-| Martelage aveugle | 6 123 | 11 % | 20 |
-| **Jeu habile** (plonger vers la descente) | **9 828** | **47 %** | **52** |
+| Ne jamais appuyer | 14 807 | 21 % | 1,2 |
+| Bouton toujours tenu | 13 888 | 0 % | 3,7 |
+| Martelage aveugle | 22 788 | 17 % | 4,3 |
+| **Jeu habile** | **46 634** | **66 %** | **6,6** |
 
-Le jeu habile bat le passif **1,71×**, le bouton tenu **1,40×** et le martelage **1,61×** —
-il existe donc une vraie compétence, et aucune stratégie bête ne la remplace.
+Écart : **3,15×** le passif, **3,36×** le bouton tenu, **2,05×** le martelage. Le martelage
+avance quand même — un débutant progresse, il n'est pas puni.
 
-Vol moyen **0,42 s**, vol le plus long **0,83 s** (à 60 fps). Vitesse entre 1,2 et 5,7.
-Avec `SUIVI_CAMERA = 0.14`, le héros garde 33 px de marge en haut et 18 px en bas dans le
-pire cas, toutes stratégies confondues — il ne sort jamais de l'écran.
+Vol moyen **0,28 s**, le plus long **0,55 s**, et **0,68 colline franchie par vol**.
+Hauteur de vol maximale **139 px** — soit 19 px de plus que l'écran. Le zoom arrière
+de 9.4 n'est donc pas un ornement : sans lui, on ne voit plus le sol au sommet d'un vol.
 
-### 9.4 Le système de thèmes
+### 9.4 La caméra qui dézoome
+
+**Obligatoire, pas décoratif.** Les vols montent jusqu'à 139 px au-dessus du sol alors que
+l'écran fait 120 px de haut. Sans zoom arrière, au sommet d'un vol on ne voit plus que du
+ciel — et comme toute la compétence consiste à **choisir où retomber**, un joueur qui ne
+voit pas le sol ne joue plus. Le zoom rend la décision possible ; la sensation de monter
+haut vient en prime.
+
+```python
+ZOOM_MIN, ZOOM_MAX = 0.45, 1.0
+SUIVI_ZOOM = 0.06
+
+hauteur_de_vol = hauteur_du_sol(camera_x) - y          # 0 au sol
+zoom_vise = 1.0 - 0.55 * min(1.0, hauteur_de_vol / 120)
+zoom += (zoom_vise - zoom) * SUIVI_ZOOM                # lissé, jamais brusque
+```
+
+Le monde se convertit alors en coordonnées d'écran avec le zoom :
+
+```python
+ecran_y = (monde_y - camera_y) * zoom
+monde_x = camera_x + (ecran_x - X_HEROS) / zoom
+```
+
+**Sur la console**, MakeCode Arcade ne sait pas redimensionner librement : les sprites sont
+des images de taille fixe. Le port de la leçon 14 utilisera donc **trois paliers discrets**
+(1.0 / 0.65 / 0.45) avec deux tailles de sprite pour le héros (16×16 et 8×8). Le terrain,
+lui, est dessiné en colonnes — il se met à l'échelle sans rien changer.
+
+C'est un bon sujet de discussion pour le port : *qu'est-ce qu'on coupe quand la machine ne
+peut pas suivre ?* Le palier discret se lit comme un choix, pas comme un défaut.
+
+### 9.5 Les îles et la nuit
+
+Les deux mécaniques qui donnent une **fin** au jeu. Sans elles, on glisse indéfiniment.
+
+#### La nuit — la mécanique de fin
+
+C'est celle de l'original. L'auteur la décrit ainsi sur son site :
+
+> "Watch out for the night and fly as fast as you can."
+
+Un compteur `heure` avance à chaque image. Le ciel passe progressivement du jour au
+crépuscule puis à la nuit ; quand il fait complètement noir, la partie est finie.
+
+```python
+VITESSE_NUIT_BASE = 0.00035
+BONUS_ATTERRISSAGE = 0.004      # un bel atterrissage repousse la nuit
+
+heure += VITESSE_NUIT_BASE * (1 + 0.35 * numero_ile)   # accélère par paliers
+```
+
+**Seul l'enchaînement permet de devancer la nuit.** Chaque atterrissage qui *gagne* de la
+vitesse (voir 9.3, `vx` augmente à l'impact) rend un peu de jour. Un atterrissage raté n'en
+rend aucun. La boucle de récompense est donc : bien viser → plus de jour → plus de distance.
+
+Rendu : c'est une **interpolation entre deux palettes** — palette jour et palette nuit du
+thème courant. Quelques octets sur la console, et ça réutilise exactement le système de
+thèmes de 9.6. Les étoiles apparaissent quand `heure > 0.6`.
+
+#### Les îles
+
+- **Longueur fixe** : 20 collines, soit 4 000 px (affiché « 400 m »)
+- **Difficulté croissante** : `D_MAX` grandit et `L_COLLINE` rétrécit à chaque île
+- **La nuit accélère d'un palier** à chaque île
+
+**Le dernier saut de chaque île ne peut pas échouer.** La dernière colline est spéciale :
+descente très longue et rampe surdimensionnée. Le dragonneau arrive donc à pleine vitesse
+et traverse l'océan jusqu'à l'île suivante quoi qu'il fasse. Mais il y arrive **très vite**,
+et un atterrissage réussi sur la nouvelle île lance l'île entière du bon pied.
+
+C'est un moment de respiration offert entre deux montées de difficulté — le joueur ne peut
+pas le rater, mais il peut le rentabiliser.
+
+### 9.6 Le système de thèmes
 
 Un thème est un **dictionnaire** (rappel direct de la leçon 05). En MakeCode, c'est un
 simple `image.setPalette()` — donc l'idée migre telle quelle, et un thème coûte ~48 octets
@@ -627,7 +741,7 @@ Valeurs RGB validées au rendu (les quatre thèmes restent lisibles en 16 couleu
 Les thèmes se débloquent à la distance parcourue — ça justifie le système au lieu d'en
 faire un gadget.
 
-### 9.5 Fichiers d'une leçon du bloc 2
+### 9.7 Fichiers d'une leçon du bloc 2
 
 Le fil rouge ne casse pas la règle « chaque dossier est autonome ». **`jeu.py` d'une leçon
 contient l'état terminé de la leçon précédente**, avec les nouveaux `TODO` insérés. Adam
@@ -667,7 +781,7 @@ grossir un `jeu.py` de 300 lignes (illisible à 9 ans, et pénible à faire déf
 Chaque module correspond à un *namespace* MakeCode — le découpage sert le port autant que
 la lisibilité, et il réactive la leçon 06 (modules et `import`).
 
-### 9.6 Budget mémoire
+### 9.8 Budget mémoire
 
 Le flash est la ressource rare (l'utilisateur a déjà dû recompiler avec d'anciennes
 versions de MakeCode pour faire tenir certains jeux). Le design l'évite par construction :
@@ -680,21 +794,27 @@ versions de MakeCode pour faire tenir certains jeux). Le design l'évite par con
 Si le jeu ne compile pas à la leçon 13, couper dans cet ordre : particules, puis thèmes
 supplémentaires, puis animation du héros.
 
-### 9.7 Découpage leçon par leçon
+### 9.9 Découpage leçon par leçon
 
 | # | Ce qu'Adam écrit | Ce qu'il voit à la fin |
 |---|---|---|
 | **07** | Fenêtre 160×120 ×4, boucle, `vy += GRAVITE`, sol plat | Un dragonneau tombe et rebondit sur un sol plat |
 | **08** | `pygame.event` → bouton tenu, sprite 16×16, animation 2 images | Tenir ESPACE le fait plonger ; il bat des ailes |
-| **09** | `hauteur_du_sol(x)`, dessin en colonnes, `camera_x`, `camera_y` | De vraies collines défilent sous lui |
-| **09b** | Détection `y >= sol`, `pente`, `vy = pente * vx`, accélération | **Le vrai gameplay** : il glisse, prend de la vitesse, décolle |
-| **10** | Distance, vitesse, bonus « super glisse », HUD | Ça devient un jeu avec un score |
-| **11** | États menu/jeu/game over, dict de thèmes | Menu, game over, 4 thèmes déblocables |
-| **12** | Sons, particules, screen shake | Ça devient *satisfaisant* |
-| **13** | Réécriture MakeCode Arcade + `.uf2` | **Son jeu tourne sur la console** |
+| **09** | `hauteur_du_sol(x)` en tremplins, dessin en colonnes, `camera_x`, `camera_y` | De vraies collines défilent sous lui |
+| **09b** | `y >= sol`, `pente`, suivi de pente, **formule d'atterrissage** | **Le vrai gameplay** : il glisse, décolle, et rate ses atterrissages |
+| **10** | Zoom lié à l'altitude, HUD vitesse + distance | Il monte *haut* — et on voit enfin où il va retomber |
+| **11** | Compteur `heure`, palettes jour/nuit, îles, saut d'océan | Le jeu a une **fin** : la nuit le rattrape |
+| **12** | États menu/jeu/game over, dict de thèmes | Menu, game over, 4 thèmes déblocables |
+| **13** | Sons, particules, screen shake | Ça devient *satisfaisant* |
+| **14** | Réécriture MakeCode Arcade + `.uf2` | **Son jeu tourne sur la console** |
 
-⚠️ La leçon **09b** est la plus dense du bloc. Prévoir qu'elle déborde et garder la
-leçon 10 courte en compensation.
+⚠️ La leçon **09b** est la plus dense du bloc : elle contient la formule d'atterrissage,
+qui est le cœur du jeu. Prévoir qu'elle déborde et garder la leçon 10 courte en
+compensation.
+
+⚠️ **La leçon 10 n'est pas du polish.** Sans le zoom arrière, les vols de la leçon 09b
+sortent de l'écran et le joueur ne voit plus le sol — donc ne peut plus viser. 09b et 10
+forment une paire ; ne pas les séparer de plusieurs semaines.
 
 ⚠️ **Leçons 07 et 08 — le sol plat doit faire rebondir**, pas coller :
 

@@ -26,16 +26,27 @@ LARGEUR, HAUTEUR = 160, 120      # résolution logique (= MakeCode Arcade)
 ZOOM = 4                         # fenêtre 640x480
 X_HEROS = 40                     # le héros reste à cette colonne
 
+# --- Terrain : des collines-TREMPLINS (voir COURS_FORMAT §9.3) ---
+L_COLLINE        = 200           # longueur d'une colline
+R_DESCENTE       = 0.68          # part occupée par la descente
+CRETE            = 46            # y du sommet (constant : les collines se raccordent)
+D_MIN, D_MAX     = 30, 65        # dénivelé, tiré au sort par colline
+
 # --- Physique (calibrée par simulation — voir COURS_FORMAT §9.3) ---
 GRAVITE          = 0.14
-GRAVITE_PLONGEON = 0.50
-ACCEL_DESCENTE   = 0.18
-FREIN_MONTEE     = 0.23          # > ACCEL_DESCENTE : c'est le coeur du game design
+GRAVITE_PLONGEON = 0.80
+ACCEL_DESCENTE   = 0.22
+FREIN_MONTEE     = 0.28          # > ACCEL_DESCENTE : c'est le coeur du game design
 FRICTION         = 0.997
-VX_MIN, VX_MAX   = 1.2, 8.0
-VX_JAUGE_MAX     = 6.0           # affichage seulement : VX_MAX n'est jamais atteint
+VX_MIN, VX_MAX   = 1.2, 9.0
+VX_JAUGE_MAX     = 7.0           # affichage seulement : VX_MAX n'est jamais atteint
 SUIVI_CAMERA     = 0.14
 HAUTEUR_VISEE    = 60
+
+# --- Zoom arrière : obligatoire, les vols dépassent l'écran (§9.4) ---
+ZOOM_MIN         = 0.45
+HAUTEUR_ZOOM     = 80            # altitude à laquelle le zoom est complètement ouvert
+SUIVI_ZOOM       = 0.12
 
 # --- Thèmes --------------------------------------------------
 THEMES = [
@@ -117,8 +128,20 @@ POLICE = None    # initialisée dans main()
 
 
 def hauteur_du_sol(x):
-    """Le y du sol à la position x du monde. y = 0 en haut de l'écran."""
-    return 76 + 32 * math.sin(x / 38) + 11 * math.sin(x / 17)
+    """Le y du sol à la position x du monde. y = 0 en haut de l'écran.
+
+    Chaque colline est un TREMPLIN : longue descente douce en cosinus,
+    puis rampe droite qui casse net au sommet. C'est l'angle du sommet
+    qui projette le dragonneau — une colline arrondie ne décolle pas.
+    """
+    i = int(x // L_COLLINE)
+    d = D_MIN + (D_MAX - D_MIN) * ((i * 7919) % 1000) / 1000
+    t = (x % L_COLLINE) / L_COLLINE
+    if t < R_DESCENTE:
+        u = t / R_DESCENTE
+        return CRETE + d * (1 - math.cos(math.pi * u)) / 2
+    u = (t - R_DESCENTE) / (1 - R_DESCENTE)
+    return CRETE + d * (1 - u)
 
 
 class Jeu:
@@ -152,11 +175,14 @@ class Jeu:
         self.y = hauteur_du_sol(0)
         self.vy = 0.0
         self.vx = 2.0
+        self.zoom = 1.0
         self.camera_y = self.y - HAUTEUR_VISEE
         self.au_sol = True
         self.temps_en_vol = 0
         self.meilleur_vol = 0
         self.animation = 0.0
+        self.gain_atterrissage = 0.0
+        self.eclat = 0
 
     # --- Le moteur, exactement comme dans COURS_FORMAT §9.3 ---
     def mettre_a_jour(self, bouton_tenu):
@@ -166,12 +192,22 @@ class Jeu:
 
         sol = hauteur_du_sol(self.camera_x)
         if self.y >= sol:
-            if not self.au_sol:
-                self.meilleur_vol = max(self.meilleur_vol, self.temps_en_vol)
-            self.au_sol = True
-            self.temps_en_vol = 0
             self.y = sol
             pente = hauteur_du_sol(self.camera_x + 1) - sol
+
+            if not self.au_sol:
+                # ATTERRISSAGE — la ligne la plus importante du jeu.
+                # Seule la vitesse PARALLELE au sol survit à l'impact.
+                # Aligné sur une descente -> on gagne. De travers -> on perd tout.
+                self.meilleur_vol = max(self.meilleur_vol, self.temps_en_vol)
+                avant = self.vx
+                self.vx = (self.vx + self.vy * pente) / (1 + pente * pente)
+                self.vx = max(VX_MIN, min(VX_MAX, self.vx))
+                self.gain_atterrissage = self.vx - avant
+                self.eclat = 12 if self.gain_atterrissage > 0.15 else 0
+
+            self.au_sol = True
+            self.temps_en_vol = 0
             self.vy = pente * self.vx
             self.vx += pente * (ACCEL_DESCENTE if pente > 0 else FREIN_MONTEE)
             self.vx = max(VX_MIN, min(VX_MAX, self.vx * FRICTION))
@@ -179,9 +215,17 @@ class Jeu:
             self.au_sol = False
             self.temps_en_vol += 1
 
+        # Zoom arrière selon l'altitude : sans lui, on ne voit plus le sol
+        # au sommet d'un vol — donc on ne peut plus viser son atterrissage.
+        hauteur_de_vol = max(0.0, sol - self.y)
+        zoom_vise = 1.0 - (1.0 - ZOOM_MIN) * min(1.0, hauteur_de_vol / HAUTEUR_ZOOM)
+        self.zoom += (zoom_vise - self.zoom) * SUIVI_ZOOM
+
         self.camera_x += self.vx
-        self.camera_y += ((self.y - HAUTEUR_VISEE) - self.camera_y) * SUIVI_CAMERA
+        self.camera_y += ((self.y - HAUTEUR_VISEE / self.zoom) - self.camera_y) * SUIVI_CAMERA
         self.animation += 0.25 if self.au_sol else 0.12
+        if self.eclat > 0:
+            self.eclat -= 1
 
     def dessiner(self, surf):
         t = self.theme
@@ -189,16 +233,25 @@ class Jeu:
 
         # Le terrain, une colonne verticale par pixel d'écran.
         # Même forme de code qu'en MakeCode Arcade (image.drawLine).
+        z = self.zoom
         for ex in range(LARGEUR):
-            sy = int(hauteur_du_sol(self.camera_x + ex - X_HEROS) - self.camera_y)
+            monde_x = self.camera_x + (ex - X_HEROS) / z
+            sy = int((hauteur_du_sol(monde_x) - self.camera_y) * z)
             if sy < HAUTEUR:
                 pygame.draw.line(surf, t["collines"], (ex, sy), (ex, HAUTEUR))
-                pygame.draw.line(surf, t["ombre"], (ex, sy), (ex, min(sy + 3, HAUTEUR)))
+                pygame.draw.line(surf, t["ombre"], (ex, sy),
+                                 (ex, min(sy + max(1, int(3 * z)), HAUTEUR)))
 
-        # Le héros
+        # Le héros — il rapetisse avec le zoom (sur la console : 2 tailles de sprite)
         img = self.sprites[int(self.animation) % 2]
-        ey = int(self.y - self.camera_y)
-        surf.blit(img, (X_HEROS - 7, ey - 7))
+        if z < 0.75:
+            img = pygame.transform.scale(img, (max(6, int(16 * z)), max(5, int(12 * z))))
+        ey = int((self.y - self.camera_y) * z)
+        surf.blit(img, (X_HEROS - img.get_width() // 2, ey - img.get_height() // 2))
+
+        # Éclat blanc quand l'atterrissage a fait GAGNER de la vitesse
+        if self.eclat > 0:
+            pygame.draw.circle(surf, (255, 255, 255), (X_HEROS, ey), 10 - self.eclat // 2, 1)
 
         # HUD : distance + jauge de vitesse
         distance = int(self.camera_x / 10)
