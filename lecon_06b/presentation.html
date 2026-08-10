@@ -238,8 +238,8 @@
 <div id="progress-bar">
   <a href="../index.html" class="back-btn">← Plan</a>
   <span class="progress-item active" id="prog-0">0. Intro</span>
-  <span class="progress-item" id="prog-1">1. customtkinter</span>
-  <span class="progress-item" id="prog-2">2. matplotlib</span>
+  <span class="progress-item" id="prog-1">1. Les tokens</span>
+  <span class="progress-item" id="prog-2">2. Déjà écrit</span>
   <span class="progress-item" id="prog-3">3. try/except</span>
   <span class="progress-item" id="prog-4">4. Projet</span>
   <span class="progress-item" id="prog-5">5. Résumé</span>
@@ -256,14 +256,20 @@
   <div class="card info">
     <div class="label code">Objectifs</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
-      <li>Créer une fenêtre avec boutons — <code style="color:var(--accent2)">customtkinter</code></li>
-      <li>Tracer des courbes mathématiques — <code style="color:var(--accent2)">matplotlib</code></li>
+      <li>Comprendre comment un programme <strong>lit</strong> <code style="color:var(--accent2)">12+3×4</code></li>
       <li>Protéger le programme contre les erreurs — <code style="color:var(--accent2)">try / except</code></li>
-      <li>Assembler tout ça en une <strong>calculatrice graphique</strong> style TI-83</li>
+      <li>Écrire <strong>deux modules</strong> que la calculatrice va importer</li>
+      <li>Voir ton code faire tourner une vraie <strong>calculatrice graphique</strong></li>
     </ul>
   </div>
 
-  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 90 min de projet</p>
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Tu ne pars pas de zéro</div>
+    <p style="font-size:.95em;">La fenêtre, les boutons et le graphique sont <strong>déjà écrits</strong>.
+    Toi, tu écris le cœur : les opérations et la mémoire.</p>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 60 min d'atelier</p>
 
   <!-- ── Rappel leçon 06 ── -->
   <div style="margin-top: 28px;">
@@ -305,66 +311,94 @@
 <div class="section" id="sec-1">
   <div class="section-header">
     <div class="section-number">1</div>
-    <h2>customtkinter — fenêtres et boutons</h2>
+    <h2>Les tokens — comment lire <code style="font-size:.85em">12+3×4</code></h2>
   </div>
 
+  <style>
+    .tok {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:44px; padding:10px 14px; border-radius:8px;
+      font-family:'Courier New', monospace; font-size:1.15em; font-weight:bold;
+      border:2px solid transparent; transition:all .25s;
+    }
+    .tok-num { background:#2d2a4a; color:var(--accent2); border-color:var(--accent); }
+    .tok-op  { background:#4a3520; color:var(--warning); border-color:#c46f37; }
+    .tok-vise { transform:translateY(-6px); box-shadow:0 6px 18px rgba(124,106,247,.5); }
+    .tok-neuf { background:#2a4a2d; color:var(--success); border-color:var(--success); }
+    .tok-rangee { display:flex; gap:10px; flex-wrap:wrap; align-items:center; min-height:52px; }
+  </style>
+
   <div class="card analogy">
-    <div class="label analogy">Analogie — LEGO pour interfaces</div>
+    <div class="label analogy">Analogie — lire une phrase</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
-      <span>🏠 <code style="color:var(--accent2)">CTk()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; la plaque de base (la fenêtre)</span>
-      <span>🔤 <code style="color:var(--accent2)">CTkLabel()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une étiquette de texte</span>
-      <span>🔵 <code style="color:var(--accent2)">CTkButton()</code> &nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; un bouton cliquable</span>
-      <span>📝 <code style="color:var(--accent2)">CTkEntry()</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une case de saisie</span>
+      <span>📖 <code style="color:var(--accent2)">"12+3×4"</code> &nbsp;→&nbsp; pour l'ordinateur, six caractères <span style="color:var(--muted)">(pas un calcul)</span></span>
+      <span>✂️ <strong>Découper</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; en mots : <code style="color:var(--accent2)">12</code> <code style="color:var(--accent2)">+</code> <code style="color:var(--accent2)">3</code> <code style="color:var(--accent2)">×</code> <code style="color:var(--accent2)">4</code></span>
+      <span>🔢 <strong>Réduire</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le plus prioritaire d'abord, jusqu'à un seul morceau</span>
     </div>
   </div>
 
-  <div class="card install">
-    <div class="label install">📦 Installation (une seule fois dans Thonny)</div>
-    <p style="font-size:.9em;">Outils → Gérer les paquets → chercher <code style="color:var(--accent2)">customtkinter</code> → Installer</p>
-  </div>
-
-  <div class="code-block"><span class="kw">import</span> <span class="mod">customtkinter</span> <span class="kw">as</span> <span class="mod">ctk</span>
-
-<span class="var">fenetre</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTk</span>()                     <span class="cm"># créer la fenêtre</span>
-<span class="var">fenetre</span>.<span class="fn">title</span>(<span class="str">"Ma calculatrice"</span>)         <span class="cm"># titre</span>
-<span class="var">fenetre</span>.<span class="fn">geometry</span>(<span class="str">"400x300"</span>)             <span class="cm"># largeur × hauteur px</span>
-
-<span class="var">label</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkLabel</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"Résultat : 0"</span>)
-<span class="var">label</span>.<span class="fn">pack</span>(<span class="var">pady</span><span class="op">=</span><span class="num">20</span>)                    <span class="cm"># placer dans la fenêtre</span>
-
-<span class="var">btn</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkButton</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"="</span>, <span class="var">command</span><span class="op">=</span><span class="var">calculer</span>)
-<span class="var">btn</span>.<span class="fn">pack</span>()
-
-<span class="var">fenetre</span>.<span class="fn">mainloop</span>()                     <span class="cm"># lancer — attend les clics</span></div>
-
   <div class="card info">
-    <div class="label code">command=</div>
+    <div class="label code">Un token</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-      <li><code style="color:var(--accent2)">command=calculer</code> → appelle <code>calculer()</code> au clic</li>
-      <li><code style="color:var(--accent2)">command=lambda: ...</code> → action courte en une ligne</li>
-      <li><strong>Pas de parenthèses</strong> après le nom de la fonction !</li>
+      <li><strong>Token</strong> &nbsp;<code>= un morceau</code> — un nombre, ou un symbole</li>
+      <li><strong>Découper</strong> &nbsp;<code>"12+3" → [12, "+", 3]</code></li>
+      <li><strong>Chiffres collés</strong> &nbsp;<code>1 puis 2 → 12</code>, pas deux nombres</li>
     </ul>
   </div>
 
-  <h3>🎮 Démo — Construction d'une fenêtre</h3>
+  <h3>🎮 Démo — Regarde le calcul se réduire</h3>
 
   <div class="demo-box">
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
-      <button class="demo-btn" id="ctk-next-btn" onclick="ctkNext()">▶ Étape suivante</button>
-      <button class="demo-btn secondary" onclick="ctkReset()">↺ Recommencer</button>
+    <div style="margin-bottom:14px; display:flex; gap:6px; flex-wrap:wrap;">
+      <button class="curve-btn active" id="btn-tk0" onclick="tokChoisir(0)">12+3×4</button>
+      <button class="curve-btn"        id="btn-tk1" onclick="tokChoisir(1)">2+3×4-1</button>
+      <button class="curve-btn"        id="btn-tk2" onclick="tokChoisir(2)">10-2-3</button>
+      <button class="curve-btn"        id="btn-tk3" onclick="tokChoisir(3)">6÷2×3</button>
     </div>
 
-    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
-      <div class="sim-window" style="flex: 0 0 auto;">
-        <div class="sim-titlebar">Ma calculatrice — 400×300</div>
-        <div class="sim-body" id="ctk-sim-body">
-          <div style="color:var(--muted); font-size:.8em; font-style:italic;">— fenêtre vide —</div>
-        </div>
-      </div>
-      <div id="ctk-step-info" style="flex:1; min-width:160px; font-size:.9em; color:var(--muted); padding-top:8px;">
-        Clique sur "Étape suivante" pour assembler la fenêtre pièce par pièce.
-      </div>
+    <div style="background:#13131f; border-radius:8px; padding:18px; margin-bottom:14px;">
+      <div style="color:var(--muted); font-size:.8em; margin-bottom:10px;">Le texte tapé sur les boutons :</div>
+      <div id="tok-brut" style="font-family:'Courier New'; font-size:1.5em; color:var(--accent2); letter-spacing:.08em;">12+3×4</div>
     </div>
+
+    <div style="background:#13131f; border-radius:8px; padding:18px; margin-bottom:16px;">
+      <div style="color:var(--muted); font-size:.8em; margin-bottom:12px;">Les tokens :</div>
+      <div class="tok-rangee" id="tok-rangee"></div>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <button class="demo-btn" id="tok-btn" onclick="tokSuivant()">▶ Étape suivante</button>
+      <button class="demo-btn secondary" onclick="tokReset()">↺ Recommencer</button>
+    </div>
+
+    <div id="tok-legende" style="font-size:.95em; color:var(--muted); min-height:44px;"></div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Toujours × et ÷ avant + et −</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># Sans priorité — faux</span>
+<span class="num">12</span> <span class="op">+</span> <span class="num">3</span> <span class="op">=</span> <span class="num">15</span>,  <span class="num">15</span> <span class="op">×</span> <span class="num">4</span> <span class="op">=</span> <span class="num">60</span>   <span class="cm">❌</span>
+
+<span class="cm"># Avec priorité — juste</span>
+<span class="num">3</span> <span class="op">×</span> <span class="num">4</span> <span class="op">=</span> <span class="num">12</span>,  <span class="num">12</span> <span class="op">+</span> <span class="num">12</span> <span class="op">=</span> <span class="num">24</span>   <span class="cm">✅</span></div>
+  </div>
+
+  <div class="card success">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">C'est déjà écrit pour toi</div>
+    <p style="font-size:.95em;">Ce découpage et ces priorités, c'est <code style="color:var(--accent2)">calculator.py</code>.
+    Tu n'as pas à l'écrire — mais maintenant tu sais ce qu'il fait quand tu appuies sur <code>=</code>.</p>
+  </div>
+
+  <!-- Quiz -->
+  <div class="quiz-block">
+    <h4>🧠 Quiz — Combien de tokens dans <code>25+7</code> ?</h4>
+    <div class="quiz-options" id="q0-opts">
+      <div class="quiz-option">5 — un par caractère</div>
+      <div class="quiz-option">3 — le nombre 25, le +, le nombre 7</div>
+      <div class="quiz-option">2 — le calcul et le résultat</div>
+    </div>
+    <div class="quiz-feedback" id="q0-feedback"></div>
   </div>
 </div>
 
@@ -374,51 +408,60 @@
 <div class="section" id="sec-2">
   <div class="section-header">
     <div class="section-number">2</div>
-    <h2>matplotlib — dessiner des courbes</h2>
+    <h2>Ce qui est déjà écrit pour toi</h2>
   </div>
 
   <div class="card analogy">
-    <div class="label analogy">Analogie — papier millimétré numérique</div>
+    <div class="label analogy">Analogie — les modules de la leçon 06</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
-      <span>📊 <code style="color:var(--accent2)">matplotlib</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; dessine les courbes</span>
-      <span>📐 <code style="color:var(--accent2)">numpy</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; génère les points x</span>
+      <span>🧱 <code style="color:var(--accent2)">customtkinter</code> &nbsp;→&nbsp; les LEGO de la fenêtre</span>
+      <span>📐 <code style="color:var(--accent2)">matplotlib</code> &nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le papier millimétré</span>
+      <span>🔬 <code style="color:var(--accent2)">mpmath</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; les nombres géants <span style="color:var(--muted)">(celui-là, tu t'en sers)</span></span>
     </div>
   </div>
 
   <div class="card install">
     <div class="label install">📦 Installation (une seule fois dans Thonny)</div>
     <p style="font-size:.9em;">
-      Outils → Gérer les paquets → <code style="color:var(--accent2)">matplotlib</code> → Installer<br>
-      puis → <code style="color:var(--accent2)">numpy</code> → Installer
+      Outils → Gérer les paquets → installer&nbsp;:
+      <code style="color:var(--accent2)">customtkinter</code>,
+      <code style="color:var(--accent2)">matplotlib</code>,
+      <code style="color:var(--accent2)">numpy</code>,
+      <code style="color:var(--accent2)">mpmath</code>
     </p>
   </div>
 
-  <h3>Tracer une courbe (version simple)</h3>
+  <h3>Les cinq fichiers du projet</h3>
 
-  <div class="code-block"><span class="kw">import</span> <span class="mod">matplotlib.pyplot</span> <span class="kw">as</span> <span class="mod">plt</span>
-<span class="kw">import</span> <span class="mod">numpy</span> <span class="kw">as</span> <span class="mod">np</span>
+  <div class="code-block"><span class="fn">mes_operations.py</span>   <span class="cm">← TOI     puissance, racines, factorielle, tétration</span>
+<span class="fn">mon_historique.py</span>   <span class="cm">← TOI     la mémoire et les messages d'erreur</span>
+<span class="cm">──────────────────────────────────────────────────────────</span>
+<span class="var">calculator.py</span>       <span class="cm">  fourni   les tokens et les priorités  (section 1)</span>
+<span class="var">interface.py</span>        <span class="cm">  fourni   la fenêtre, les boutons, le graphique</span>
+<span class="var">projet.py</span>           <span class="cm">  fourni   assemble tout et démarre</span></div>
 
-<span class="var">x</span> <span class="op">=</span> <span class="mod">np</span>.<span class="fn">linspace</span>(<span class="op">-</span><span class="num">5</span>, <span class="num">5</span>, <span class="num">200</span>)   <span class="cm"># 200 points entre -5 et 5</span>
-<span class="var">y</span> <span class="op">=</span> <span class="var">x</span><span class="op">**</span><span class="num">2</span>                         <span class="cm"># f(x) = x²</span>
+  <div class="card info">
+    <div class="label code">Comment ils se parlent</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Le clic</strong> &nbsp;<code>interface.py</code> — attrape le bouton</li>
+      <li><strong>La lecture</strong> &nbsp;<code>calculator.py</code> — découpe et priorise</li>
+      <li><strong>Le calcul</strong> &nbsp;<code>mes_operations.py</code> — <span style="color:var(--success)">ton code</span></li>
+      <li><strong>La mémoire</strong> &nbsp;<code>mon_historique.py</code> — <span style="color:var(--success)">ton code</span></li>
+    </ul>
+  </div>
 
-<span class="mod">plt</span>.<span class="fn">plot</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">color</span><span class="op">=</span><span class="str">'#7c6af7'</span>)
-<span class="mod">plt</span>.<span class="fn">title</span>(<span class="str">"y = x²"</span>)
-<span class="mod">plt</span>.<span class="fn">show</span>()                        <span class="cm"># ouvre une fenêtre avec le graphique</span></div>
+  <div class="card success">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">Un seul import te concerne</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="kw">import</span> <span class="mod">mpmath</span>
+<span class="kw">from</span> <span class="mod">mpmath</span> <span class="kw">import</span> <span class="fn">mpf</span>
 
-  <h3>Intégrer le graphique dans la fenêtre CTk</h3>
+<span class="mod">mpmath</span>.<span class="fn">sqrt</span>(<span class="num">16</span>)        <span class="cm"># 4 — mais avec 500 décimales si tu veux</span>
+<span class="mod">mpmath</span>.<span class="fn">root</span>(<span class="num">8</span>, <span class="num">3</span>)      <span class="cm"># 2 — la racine cubique</span>
+<span class="mod">mpmath</span>.<span class="fn">factorial</span>(<span class="num">5</span>)    <span class="cm"># 120</span></div>
+  </div>
 
-  <div class="code-block"><span class="kw">from</span> <span class="mod">matplotlib.figure</span> <span class="kw">import</span> <span class="fn">Figure</span>
-<span class="kw">from</span> <span class="mod">matplotlib.backends.backend_tkagg</span> <span class="kw">import</span> <span class="fn">FigureCanvasTkAgg</span>
-
-<span class="var">fig</span> <span class="op">=</span> <span class="fn">Figure</span>(<span class="var">figsize</span><span class="op">=</span>(<span class="num">5</span>, <span class="num">4</span>), <span class="var">dpi</span><span class="op">=</span><span class="num">100</span>)  <span class="cm"># la feuille de papier</span>
-<span class="var">ax</span>  <span class="op">=</span> <span class="var">fig</span>.<span class="fn">add_subplot</span>(<span class="num">111</span>)               <span class="cm"># la zone de dessin</span>
-<span class="var">ax</span>.<span class="fn">plot</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">color</span><span class="op">=</span><span class="str">'#7c6af7'</span>)
-
-<span class="var">canvas</span> <span class="op">=</span> <span class="fn">FigureCanvasTkAgg</span>(<span class="var">fig</span>, <span class="var">master</span><span class="op">=</span><span class="var">fenetre</span>)  <span class="cm"># coller dans CTk</span>
-<span class="var">canvas</span>.<span class="fn">draw</span>()
-<span class="var">canvas</span>.<span class="fn">get_tk_widget</span>().<span class="fn">pack</span>()</div>
-
-  <h3>🎮 Démo — Courbes mathématiques</h3>
+  <h3>🎮 Démo — Ce que le bouton 📊 va tracer</h3>
 
   <div class="demo-box">
     <div style="margin-bottom:14px; display:flex; gap:6px; flex-wrap:wrap;">
@@ -550,45 +593,61 @@
           <div style="color:var(--accent2); font-size:1.4em; font-family:'Courier New';">5.0</div>
         </div>
         <!-- Button grid -->
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;">
-          <div class="calc-key">7</div><div class="calc-key">8</div><div class="calc-key">9</div><div class="calc-key op">÷</div>
-          <div class="calc-key">4</div><div class="calc-key">5</div><div class="calc-key">6</div><div class="calc-key op">×</div>
-          <div class="calc-key">1</div><div class="calc-key">2</div><div class="calc-key">3</div><div class="calc-key op">−</div>
-          <div class="calc-key">0</div><div class="calc-key">.</div><div class="calc-key op">C</div><div class="calc-key op">+</div>
-          <div class="calc-key fn" style="grid-column:span 2;">📊 Graphique</div>
-          <div class="calc-key eq" style="grid-column:span 2;">=</div>
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px;">
+          <div class="calc-key fn">x²</div><div class="calc-key fn">^</div><div class="calc-key fn">√</div><div class="calc-key fn">ⁿ√</div><div class="calc-key fn">↑↑</div>
+          <div class="calc-key fn">n!</div><div class="calc-key fn">π</div><div class="calc-key fn">(</div><div class="calc-key fn">)</div><div class="calc-key fn">±</div>
+          <div class="calc-key">7</div><div class="calc-key">8</div><div class="calc-key">9</div><div class="calc-key op">÷</div><div class="calc-key fn">EE</div>
+          <div class="calc-key">4</div><div class="calc-key">5</div><div class="calc-key">6</div><div class="calc-key op">×</div><div class="calc-key fn">Ans</div>
+          <div class="calc-key">1</div><div class="calc-key">2</div><div class="calc-key">3</div><div class="calc-key op">−</div><div class="calc-key eq" style="grid-row:span 2;">=</div>
+          <div class="calc-key">X</div><div class="calc-key">0</div><div class="calc-key">.</div><div class="calc-key op">+</div>
         </div>
       </div>
     </div>
-    <p style="color:var(--muted); font-size:.8em; margin-top:12px;">Maquette — ton projet final ressemblera à ça !</p>
+    <p style="color:var(--muted); font-size:.8em; margin-top:12px;">Le bouton <strong>=</strong> devient <strong>📊</strong> dès que l'expression contient un X.</p>
   </div>
 
-  <h3>Modules à importer</h3>
+  <h3>Ta part — 10 fonctions, deux fichiers</h3>
 
-  <div class="code-block" style="font-size:.88em;"><span class="kw">import</span> <span class="mod">customtkinter</span> <span class="kw">as</span> <span class="mod">ctk</span>                          <span class="cm"># boutons, labels, fenêtre</span>
-<span class="kw">from</span> <span class="mod">matplotlib.figure</span> <span class="kw">import</span> <span class="fn">Figure</span>                   <span class="cm"># figure embarquée</span>
-<span class="kw">from</span> <span class="mod">matplotlib.backends.backend_tkagg</span> <span class="kw">import</span> <span class="fn">FigureCanvasTkAgg</span>
-<span class="kw">import</span> <span class="mod">numpy</span> <span class="kw">as</span> <span class="mod">np</span>                                    <span class="cm"># points pour les courbes</span>
-<span class="kw">from</span> <span class="mod">mpmath</span> <span class="kw">import</span> <span class="var">mp</span>, <span class="fn">mpf</span>                            <span class="cm"># précision choisie</span></div>
+  <div class="compare-grid">
+    <div>
+      <div class="code-block" style="font-size:.84em; border-left: 3px solid var(--accent); margin: 0;">
+<span class="cm"># mes_operations.py   (leçon 06)</span>
+<span class="kw">def</span> <span class="fn">puissance</span>(<span class="var">base</span>, <span class="var">exposant</span>)
+<span class="kw">def</span> <span class="fn">racine_carree</span>(<span class="var">nombre</span>)
+<span class="kw">def</span> <span class="fn">racine_nieme</span>(<span class="var">nombre</span>, <span class="var">indice</span>)
+<span class="kw">def</span> <span class="fn">factorielle</span>(<span class="var">nombre</span>)
+<span class="kw">def</span> <span class="fn">tetration</span>(<span class="var">base</span>, <span class="var">hauteur</span>)</div>
+      <p style="color:var(--muted); font-size:.82em; margin-top:8px;">→ allume les boutons <code>x²</code> <code>^</code> <code>√</code> <code>ⁿ√</code> <code>n!</code> <code>↑↑</code></p>
+    </div>
+    <div>
+      <div class="code-block" style="font-size:.84em; border-left: 3px solid var(--success); margin: 0;">
+<span class="cm"># mon_historique.py   (leçon 05)</span>
+<span class="kw">def</span> <span class="fn">noter</span>(<span class="var">historique</span>, <span class="var">expr</span>, <span class="var">res</span>)
+<span class="kw">def</span> <span class="fn">dernier</span>(<span class="var">historique</span>)
+<span class="kw">def</span> <span class="fn">du_plus_recent</span>(<span class="var">historique</span>)
+<span class="var">MESSAGES</span> <span class="op">=</span> { <span class="cm">… }</span>
+<span class="kw">def</span> <span class="fn">message_pour</span>(<span class="var">nom_erreur</span>)</div>
+      <p style="color:var(--muted); font-size:.82em; margin-top:8px;">→ allume le panneau d'historique et le bouton <code>Ans</code></p>
+    </div>
+  </div>
 
-  <div class="card info" style="margin-top:8px;">
-    <div class="label code">Fonctionnalités à construire</div>
+  <div class="card info" style="margin-top:16px;">
+    <div class="label code">Comment tester</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-      <li>✅ Boutons 0–9, +, −, ×, ÷, = et C (effacer)</li>
-      <li>✅ Affichage de l'expression et du résultat</li>
-      <li>✅ Gestion des erreurs avec <code>try/except</code></li>
-      <li>✅ Bouton "Graphique" → trace f(x) dans la fenêtre</li>
-      <li>⭐ Bonus : historique des derniers calculs</li>
-      <li>⭐ Bonus : choisir la fonction (x², sin, cos…)</li>
+      <li><strong>▶ sur un module</strong> &nbsp;<code>mes_operations.py</code> — teste ce fichier seul</li>
+      <li><strong>▶ sur tests.py</strong> &nbsp;<code>29 tests</code> — le grand total</li>
+      <li><strong>▶ sur projet.py</strong> &nbsp;<code>la vraie fenêtre</code> — s'ouvre même à trous</li>
     </ul>
   </div>
 
   <div class="card warning" style="margin-top:12px;">
-    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Astuce de mise en page</div>
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Le piège de la tétration</div>
     <div class="code-block" style="margin-top: 10px; font-size:.85em;">
-<span class="cm"># .grid() est mieux que .pack() pour une grille de boutons</span>
-<span class="var">btn</span> <span class="op">=</span> <span class="mod">ctk</span>.<span class="fn">CTkButton</span>(<span class="var">fenetre</span>, <span class="var">text</span><span class="op">=</span><span class="str">"7"</span>)
-<span class="var">btn</span>.<span class="fn">grid</span>(<span class="var">row</span><span class="op">=</span><span class="num">0</span>, <span class="var">column</span><span class="op">=</span><span class="num">0</span>, <span class="var">padx</span><span class="op">=</span><span class="num">4</span>, <span class="var">pady</span><span class="op">=</span><span class="num">4</span>)</div>
+<span class="cm"># Sans garde-fou : 2↑↑6 occupe l'ordinateur 30 minutes</span>
+<span class="var">resultat</span> <span class="op">=</span> <span class="var">base</span> <span class="op">**</span> <span class="var">resultat</span>              <span class="cm">❌</span>
+
+<span class="cm"># Avec : ta fonction puissance() vérifie d'abord</span>
+<span class="var">resultat</span> <span class="op">=</span> <span class="fn">puissance</span>(<span class="var">base</span>, <span class="var">resultat</span>)      <span class="cm">✅</span></div>
   </div>
 </div>
 
@@ -607,38 +666,38 @@
     </thead>
     <tbody>
       <tr>
-        <td>import customtkinter as ctk</td>
-        <td>Charge la bibliothèque de fenêtres</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">ctk.CTk() → fenêtre</td>
+        <td>Token</td>
+        <td>Un morceau de l'expression : un nombre ou un symbole</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">"12+3" → [12, "+", 3]</td>
       </tr>
       <tr>
-        <td>CTkButton(command=f)</td>
-        <td>Bouton — appelle f() au clic</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">CTkButton(text="=", command=calc)</td>
+        <td>Priorité</td>
+        <td>× et ÷ se réduisent avant + et −</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">12+3×4 → 12+12 → 24</td>
       </tr>
       <tr>
-        <td>fenetre.mainloop()</td>
-        <td>Lance la boucle d'événements</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">toujours à la fin</td>
+        <td>mpmath.sqrt / root / factorial</td>
+        <td>Racine, racine n-ième, factorielle — à précision réglable</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">mpmath.root(8, 3) → 2</td>
       </tr>
       <tr>
-        <td>np.linspace(a, b, n)</td>
-        <td>n points réguliers entre a et b</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">linspace(-5, 5, 200)</td>
+        <td>liste.append(dictionnaire)</td>
+        <td>Ajoute un calcul à l'historique</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">{"expression": …, "resultat": …}</td>
       </tr>
       <tr>
-        <td>ax.plot(x, y)</td>
-        <td>Trace la courbe dans la figure</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">ax.plot(x, x**2)</td>
+        <td>list(reversed(liste))</td>
+        <td>Une copie à l'envers — sans abîmer l'originale</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">.reverse() modifie, reversed() copie</td>
       </tr>
       <tr>
-        <td>FigureCanvasTkAgg(fig, master=f)</td>
-        <td>Intègre matplotlib dans CTk</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">canvas.get_tk_widget().pack()</td>
+        <td>dictionnaire.get(clé, défaut)</td>
+        <td>Cherche sans planter si la clé n'existe pas</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">MESSAGES.get(nom, "❌ Erreur")</td>
       </tr>
       <tr>
         <td>try / except ValueError</td>
-        <td>Attrape une saisie invalide</td>
+        <td>Attrape un calcul impossible</td>
         <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">int("abc") → ValueError</td>
       </tr>
       <tr>
@@ -652,10 +711,10 @@
   <div class="card success" style="margin-top: 24px;">
     <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
     <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
-      <li><code style="color:var(--accent2)">CTkButton(command=f)</code> → <strong>pas de parenthèses</strong> après f</li>
-      <li><code style="color:var(--accent2)">np.linspace</code> génère les points x pour tracer une courbe</li>
-      <li><code style="color:var(--accent2)">FigureCanvasTkAgg</code> colle matplotlib dans la fenêtre CTk</li>
-      <li><code style="color:var(--accent2)">try/except</code> empêche le programme de planter sur une erreur de saisie</li>
+      <li>Un programme <strong>découpe</strong> le texte en tokens avant de calculer quoi que ce soit</li>
+      <li>Les priorités se font en <strong>plusieurs passes</strong> : × et ÷ d'abord, + et − ensuite</li>
+      <li><code style="color:var(--accent2)">import</code> permet de découper ton propre projet en modules</li>
+      <li><code style="color:var(--accent2)">try/except</code> + un dictionnaire = des messages d'erreur clairs</li>
     </ul>
   </div>
 
@@ -692,64 +751,125 @@ const observer = new IntersectionObserver(entries => {
 sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
 
 // ════════════════════════════════════════════════════════════
-// Section 1 — CTk window builder demo
+// Section 1 — Démo des tokens : découpage puis réduction
 // ════════════════════════════════════════════════════════════
-const CTK_STEPS = [
-  {
-    info: '① <strong style="color:var(--accent2)">CTk()</strong> — la fenêtre est créée. Elle est encore vide.',
-    widget: null
-  },
-  {
-    info: '② <strong style="color:var(--accent2)">title() / geometry()</strong> — on lui donne un nom et une taille.',
-    widget: null
-  },
-  {
-    info: '③ <strong style="color:var(--accent2)">CTkLabel()</strong> — une étiquette apparaît dans la fenêtre.',
-    widget: `<div style="color:var(--text); background:rgba(124,106,247,.1); padding:8px 16px; border-radius:6px; font-size:.9em; border:1px solid rgba(124,106,247,.2);">Résultat : 0</div>`
-  },
-  {
-    info: '④ <strong style="color:var(--accent2)">CTkButton()</strong> — un bouton cliquable est ajouté.',
-    widget: `<div style="background:var(--accent); color:white; padding:8px 24px; border-radius:8px; font-size:.9em; cursor:default;">=</div>`
-  },
-  {
-    info: '⑤ <strong style="color:var(--accent2)">mainloop()</strong> — la fenêtre est prête ! Elle attend les clics.',
-    widget: null
-  }
-];
+const TOK_EXPRS = ['12+3×4', '2+3×4-1', '10-2-3', '6÷2×3'];
+const TOK_OPS   = ['+', '-', '×', '÷'];
 
-let ctkStep = -1;
-let ctkWidgets = [];
+let tokChoix = 0;
+let tokTokens = null;      // null = pas encore découpé
+let tokNeuf = -1;          // index du token qui vient d'apparaître
+let tokFini = false;
 
-function ctkNext() {
-  ctkStep++;
-  if (ctkStep >= CTK_STEPS.length) return;
-
-  const step = CTK_STEPS[ctkStep];
-  document.getElementById('ctk-step-info').innerHTML =
-    `<div style="color:var(--text); line-height:1.5;">${step.info}</div>`;
-
-  if (step.widget) {
-    ctkWidgets.push(step.widget);
-    document.getElementById('ctk-sim-body').innerHTML = ctkWidgets.join('');
-  }
-
-  if (ctkStep === CTK_STEPS.length - 1) {
-    const btn = document.getElementById('ctk-next-btn');
-    btn.textContent = '✅ Terminé';
-    btn.disabled = true;
-  }
+function tokChoisir(i) {
+  tokChoix = i;
+  TOK_EXPRS.forEach((_, n) =>
+    document.getElementById('btn-tk' + n).classList.toggle('active', n === i));
+  document.getElementById('tok-brut').textContent = TOK_EXPRS[i];
+  tokReset();
 }
 
-function ctkReset() {
-  ctkStep = -1;
-  ctkWidgets = [];
-  document.getElementById('ctk-sim-body').innerHTML =
-    '<div style="color:var(--muted); font-size:.8em; font-style:italic;">— fenêtre vide —</div>';
-  document.getElementById('ctk-step-info').textContent =
-    'Clique sur "Étape suivante" pour assembler la fenêtre pièce par pièce.';
-  const btn = document.getElementById('ctk-next-btn');
-  btn.textContent = '▶ Étape suivante';
-  btn.disabled = false;
+function tokeniser(expr) {
+  const tokens = [];
+  let nombre = '';
+
+  for (const c of expr) {
+    if (c >= '0' && c <= '9') {
+      nombre += c;
+    } else {
+      if (nombre) { tokens.push(nombre); nombre = ''; }
+      tokens.push(c);
+    }
+  }
+
+  if (nombre) tokens.push(nombre);
+  return tokens;
+}
+
+function tokEstOp(t) { return TOK_OPS.includes(t); }
+
+// × et ÷ d'abord, puis + et − ; à priorité égale, de gauche à droite
+function tokProchaine(tokens) {
+  for (const groupe of [['×', '÷'], ['+', '-']]) {
+    for (let i = 0; i < tokens.length; i++) {
+      if (groupe.includes(tokens[i])) return i;
+    }
+  }
+  return -1;
+}
+
+function tokRendu() {
+  const zone = document.getElementById('tok-rangee');
+
+  if (tokTokens === null) {
+    zone.innerHTML = '<span style="color:var(--muted); font-style:italic; font-size:.9em;">— pas encore découpé —</span>';
+    return;
+  }
+
+  zone.innerHTML = tokTokens.map((t, i) => {
+    const base = tokEstOp(t) ? 'tok tok-op' : 'tok tok-num';
+    const neuf = (i === tokNeuf) ? ' tok-neuf tok-vise' : '';
+    return `<span class="${base}${neuf}">${t}</span>`;
+  }).join('');
+}
+
+function tokLegende(html) {
+  document.getElementById('tok-legende').innerHTML = html;
+}
+
+function tokBouton(texte, actif) {
+  const b = document.getElementById('tok-btn');
+  b.textContent = texte;
+  b.disabled = !actif;
+}
+
+function tokSuivant() {
+  if (tokFini) return;
+
+  // Première étape : découper
+  if (tokTokens === null) {
+    tokTokens = tokeniser(TOK_EXPRS[tokChoix]);
+    tokNeuf = -1;
+    tokRendu();
+    tokLegende('<strong style="color:var(--accent2)">Découpage.</strong> Chaque nombre et chaque symbole devient un token. ' +
+               'Les chiffres collés forment <strong>un seul</strong> nombre.');
+    return;
+  }
+
+  const i = tokProchaine(tokTokens);
+
+  if (i === -1) {
+    tokFini = true;
+    tokLegende(`<strong style="color:var(--success)">Terminé.</strong> Il ne reste qu'un token : le résultat est <strong>${tokTokens[0]}</strong>.`);
+    tokBouton('✅ Terminé', false);
+    return;
+  }
+
+  const op = tokTokens[i];
+  const a = Number(tokTokens[i - 1]);
+  const b = Number(tokTokens[i + 1]);
+  const r = op === '×' ? a * b : op === '÷' ? a / b : op === '+' ? a + b : a - b;
+  const prioritaire = (op === '×' || op === '÷');
+
+  tokTokens.splice(i - 1, 3, String(r));
+  tokNeuf = i - 1;
+  tokRendu();
+
+  const regle = prioritaire
+    ? '× et ÷ passent en premier'
+    : '+ et − viennent après, de gauche à droite';
+
+  tokLegende(`<strong style="color:var(--accent2)">${a} ${op} ${b} = ${r}</strong>` +
+             ` &nbsp;—&nbsp; <span style="color:var(--muted)">${regle}. Trois tokens n'en font plus qu'un.</span>`);
+}
+
+function tokReset() {
+  tokTokens = null;
+  tokNeuf = -1;
+  tokFini = false;
+  tokRendu();
+  tokLegende('Clique sur « Étape suivante » pour découper l\'expression.');
+  tokBouton('▶ Étape suivante', true);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -915,10 +1035,21 @@ function makeQuiz(optsSelector, fbId, correctIdx, hints) {
   });
 }
 
+makeQuiz('#q0-opts', 'q0-feedback', 1, [
+  'Un token n\'est pas un caractère : 2 et 5 collés forment un seul nombre.',
+  'Découpe à voix haute : « vingt-cinq », « plus », « sept » — trois morceaux.'
+]);
+
 makeQuiz('#q1-opts', 'q1-feedback', 1, [
   '"bonjour" ne peut pas être converti en entier — int() va déclencher une erreur.',
   'int("bonjour") déclenche ValueError → c\'est le bloc except qui s\'exécute !'
 ]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ des démos
+// ════════════════════════════════════════════════════════════
+tokChoisir(0);
+drawCurve('quad');
 </script>
 
 </body>
