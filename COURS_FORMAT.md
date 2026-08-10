@@ -526,32 +526,34 @@ Tout le jeu tient dans ces lignes. Elles sont introduites progressivement de 07 
 LARGEUR, HAUTEUR = 160, 120
 
 L_COLLINE        = 200      # longueur d'une colline, en px
-R_DESCENTE       = 0.68     # part de la colline occupée par la descente
+R_DESCENTE       = 0.62     # part de la colline occupée par la descente
 CRETE            = 46       # y du sommet (constant : les collines se raccordent)
 D_MIN, D_MAX     = 30, 65   # dénivelé — tiré au sort par colline
+POINTE           = 2.2      # netteté du sommet
 
-GRAVITE          = 0.14     # chute normale (planer)
-GRAVITE_PLONGEON = 0.80     # bouton tenu
+GRAVITE          = 0.08     # chute normale (planer)
+GRAVITE_PLONGEON = 0.30     # bouton tenu
 ACCEL_DESCENTE   = 0.22     # gain de vitesse en descente
 FREIN_MONTEE     = 0.28     # perte en montée — VOLONTAIREMENT > ACCEL_DESCENTE
+BONUS_PLONGEON   = 2.6      # × l'accélération si bouton tenu EN DESCENTE
+MALUS_PLONGEON   = 3.5      # × le freinage    si bouton tenu EN MONTÉE
 FRICTION         = 0.997
 VX_MIN, VX_MAX   = 1.2, 9.0
 SUIVI_CAMERA     = 0.14
-HAUTEUR_VISEE    = 60       # où le héros se stabilise à l'écran
 
 
 def hauteur_du_sol(x):
     """Le y du sol à la position x. y=0 en haut de l'écran.
-       Chaque colline est un TREMPLIN : longue descente douce,
-       puis rampe droite qui casse net au sommet."""
+       Descente longue et douce, puis remontée « en goutte » :
+       le sommet est ARRONDI, mais la courbure culmine AVANT lui."""
     i = int(x // L_COLLINE)                          # numéro de la colline
     d = D_MIN + (D_MAX - D_MIN) * ((i * 7919) % 1000) / 1000
     t = (x % L_COLLINE) / L_COLLINE
     if t < R_DESCENTE:                               # la descente, en cosinus
         u = t / R_DESCENTE
         return CRETE + d * (1 - math.cos(math.pi * u)) / 2
-    u = (t - R_DESCENTE) / (1 - R_DESCENTE)          # la rampe, toute droite
-    return CRETE + d * (1 - u)
+    u = (t - R_DESCENTE) / (1 - R_DESCENTE)          # la remontée « en goutte »
+    return CRETE + d * math.cos(math.pi * u / 2) ** POINTE
 ```
 
 À chaque image :
@@ -570,33 +572,57 @@ if y >= sol:                                       # au sol
         vx = max(VX_MIN, min(VX_MAX, vx))
 
     vy = pente * vx                                # suivre la pente
-    vx += pente * (ACCEL_DESCENTE if pente > 0 else FREIN_MONTEE)
-    vx = max(VX_MIN, min(VX_MAX, vx * FRICTION))
+
+    # LE BOUTON AGIT AUSSI AU SOL — c'est là qu'est le jeu
+    if pente > 0:      # descente : appuyer = se coller à la pente
+        accel = ACCEL_DESCENTE * (BONUS_PLONGEON if bouton_tenu else 1.0)
+    else:              # montée   : appuyer = s'écraser dans la côte
+        accel = FREIN_MONTEE * (MALUS_PLONGEON if bouton_tenu else 1.0)
+    vx = max(VX_MIN, min(VX_MAX, (vx + pente * accel) * FRICTION))
 
 au_sol_avant = y >= sol
 camera_x += vx
-camera_y += ((y - HAUTEUR_VISEE) - camera_y) * SUIVI_CAMERA
 ```
 
 Tout ce qui se dessine est ensuite décalé de `- camera_y` : le sol et le héros.
 
 #### Les trois mécanismes, et pourquoi ils sont là
 
-**1. L'angle au sommet, c'est lui qui projette.** On quitte le sol quand
-`courbure × vx² / 2 > gravité` — donc au point de **courbure maximale**. Sur une colline
-arrondie (un sinus), ce point est le sommet exact, là où la pente vaut 0 : le dragonneau
-décolle avec `vy = pente × vx ≈ 0`, c'est-à-dire pas du tout. C'est une propriété de la
-forme, aucun réglage de constantes ne la corrige.
+**1. Le bouton agit au sol — c'est le geste central du jeu.**
+Tenir dans la **descente** multiplie l'accélération par `BONUS_PLONGEON` : le dragonneau se
+colle à la pente et prend beaucoup de vitesse. Tenir dans la **montée** multiplie le
+freinage par `MALUS_PLONGEON` : il s'écrase dans la côte. Le geste à apprendre est donc
+*appuyer en descendant, relâcher avant l'horizontale*.
 
-La rampe droite met une **cassure** au sommet : la courbure y est infinie, et le
-dragonneau part avec la pleine pente de la rampe (25° à 45° selon le dénivelé). C'est un
-tremplin de saut à ski, et c'est la seule géométrie qui produit de vrais sauts.
+Mesuré : tenir en descente fait **2,52×** la distance de « ne jamais appuyer » et **1,85×**
+celle de « tenir tout le temps » ; tenir en montée fait **0,86×** — donc **pire que ne rien
+faire**. C'est exactement la hiérarchie de l'original.
 
-**2. `FREIN_MONTEE > ACCEL_DESCENTE`.** Si monter coûtait moins que descendre ne rapporte,
+Sans cette règle, le bouton n'a d'effet qu'en vol et la glisse est entièrement passive.
+
+**2. La forme du sommet décide du décollage.** On quitte le sol quand
+`courbure × vx² / 2 > gravité` — donc au point de **courbure maximale**. La question est :
+*quelle est la pente à cet endroit ?* Sur un sinus, la courbure culmine au sommet exact, là
+où la pente vaut 0 : le dragonneau décolle avec `vy = pente × vx ≈ 0`, c'est-à-dire pas du
+tout.
+
+La remontée **« en goutte »** (`cos(π·u/2)^POINTE`) place la courbure maximale *avant* le
+sommet, là où la pente vaut encore **0,44**. Le sommet reste visuellement arrondi — aucun
+coin, aucun segment droit. Une rampe droite donnait 0,39 pour un rendu bien plus laid : la
+goutte est meilleure sur les deux plans.
+
+| Forme | Saut de pente (coin visible) | Pente au décollage |
+|---|---|---|
+| **goutte** | **0,009** | **0,44** |
+| tremplin (rampe droite) | 0,393 | 0,39 |
+| arrondi | 0,441 | 0,24 |
+| vague (sinus déformé) | 0,022 | 0,03 |
+
+**3. `FREIN_MONTEE > ACCEL_DESCENTE`.** Si monter coûtait moins que descendre ne rapporte,
 rester collé au sol serait toujours gagnant. En rendant la montée plus chère, la seule
 façon de progresser est de **survoler la côte suivante**.
 
-**3. L'atterrissage, c'est là qu'est la compétence.**
+**4. L'atterrissage, c'est là qu'est la compétence.**
 `vx = (vx + vy × pente) / (1 + pente²)` — seule la composante de la vitesse **parallèle au
 sol** survit à l'impact ; la composante perpendiculaire est perdue.
 
@@ -607,9 +633,6 @@ Sans cette ligne, le jeu n'a aucune profondeur : ne jamais toucher le bouton don
 temps en vol et fait presque aussi bien que le jeu optimal. Avec elle, l'écart passe de
 1,12× à 3,15×. **C'est la ligne la plus importante du jeu.**
 
-**Le bouton ne fait effet qu'en vol** — au sol, la branche `if` réécrit `vy` à chaque
-image. Fidèle à l'original : on ne pilote pas la glisse, on choisit *où retomber*.
-
 **Les collines varient.** Le dénivelé est tiré par numéro de colline. Avec des collines
 identiques, le joueur se cale dans un rythme régulier et n'a plus rien à décider — mesuré :
 l'écart avec le jeu habile tombe à 1,12×. La variation force à viser chaque atterrissage.
@@ -617,38 +640,40 @@ l'écart avec le jeu habile tombe à 1,12×. La variation force à viser chaque 
 #### 9.3.1 Résultats mesurés (simulation sur 6 000 images)
 
 Ces chiffres servent de test de non-régression : si un réglage change, les revérifier.
-Le « jeu habile » est un pilote qui simule les deux choix jusqu'à l'atterrissage et garde
-celui qui donne la meilleure vitesse — un substitut correct d'un joueur qui vise.
 
-| Stratégie | Distance | % en vol | Vitesse finale |
+| Stratégie | Distance | % en vol | Rapport |
 |---|---|---|---|
-| Ne jamais appuyer | 14 807 | 21 % | 1,2 |
-| Bouton toujours tenu | 13 888 | 0 % | 3,7 |
-| Martelage aveugle | 22 788 | 17 % | 4,3 |
-| **Jeu habile** | **46 634** | **66 %** | **6,6** |
+| Tenir **en montée** | 11 747 | 7 % | **0,86×** — pire que ne rien faire |
+| Ne jamais appuyer | 13 657 | 45 % | 1,00× (référence) |
+| Tenir tout le temps | 18 606 | 28 % | 1,36× |
+| **Tenir en descente** | **34 440** | **69 %** | **2,52×** |
 
-Écart : **3,15×** le passif, **3,36×** le bouton tenu, **2,05×** le martelage. Le martelage
-avance quand même — un débutant progresse, il n'est pas puni.
+La hiérarchie est celle demandée : le bon geste domine, et **appuyer en montée est puni**.
 
-Vol moyen **0,28 s**, le plus long **0,55 s**, et **0,68 colline franchie par vol**.
-Hauteur de vol maximale **139 px** — soit 19 px de plus que l'écran. Le zoom arrière
-de 9.4 n'est donc pas un ornement : sans lui, on ne voit plus le sol au sommet d'un vol.
+Hauteur de vol maximale **225 px** — presque deux écrans. Le zoom arrière de 9.4 n'est donc
+pas un ornement : sans lui, on ne voit plus le sol au sommet d'un vol.
 
 ### 9.4 La caméra qui dézoome
 
-**Obligatoire, pas décoratif.** Les vols montent jusqu'à 139 px au-dessus du sol alors que
+**Obligatoire, pas décoratif.** Les vols montent jusqu'à 225 px au-dessus du sol alors que
 l'écran fait 120 px de haut. Sans zoom arrière, au sommet d'un vol on ne voit plus que du
 ciel — et comme toute la compétence consiste à **choisir où retomber**, un joueur qui ne
 voit pas le sol ne joue plus. Le zoom rend la décision possible ; la sensation de monter
 haut vient en prime.
 
 ```python
-ZOOM_MIN, ZOOM_MAX = 0.45, 1.0
-SUIVI_ZOOM = 0.06
+ZOOM_MIN     = 0.40
+HAUTEUR_ZOOM = 140          # altitude à laquelle le zoom est complètement ouvert
+SUIVI_ZOOM   = 0.10
+VISEE_BAS    = 60           # hauteur du héros à l'écran quand il est au sol
+VISEE_HAUT   = 26           # ... et quand il est très haut
 
 hauteur_de_vol = hauteur_du_sol(camera_x) - y          # 0 au sol
-zoom_vise = 1.0 - 0.55 * min(1.0, hauteur_de_vol / 120)
-zoom += (zoom_vise - zoom) * SUIVI_ZOOM                # lissé, jamais brusque
+k = min(1.0, hauteur_de_vol / HAUTEUR_ZOOM)
+
+zoom  += (1.0 - (1.0 - ZOOM_MIN) * k - zoom) * SUIVI_ZOOM     # lissé, jamais brusque
+visee  = VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * k
+camera_y += ((y - visee / zoom) - camera_y) * SUIVI_CAMERA
 ```
 
 Le monde se convertit alors en coordonnées d'écran avec le zoom :
@@ -657,6 +682,11 @@ Le monde se convertit alors en coordonnées d'écran avec le zoom :
 ecran_y = (monde_y - camera_y) * zoom
 monde_x = camera_x + (ecran_x - X_HEROS) / zoom
 ```
+
+⚠️ **La visée doit varier, pas seulement le zoom.** Quand le dragonneau monte, il faut
+aussi le faire glisser vers le **haut** de l'écran pour libérer de la place sous lui.
+Mesuré : à visée fixe (60), le sol n'est visible que 53 à 93 % du temps en vol haut
+malgré le zoom ; avec la visée variable (60 → 26), **100 %**.
 
 **Sur la console**, MakeCode Arcade ne sait pas redimensionner librement : les sprites sont
 des images de taille fixe. Le port de la leçon 14 utilisera donc **trois paliers discrets**
