@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 07 — Fenêtre, boucle de jeu, gravité</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+    .card.install { border-left: 4px solid var(--accent2); background: rgba(247,162,106,.06); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+    .label.install { background: rgba(247,162,106,.2); color: var(--accent2); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+    .output-line {
+      color: var(--accent2); display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(247,162,106,.07);
+      border-radius: 4px; margin-top: 4px;
+    }
+    .output-line::before { content: '▶  '; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    /* ── Boucle de jeu (section 2) ── */
+    .loop-ring {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; flex-wrap: wrap; margin: 18px 0;
+    }
+    .loop-step {
+      padding: 14px 20px; border-radius: 12px; background: var(--surface);
+      border: 2px solid transparent; text-align: center; min-width: 130px;
+      transition: all .3s; opacity: .45;
+    }
+    .loop-step.active {
+      opacity: 1; border-color: var(--accent);
+      background: rgba(124,106,247,.14); transform: translateY(-3px);
+    }
+    .loop-step .ls-icon { font-size: 1.6em; display: block; }
+    .loop-step .ls-name { color: var(--accent2); font-weight: bold; font-size: .95em; }
+    .loop-step .ls-sub  { color: var(--muted); font-size: .78em; }
+    .loop-arrow { color: var(--muted); font-size: 1.4em; }
+
+    /* ── Mini écran de jeu (sections 3 et 4) ── */
+    .screen {
+      position: relative; background: #101020;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      margin: 0 auto; overflow: hidden;
+    }
+    .screen .sol {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: #3a8a44; border-top: 3px solid #2a6432;
+    }
+    .dot {
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent2); margin-left: -7px; margin-top: -7px;
+      box-shadow: 0 0 10px rgba(247,162,106,.6);
+    }
+    .dot.smooth { transition: top .45s cubic-bezier(.4,0,.2,1); }
+    .axis-label {
+      position: absolute; font-family: 'Courier New'; font-size: 11px;
+      color: var(--muted); pointer-events: none;
+    }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+
+    /* ── Slider ── */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Checklist visuelle ── */
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. La fenêtre</span>
+  <span class="progress-item" id="prog-2">2. La boucle</span>
+  <span class="progress-item" id="prog-3">3. Les pixels</span>
+  <span class="progress-item" id="prog-4">4. La gravité</span>
+  <span class="progress-item" id="prog-5">5. Design</span>
+  <span class="progress-item" id="prog-6">6. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 07 — Le Dragonneau prend vie</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Ouvrir une vraie <strong>fenêtre de jeu</strong> avec <code style="color:var(--accent2)">pygame</code></li>
+      <li>Comprendre la <strong>boucle de jeu</strong> — 60 fois par seconde</li>
+      <li>Trouver les pixels : <code style="color:var(--accent2)">y</code> descend, il ne monte pas</li>
+      <li>Programmer la <strong>gravité</strong> — deux lignes, et ça tombe</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 55–70 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Le projet des 7 prochaines leçons</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🐉 Un dragonneau <span style="color:var(--muted)">trop jeune pour voler</span></span>
+      <span>⛰️ Il plonge dans les pentes <span style="color:var(--muted)">pour prendre de la vitesse</span></span>
+      <span>🚀 Il décolle au sommet <span style="color:var(--muted)">— un seul bouton, tout le jeu</span></span>
+    </div>
+  </div>
+
+  <!-- ── Rappel leçon 06 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçon 06</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">import</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">import</span> <span class="mod">math</span>
+<span class="var">r</span> <span class="op">=</span> <span class="mod">math</span>.<span class="fn">sqrt</span>(<span class="num">144</span>)</div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">while</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="fn">print</span>(<span class="str">"encore"</span>)</div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Dictionnaires</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">t</span> <span class="op">=</span> {<span class="str">"nom"</span>: <span class="str">"Lune"</span>}
+<span class="fn">print</span>(<span class="var">t</span>[<span class="str">"nom"</span>])</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — LA FENÊTRE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2><code style="font-size:.9em">pygame</code> — ouvrir une fenêtre</h2>
+  </div>
+
+  <div class="card install">
+    <div class="label install">Avant de commencer</div>
+    <p style="font-size:.95em;">Dans Thonny : <strong>Outils → Gérer les paquets…</strong> → chercher <code style="color:var(--accent2)">pygame</code> → Installer</p>
+  </div>
+
+  <div class="code-block">
+<span class="kw">import</span> <span class="mod">pygame</span>
+
+<span class="var">LARGEUR</span>, <span class="var">HAUTEUR</span> <span class="op">=</span> <span class="num">160</span>, <span class="num">120</span>   <span class="cm"># la taille du monde</span>
+<span class="var">ZOOM</span> <span class="op">=</span> <span class="num">4</span>                     <span class="cm"># chaque pixel devient un carré de 4×4</span>
+
+<span class="mod">pygame</span>.<span class="fn">init</span>()
+<span class="var">ecran</span> <span class="op">=</span> <span class="mod">pygame</span>.<span class="mod">display</span>.<span class="fn">set_mode</span>((<span class="var">LARGEUR</span> <span class="op">*</span> <span class="var">ZOOM</span>, <span class="var">HAUTEUR</span> <span class="op">*</span> <span class="var">ZOOM</span>))
+<span class="var">surf</span>  <span class="op">=</span> <span class="mod">pygame</span>.<span class="fn">Surface</span>((<span class="var">LARGEUR</span>, <span class="var">HAUTEUR</span>))</div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la loupe</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎨 <code style="color:var(--accent2)">surf</code> &nbsp;→&nbsp; le petit dessin <span style="color:var(--muted)">(160 × 120)</span></span>
+      <span>🔍 <code style="color:var(--accent2)">ecran</code> &nbsp;→&nbsp; la loupe <span style="color:var(--muted)">(× 4 = 640 × 480)</span></span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Deux images, pas une</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>On dessine</strong> &nbsp;<code>surf</code> — tout petit, 160 × 120</li>
+      <li><strong>On agrandit</strong> &nbsp;<code>ecran</code> — ×4 à la toute fin</li>
+      <li><strong>Résultat</strong> &nbsp;— gros pixels carrés, style rétro</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — LA BOUCLE DE JEU -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>La boucle de jeu</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le carnet à feuilleter</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>✏️ <strong>Une page</strong> &nbsp;→&nbsp; une image <span style="color:var(--muted)">(dessin figé)</span></span>
+      <span>👉 <strong>Feuilleter vite</strong> &nbsp;→&nbsp; ça bouge <span style="color:var(--muted)">(60 pages par seconde)</span></span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — un tour de boucle à la fois</div>
+
+    <div class="loop-ring">
+      <div class="loop-step" id="lp-0">
+        <span class="ls-icon">🎧</span>
+        <span class="ls-name">écouter</span>
+        <span class="ls-sub">clavier, fermeture</span>
+      </div>
+      <span class="loop-arrow">→</span>
+      <div class="loop-step" id="lp-1">
+        <span class="ls-icon">🧮</span>
+        <span class="ls-name">calculer</span>
+        <span class="ls-sub">bouger, tomber</span>
+      </div>
+      <span class="loop-arrow">→</span>
+      <div class="loop-step" id="lp-2">
+        <span class="ls-icon">🎨</span>
+        <span class="ls-name">dessiner</span>
+        <span class="ls-sub">tout redessiner</span>
+      </div>
+      <span class="loop-arrow">↻</span>
+    </div>
+
+    <div class="readout">
+      Tour n° <b id="loop-count">0</b> &nbsp;·&nbsp; temps écoulé <b id="loop-time">0.000</b> s
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="loopNext()">▶ Un tour</button>
+      <button class="demo-btn" onclick="loopFast()" id="loop-fast-btn">⏩ 60 tours (1 s)</button>
+      <button class="demo-btn secondary" onclick="loopReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">horloge</span> <span class="op">=</span> <span class="mod">pygame</span>.<span class="mod">time</span>.<span class="fn">Clock</span>()
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="cm"># 1. écouter</span>
+    <span class="kw">for</span> <span class="var">e</span> <span class="kw">in</span> <span class="mod">pygame</span>.<span class="mod">event</span>.<span class="fn">get</span>():
+        <span class="kw">if</span> <span class="var">e</span>.<span class="var">type</span> <span class="op">==</span> <span class="mod">pygame</span>.<span class="var">QUIT</span>:
+            <span class="mod">pygame</span>.<span class="fn">quit</span>()
+
+    <span class="cm"># 2. calculer</span>
+    <span class="var">y</span> <span class="op">=</span> <span class="var">y</span> <span class="op">+</span> <span class="num">1</span>
+
+    <span class="cm"># 3. dessiner</span>
+    <span class="var">surf</span>.<span class="fn">fill</span>((<span class="num">30</span>, <span class="num">24</span>, <span class="num">60</span>))
+    <span class="mod">pygame</span>.<span class="mod">draw</span>.<span class="fn">circle</span>(<span class="var">surf</span>, (<span class="num">232</span>, <span class="num">92</span>, <span class="num">56</span>), (<span class="num">40</span>, <span class="var">y</span>), <span class="num">6</span>)
+
+    <span class="mod">pygame</span>.<span class="mod">transform</span>.<span class="fn">scale</span>(<span class="var">surf</span>, <span class="var">ecran</span>.<span class="fn">get_size</span>(), <span class="var">ecran</span>)
+    <span class="mod">pygame</span>.<span class="mod">display</span>.<span class="fn">flip</span>()
+    <span class="var">horloge</span>.<span class="fn">tick</span>(<span class="num">60</span>)      <span class="cm"># 60 tours par seconde</span></div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ On efface avant de redessiner</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">surf</span>.<span class="fn">fill</span>((<span class="num">30</span>, <span class="num">24</span>, <span class="num">60</span>))   <span class="cm"># sinon : une traînée</span></div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — <code>horloge.tick(60)</code> disparaît. Que se passe-t-il ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">La fenêtre se ferme</div>
+      <div class="quiz-option">Le jeu tourne aussi vite que possible — trop vite</div>
+      <div class="quiz-option">Rien ne change</div>
+      <div class="quiz-option">Le dragonneau disparaît</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — LES PIXELS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Où sont les pixels ?</h2>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ y descend quand il grandit</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">y</span> <span class="op">=</span> <span class="num">0</span>     <span class="cm"># tout en HAUT</span>
+<span class="var">y</span> <span class="op">=</span> <span class="num">119</span>   <span class="cm"># tout en BAS</span></div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — clique sur une hauteur</div>
+
+    <div class="screen" id="scr-coord" style="width:320px; height:240px;">
+      <div class="axis-label" style="left:4px;  top:2px;">(0,0)</div>
+      <div class="axis-label" style="right:4px; top:2px;">x = 159</div>
+      <div class="axis-label" style="left:4px;  bottom:2px;">y = 119</div>
+      <div class="dot smooth" id="dot-coord" style="left:80px; top:20px;"></div>
+    </div>
+
+    <div class="readout">
+      <b id="coord-read">y = 10</b> &nbsp;·&nbsp; <span id="coord-word" style="color:var(--muted)">tout en haut</span>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="setCoord(10)">y = 10</button>
+      <button class="demo-btn" onclick="setCoord(60)">y = 60</button>
+      <button class="demo-btn" onclick="setCoord(110)">y = 110</button>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Le repère de l'écran</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>x</strong> &nbsp;<code>0 → 159</code> — de gauche à droite</li>
+      <li><strong>y</strong> &nbsp;<code>0 → 119</code> — <em>de haut en bas</em></li>
+      <li><strong>Tomber</strong> &nbsp;<code>y = y + 1</code> — donc on ajoute</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — LA GRAVITÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>La gravité</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la pédale d'accélérateur</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🦶 <code style="color:var(--accent2)">vy += GRAVITE</code> &nbsp;→&nbsp; on appuie <span style="color:var(--muted)">(la vitesse monte)</span></span>
+      <span>🚗 <code style="color:var(--accent2)">y += vy</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; on avance <span style="color:var(--muted)">(la position change)</span></span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">GRAVITE</span> <span class="op">=</span> <span class="num">0.14</span>
+
+<span class="var">vy</span> <span class="op">+=</span> <span class="var">GRAVITE</span>   <span class="cm"># la VITESSE augmente à chaque tour</span>
+<span class="var">y</span>  <span class="op">+=</span> <span class="var">vy</span>        <span class="cm"># la POSITION suit la vitesse</span></div>
+
+  <div class="card info">
+    <div class="label code">Deux variables, pas une</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>y</strong> &nbsp;— où il est</li>
+      <li><strong>vy</strong> &nbsp;— à quelle vitesse il descend</li>
+      <li><strong>La gravité</strong> &nbsp;— change <code>vy</code>, jamais <code>y</code></li>
+    </ul>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — lâche le dragonneau</div>
+
+    <div class="screen" id="scr-grav" style="width:320px; height:240px;">
+      <div class="sol" style="height:20px;"></div>
+      <div class="dot" id="dot-grav" style="left:160px; top:20px;"></div>
+    </div>
+
+    <div class="readout">
+      <b id="grav-read">y = 10.0 &nbsp; vy = 0.00</b>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:.85em; color:var(--muted); margin-bottom:4px;">
+        <span>GRAVITE</span><span id="grav-val" style="color:var(--accent2); font-family:'Courier New';">0.14</span>
+      </div>
+      <input type="range" id="grav-slider" min="2" max="80" value="14" oninput="gravSlide()">
+    </div>
+
+    <div style="margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; font-size:.85em; color:var(--muted); margin-bottom:4px;">
+        <span>REBOND</span><span id="reb-val" style="color:var(--accent2); font-family:'Courier New';">0.6</span>
+      </div>
+      <input type="range" id="reb-slider" min="0" max="100" value="60" oninput="rebSlide()">
+    </div>
+
+    <div style="text-align:center; margin-top:16px;">
+      <button class="demo-btn" onclick="gravStart()" id="grav-btn">▶ Lâcher</button>
+      <button class="demo-btn secondary" onclick="gravStep()">⏭ Une image</button>
+      <button class="demo-btn secondary" onclick="gravReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <h3>Le rebond</h3>
+
+  <div class="code-block">
+<span class="kw">if</span> <span class="var">y</span> <span class="op">&gt;=</span> <span class="var">SOL_PLAT</span>:
+    <span class="var">y</span> <span class="op">=</span> <span class="var">SOL_PLAT</span>          <span class="cm"># on le repose pile sur le sol</span>
+    <span class="var">vy</span> <span class="op">=</span> <span class="op">-</span><span class="var">vy</span> <span class="op">*</span> <span class="num">0.6</span>      <span class="cm"># il repart vers le haut, moins fort</span></div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Le signe moins fait tout</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">vy</span> <span class="op">=</span> <span class="num">3.2</span>    <span class="cm"># descend</span>
+<span class="var">vy</span> <span class="op">=</span> <span class="op">-</span><span class="num">3.2</span>   <span class="cm"># monte</span></div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 2 — <code>vy</code> part de 0, <code>GRAVITE = 0.5</code>. Après 3 tours de boucle, <code>vy</code> vaut ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">0.5</div>
+      <div class="quiz-option">1.0</div>
+      <div class="quiz-option">1.5</div>
+      <div class="quiz-option">3.0</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — DESIGN DE JEU -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>🎮 Design de jeu — pourquoi si petit ?</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">160 × 120, ce n'est pas un hasard</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎮 <strong>La console</strong> &nbsp;→&nbsp; c'est exactement son écran</span>
+      <span>🎨 <strong>16 couleurs</strong> &nbsp;→&nbsp; tout ce qu'elle sait afficher</span>
+      <span>💾 <strong>512 Ko</strong> &nbsp;→&nbsp; toute sa mémoire <span style="color:var(--muted)">(une photo = 10× plus)</span></span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Une contrainte qui aide</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Petit écran</strong> &nbsp;— moins de pixels à penser</li>
+      <li><strong>Peu de couleurs</strong> &nbsp;— dessiner devient facile</li>
+      <li><strong>À la leçon 13</strong> &nbsp;— ton jeu part sur la console</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top:16px; font-size:.95em;">Les plus grands jeux des années 80 tenaient dans moins de place que ça.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>pygame.init()</td>
+        <td>Démarre pygame</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">à faire une seule fois</td>
+      </tr>
+      <tr>
+        <td>display.set_mode()</td>
+        <td>Ouvre la fenêtre</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">set_mode((640, 480))</td>
+      </tr>
+      <tr>
+        <td>Surface((L, H))</td>
+        <td>Le petit dessin qu'on agrandit après</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">Surface((160, 120))</td>
+      </tr>
+      <tr>
+        <td>while True:</td>
+        <td>La boucle de jeu — écouter, calculer, dessiner</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">60 tours / seconde</td>
+      </tr>
+      <tr>
+        <td>surf.fill(couleur)</td>
+        <td>Efface tout avant de redessiner</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">fill((30, 24, 60))</td>
+      </tr>
+      <tr>
+        <td>draw.circle()</td>
+        <td>Dessine un rond</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">circle(surf, c, (40, y), 6)</td>
+      </tr>
+      <tr>
+        <td>vy += GRAVITE</td>
+        <td>La vitesse de chute augmente</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">GRAVITE = 0.14</td>
+      </tr>
+      <tr>
+        <td>y += vy</td>
+        <td>La position suit la vitesse</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">toujours après vy</td>
+      </tr>
+      <tr>
+        <td>vy = -vy * 0.6</td>
+        <td>Rebond amorti</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">le moins fait remonter</td>
+      </tr>
+      <tr>
+        <td>display.flip()</td>
+        <td>Montre l'image finie</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">à la fin de chaque tour</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Un jeu, c'est <strong>la même boucle</strong> répétée 60 fois par seconde</li>
+      <li><code style="color:var(--accent2)">y</code> grandit vers le <strong>bas</strong></li>
+      <li>La gravité change la <strong>vitesse</strong>, la vitesse change la <strong>position</strong></li>
+      <li>On <strong>efface</strong> l'écran à chaque tour, sinon ça laisse une traînée</li>
+    </ul>
+  </div>
+
+  <!-- ── Checklist visuelle (remplace tests.py dans le bloc 2) ── -->
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">Dans un jeu, on ne lit pas un rapport de tests — on regarde l'écran. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-07">
+    <li><span class="box"></span><span>Une fenêtre s'ouvre, avec un fond de ciel</span></li>
+    <li><span class="box"></span><span>On voit le sol vert en bas</span></li>
+    <li><span class="box"></span><span>Le dragonneau tombe — de plus en plus vite</span></li>
+    <li><span class="box"></span><span>Il rebondit sur le sol au lieu de le traverser</span></li>
+    <li><span class="box"></span><span>Chaque rebond est moins haut que le précédent</span></li>
+    <li><span class="box"></span><span>Il finit par s'arrêter sur le sol</span></li>
+    <li><span class="box"></span><span>Aucune traînée derrière lui</span></li>
+    <li><span class="box"></span><span>Le bouton ✕ de la fenêtre ferme le jeu</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 08 — Le bouton unique, sprites et animation</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Le rond devient un vrai dragonneau qui bat des ailes — et <code>ESPACE</code> le fera plonger.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny et complète les <code style="color:var(--text)">TODO</code> dans l'ordre.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5','sec-6'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — boucle de jeu pas à pas
+// ════════════════════════════════════════════════════════════
+let loopTick = 0;      // nombre de sous-étapes jouées
+let loopFastTimer = null;
+
+function loopRender() {
+  const phase = loopTick % 3;
+  const tours = Math.floor(loopTick / 3);
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('lp-' + i)
+      .classList.toggle('active', loopTick > 0 && i === phase);
+  }
+  document.getElementById('loop-count').textContent = tours;
+  document.getElementById('loop-time').textContent = (tours / 60).toFixed(3);
+}
+
+function loopNext() { loopTick += 1; loopRender(); }
+
+function loopFast() {
+  if (loopFastTimer) return;
+  const btn = document.getElementById('loop-fast-btn');
+  btn.disabled = true;
+  let reste = 60;
+  loopFastTimer = setInterval(() => {
+    loopTick += 3;              // un tour complet
+    loopRender();
+    if (--reste <= 0) {
+      clearInterval(loopFastTimer);
+      loopFastTimer = null;
+      btn.disabled = false;
+    }
+  }, 16);
+}
+
+function loopReset() {
+  if (loopFastTimer) { clearInterval(loopFastTimer); loopFastTimer = null; }
+  document.getElementById('loop-fast-btn').disabled = false;
+  loopTick = 0;
+  loopRender();
+}
+
+loopReset();
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — coordonnées
+// ════════════════════════════════════════════════════════════
+const SCALE_DEMO = 2;   // 160x120 affiché en 320x240
+
+function setCoord(y) {
+  document.getElementById('dot-coord').style.top = (y * SCALE_DEMO) + 'px';
+  document.getElementById('coord-read').textContent = 'y = ' + y;
+  const mots = { 10: 'tout en haut', 60: 'au milieu', 110: 'tout en bas' };
+  document.getElementById('coord-word').textContent = mots[y] || '';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — gravité + rebond
+// ════════════════════════════════════════════════════════════
+const SOL_PLAT = 110;          // en coordonnées du jeu (160x120)
+let gy = 10, gvy = 0;
+let gGravite = 0.14, gRebond = 0.6;
+let gravAnim = null;
+
+function gravRender() {
+  document.getElementById('dot-grav').style.top = (gy * SCALE_DEMO) + 'px';
+  document.getElementById('grav-read').textContent =
+    'y = ' + gy.toFixed(1) + '   vy = ' + gvy.toFixed(2);
+}
+
+function gravStep() {
+  gvy += gGravite;
+  gy  += gvy;
+  if (gy >= SOL_PLAT) {
+    gy = SOL_PLAT;
+    gvy = -gvy * gRebond;
+    if (Math.abs(gvy) < 0.35) gvy = 0;     // il finit par se poser
+  }
+  gravRender();
+}
+
+function gravStart() {
+  const btn = document.getElementById('grav-btn');
+  if (gravAnim) {
+    clearInterval(gravAnim); gravAnim = null;
+    btn.textContent = '▶ Lâcher';
+    return;
+  }
+  btn.textContent = '⏸ Pause';
+  gravAnim = setInterval(gravStep, 16);
+}
+
+function gravReset() {
+  if (gravAnim) { clearInterval(gravAnim); gravAnim = null; }
+  document.getElementById('grav-btn').textContent = '▶ Lâcher';
+  gy = 10; gvy = 0;
+  gravRender();
+}
+
+function gravSlide() {
+  gGravite = document.getElementById('grav-slider').value / 100;
+  document.getElementById('grav-val').textContent = gGravite.toFixed(2);
+}
+
+function rebSlide() {
+  gRebond = document.getElementById('reb-slider').value / 100;
+  document.getElementById('reb-val').textContent = gRebond.toFixed(2);
+}
+
+gravReset();
+
+// ════════════════════════════════════════════════════════════
+// Checklist visuelle
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-07 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      const isCorrect = idx === correctIdx;
+      if (isCorrect) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'tick(60) freine la boucle. Sans frein, qu\'est-ce qui change ?',
+  'L\'ordinateur ferait des milliers de tours par seconde — le dragonneau filerait trop vite.'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 2, [
+  'vy += 0.5 se fait à CHAQUE tour. Compte : 1er tour, 2e tour, 3e tour.',
+  '0.5 puis 1.0 puis… encore un tour de 0.5.'
+]);
+</script>
+
+</body>
+</html>
