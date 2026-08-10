@@ -227,6 +227,19 @@ if __name__ == "__main__":
 2. **Exercice 2** — semi-guidé : quelques indications, plus de liberté
 3. **Exercice 3** (si pertinent) — ouvert : consigne courte, solution libre
 
+### Exception au nommage — leçons « module à compléter »
+
+Quand la leçon consiste à écrire des **modules qu'un programme fourni importe**,
+les fichiers de l'apprenant portent un nom parlant plutôt que `exercice_XX.py`.
+
+**Pourquoi** : `from exercice_01 import factorielle` dans un moteur se lit mal, et le
+nom parlant fait partie de l'enseignement — écrire un module importable *est* la leçon.
+
+**Appliqué à la leçon 06b** : `mes_operations.py` et `mon_historique.py`. Les fonctions
+de test correspondantes s'appellent `tester_operations()` et `tester_historique()`
+au lieu de `tester_exXX()`. Tout le reste du format (TODO max 5, deux niveaux d'indice,
+bloc `__main__` qui lance les tests, `CORRECTION.md` séparé) reste identique.
+
 ---
 
 ## 3. Fichier PROJET.md" dans les formats de fichiers
