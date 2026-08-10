@@ -277,6 +277,10 @@ Présent uniquement quand la leçon se termine par un projet libre.
 
 ## 4. Fichier `tests.py`
 
+> ⚠️ **Le bloc 2 (pygame) est exempt** — pas de `tests.py`. Une boucle de jeu n'a ni
+> `stdout` capturable ni fin, et le résultat est visuel. La validation s'y fait par
+> checklist observable dans `presentation.html` — voir la **section 9.5**.
+
 ### Rôle
 `tests.py` a **deux usages** :
 
@@ -433,15 +437,21 @@ Elles ne contiennent pas de code — elles alimentent la réflexion et la discus
 | 06b | `customtkinter` + `matplotlib` — interface TI-83 | **Projet : calculatrice graphique complète** |
 
 ### Bloc 2 — Jeux 2D avec pygame (leçons 7–13) — IDE : Thonny
+
+**Fil rouge unique** : une seule et même partie construite de 07 à 13 — *Le Dragonneau*,
+un jeu à un bouton inspiré de *Tiny Wings*. Voir la **section 9** pour la spécification
+complète (physique, thèmes, contraintes matérielles, découpage détaillé).
+
 | Leçon | Sujet principal | Game design |
 |---|---|---|
-| 07 | Fenêtre, boucle de jeu, événements | 🎮 La boucle update → draw → repeat |
-| 08 | Images, sprites, animations | 🎮 Le *game feel* et la fluidité |
-| 09 | Collisions, limites d'écran | 🎮 Tension et risque |
-| 10 | Score, vies, état du jeu | 🎮 Progression et feedback |
-| 11 | Écrans multiples (menu, pause, game over) | 🎮 Structure d'un jeu complet |
-| 12 | Sons, effets visuels simples | 🎮 Le polish |
-| 13 | **Projet : jeu 2D complet** | 🎮 Bilan de conception |
+| 07 | Fenêtre, boucle de jeu, gravité | 🎮 La boucle update → draw → repeat |
+| 08 | Le bouton unique, sprites, animation | 🎮 Un seul verbe, beaucoup de profondeur |
+| 09 | Le terrain : `sin`, colonnes, caméra | 🎮 Le monde qui défile |
+| 09b | Glisser sur la pente, décoller | 🎮 Tension et risque |
+| 10 | Vitesse, distance, score, HUD | 🎮 Progression et feedback |
+| 11 | Écrans multiples + système de thèmes | 🎮 Structure d'un jeu complet |
+| 12 | Sons, particules, screen shake | 🎮 Le polish |
+| 13 | **Projet : polish + port MakeCode Arcade** | 🎮 Même jeu, deux moteurs |
 
 ### Bloc 3 — Lua & Luanti (leçons 14–20) — IDE : VS Code
 | Leçon | Sujet principal | Game design |
@@ -470,3 +480,231 @@ Quand tu génères ou modifies du contenu pour ce cours, respecte ces règles :
 
 ### Commande type pour démarrer une leçon
 > "Crée la leçon 01 du cours selon COURS_FORMAT.md. Commence par `presentation.html`, attends ma validation avant de générer les exercices."
+
+---
+
+## 9. Bloc 2 — spécification du jeu fil rouge
+
+### 9.1 Le jeu
+
+**Le Dragonneau** — un dragon trop jeune pour voler. Il ne peut que se laisser tomber :
+il plonge dans les pentes pour prendre de la vitesse et décolle au sommet des collines.
+Un seul bouton (`ESPACE`) : le tenir = plonger lourd, le relâcher = planer.
+
+Inspiré de *Tiny Wings*. Le thème « apprendre à voler » colle exactement à la mécanique :
+le héros ne vole jamais vraiment, il exploite le relief. C'est le jeu, et c'est l'histoire.
+
+### 9.2 Contraintes matérielles — à respecter dès la leçon 07
+
+Le jeu est porté sur **ElecFreaks Retro (MakeCode Arcade)** à la leçon 13. Ces contraintes
+sont adoptées dès le début pour que le port soit mécanique plutôt qu'une réécriture.
+
+| Contrainte | Valeur | Pourquoi |
+|---|---|---|
+| Résolution logique | **160 × 120** | Ce que MakeCode Arcade dessine (l'écran fait 160×128, les 8 derniers pixels sont réservés) |
+| Fenêtre PC | **640 × 480** (×4) | Pixel art lisible, `pygame.transform.scale` d'une surface 160×120 |
+| Couleurs | **16 maximum**, palette fixe | Contrainte Arcade (4 bits/pixel) |
+| MCU | STM32F401 — **512 KB flash, 96 KB RAM** | Le framebuffer seul mange ~10 KB de RAM |
+| Boutons | **A** uniquement pour le gameplay | Un seul verbe |
+| Images | Aucun gros asset | Le flash est la ressource rare — voir 9.6 |
+
+⚠️ **Le code Python ne migre pas.** Le format `.uf2` est un conteneur de flashage, pas un
+runtime : la console n'a ni CPython ni SDL. C'est le **design** qui migre. La leçon 13
+réécrit le jeu en MakeCode Arcade — et c'est précisément la leçon (*même jeu, deux moteurs*).
+
+### 9.3 Le moteur physique
+
+Tout le jeu tient dans ces lignes. Elles sont introduites progressivement de 07 à 09b.
+
+> ⚠️ **Ces constantes sont calibrées par simulation — ne pas les improviser.** Elles ont
+> été réglées par balayage numérique pour satisfaire les quatre critères de 9.3.1. Des
+> valeurs « qui ont l'air raisonnables » donnent un jeu où le dragonneau ne décolle
+> jamais, ou bien un jeu qui se gagne en tenant le bouton.
+
+```python
+LARGEUR, HAUTEUR = 160, 120
+GRAVITE          = 0.14     # chute normale (planer)
+GRAVITE_PLONGEON = 0.50     # bouton tenu
+ACCEL_DESCENTE   = 0.18     # gain de vitesse en descente
+FREIN_MONTEE     = 0.23     # perte en montée — VOLONTAIREMENT > ACCEL_DESCENTE
+FRICTION         = 0.997
+VX_MIN, VX_MAX   = 1.2, 8.0
+SUIVI_CAMERA     = 0.14
+HAUTEUR_VISEE    = 60       # où le héros se stabilise à l'écran
+
+def hauteur_du_sol(x):
+    """Renvoie le y du sol à la position x. y=0 en haut de l'écran."""
+    return 76 + 32 * math.sin(x / 38) + 11 * math.sin(x / 17)
+```
+
+À chaque image :
+
+```python
+vy += GRAVITE_PLONGEON if bouton_tenu else GRAVITE
+y  += vy
+
+sol = hauteur_du_sol(camera_x)
+if y >= sol:                                       # au sol
+    y = sol
+    pente = hauteur_du_sol(camera_x + 1) - sol     # > 0 = ça descend
+    vy = pente * vx                                # suivre la pente
+    vx += pente * (ACCEL_DESCENTE if pente > 0 else FREIN_MONTEE)
+    vx = max(VX_MIN, min(VX_MAX, vx * FRICTION))
+
+camera_x += vx
+camera_y += ((y - HAUTEUR_VISEE) - camera_y) * SUIVI_CAMERA
+```
+
+Tout ce qui se dessine est ensuite décalé de `- camera_y` : le sol et le héros. Deux
+soustractions, pas plus.
+
+**Le décollage n'est pas codé — il émerge.** Au sommet d'une colline, la tangente suivie
+par le dragonneau passe au-dessus du terrain qui se dérobe : `y < sol`, donc plus de
+contact, donc la gravité reprend. Dans un creux, `y >= sol` reste vrai à chaque image et
+la vitesse monte. Aucun cas particulier à écrire.
+
+**Pourquoi `FREIN_MONTEE > ACCEL_DESCENTE`.** C'est le cœur du game design, pas un détail
+de réglage. Si monter coûtait moins que descendre ne rapporte, rester collé au sol serait
+toujours gagnant et le jeu se gagnerait en tenant le bouton — sans aucune décision. En
+rendant la montée plus chère, la seule façon de progresser est de **décoller au sommet et
+survoler la côte suivante**. C'est exactement la compétence que *Tiny Wings* demande.
+
+**Le bouton ne fait effet qu'en vol** — au sol, la branche `if` réécrit `vy` à chaque
+image. C'est fidèle à l'original : on ne pilote pas la glisse, on choisit *où retomber*.
+
+Les deux `sin` ont des périodes premières entre elles (38 et 17) : le terrain ne se répète
+qu'au bout de 4 059 px, soit plus de 15 secondes de jeu à pleine vitesse. Adam peut
+modifier les quatre nombres de `hauteur_du_sol` en direct et voir le monde changer.
+
+#### 9.3.1 Résultats mesurés (simulation sur 3 000 images)
+
+Ces chiffres servent de test de non-régression : si un réglage change, les revérifier.
+
+| Stratégie | Distance | % en vol | Vols |
+|---|---|---|---|
+| Ne jamais appuyer | 5 762 | 26 % | 41 |
+| Bouton toujours tenu | 7 036 | 0,5 % | 0 |
+| Martelage aveugle | 6 123 | 11 % | 20 |
+| **Jeu habile** (plonger vers la descente) | **9 828** | **47 %** | **52** |
+
+Le jeu habile bat le passif **1,71×**, le bouton tenu **1,40×** et le martelage **1,61×** —
+il existe donc une vraie compétence, et aucune stratégie bête ne la remplace.
+
+Vol moyen **0,42 s**, vol le plus long **0,83 s** (à 60 fps). Vitesse entre 1,2 et 5,7.
+Avec `SUIVI_CAMERA = 0.14`, le héros garde 33 px de marge en haut et 18 px en bas dans le
+pire cas, toutes stratégies confondues — il ne sort jamais de l'écran.
+
+### 9.4 Le système de thèmes
+
+Un thème est un **dictionnaire** (rappel direct de la leçon 05). En MakeCode, c'est un
+simple `image.setPalette()` — donc l'idée migre telle quelle, et un thème coûte ~48 octets
+de flash au lieu d'un spritesheet.
+
+```python
+THEME_DRAGON = {
+    "nom":       "Dragonneau",
+    "ciel":      (40, 30, 70),
+    "collines":  (60, 140, 70),
+    "ombre":     (35, 95, 50),
+    "heros":     (232, 92, 56),
+    "gravite":   0.14,
+}
+```
+
+Un thème peut changer des valeurs de **gameplay**, pas seulement des couleurs — le thème
+Lune baisse `gravite` à 0.08. C'est le moment où Adam comprend qu'une donnée peut piloter
+le comportement.
+
+Valeurs RGB validées au rendu (les quatre thèmes restent lisibles en 16 couleurs) :
+
+| Thème | ciel → ciel2 | collines / ombre | héros | Particularité |
+|---|---|---|---|---|
+| 🐉 **Dragonneau** (défaut) | `38,28,66` → `92,52,90` | `58,138,68` / `32,92,48` | `232,92,56` | — |
+| 🎿 **Ski** | `28,44,86` → `96,140,190` | `238,244,252` / `168,190,220` | `240,80,70` | — |
+| 🚀 **Lune** | `8,8,20` → `40,36,64` | `150,148,158` / `92,90,102` | `238,238,238` | `gravite` 0.08 |
+| 🐬 **Dauphin** | `20,60,110` → `88,170,210` | `30,110,170` / `18,72,120` | `190,225,240` | — |
+
+Les thèmes se débloquent à la distance parcourue — ça justifie le système au lieu d'en
+faire un gadget.
+
+### 9.5 Fichiers d'une leçon du bloc 2
+
+Le fil rouge ne casse pas la règle « chaque dossier est autonome ». **`jeu.py` d'une leçon
+contient l'état terminé de la leçon précédente**, avec les nouveaux `TODO` insérés. Adam
+qui décroche une semaine reprend au bon endroit sans dette.
+
+```
+lecon_09/
+├── presentation.html     ← support animé par le père
+├── jeu.py                ← le fil rouge + les TODO de cette leçon
+├── themes.py             ← (à partir de la leçon 11)
+└── CORRECTION.md         ← solution + pièges attendus (père seulement)
+```
+
+**Pas de `tests.py` dans le bloc 2.** La validation se fait par **checklist visuelle**
+dans `presentation.html` — une section « ✅ Ça doit faire ça » listant des comportements
+observables :
+
+```
+☐ Le dragonneau tombe et s'arrête sur la colline
+☐ Tenir ESPACE le fait plonger plus vite
+☐ Il accélère en descente, ralentit en montée
+☐ Il décolle au sommet d'une bosse
+```
+
+C'est fidèle au vrai développement de jeu : on regarde l'écran, pas un rapport de tests.
+
+**Découpage en modules** — le fichier est scindé au fur et à mesure plutôt que de laisser
+grossir un `jeu.py` de 300 lignes (illisible à 9 ans, et pénible à faire défiler) :
+
+| Leçon | Fichiers d'Adam |
+|---|---|
+| 07 → 09b | `jeu.py` seul (~120 lignes) |
+| 10 | `jeu.py` + `terrain.py` |
+| 11 | + `themes.py` |
+| 12 | + `effets.py` |
+
+Chaque module correspond à un *namespace* MakeCode — le découpage sert le port autant que
+la lisibilité, et il réactive la leçon 06 (modules et `import`).
+
+### 9.6 Budget mémoire
+
+Le flash est la ressource rare (l'utilisateur a déjà dû recompiler avec d'anciennes
+versions de MakeCode pour faire tenir certains jeux). Le design l'évite par construction :
+
+- **Terrain procédural** — deux `sin`, zéro octet d'assets
+- **Thèmes = palettes** — pas de spritesheets alternatifs
+- **Sprites** — le dragonneau seul, 16×16, 2 images d'animation
+- **Sons** — générés (bips MakeCode), pas de fichiers `.wav` embarqués
+
+Si le jeu ne compile pas à la leçon 13, couper dans cet ordre : particules, puis thèmes
+supplémentaires, puis animation du héros.
+
+### 9.7 Découpage leçon par leçon
+
+| # | Ce qu'Adam écrit | Ce qu'il voit à la fin |
+|---|---|---|
+| **07** | Fenêtre 160×120 ×4, boucle, `vy += GRAVITE`, sol plat | Un dragonneau tombe et rebondit sur un sol plat |
+| **08** | `pygame.event` → bouton tenu, sprite 16×16, animation 2 images | Tenir ESPACE le fait plonger ; il bat des ailes |
+| **09** | `hauteur_du_sol(x)`, dessin en colonnes, `camera_x`, `camera_y` | De vraies collines défilent sous lui |
+| **09b** | Détection `y >= sol`, `pente`, `vy = pente * vx`, accélération | **Le vrai gameplay** : il glisse, prend de la vitesse, décolle |
+| **10** | Distance, vitesse, bonus « super glisse », HUD | Ça devient un jeu avec un score |
+| **11** | États menu/jeu/game over, dict de thèmes | Menu, game over, 4 thèmes déblocables |
+| **12** | Sons, particules, screen shake | Ça devient *satisfaisant* |
+| **13** | Réécriture MakeCode Arcade + `.uf2` | **Son jeu tourne sur la console** |
+
+⚠️ La leçon **09b** est la plus dense du bloc. Prévoir qu'elle déborde et garder la
+leçon 10 courte en compensation.
+
+⚠️ **Leçons 07 et 08 — le sol plat doit faire rebondir**, pas coller :
+
+```python
+if y >= SOL_PLAT:
+    y = SOL_PLAT
+    vy = -vy * 0.6        # rebond amorti
+```
+
+Sans ça, le bouton n'a **aucun effet visible** : la branche « au sol » réécrit `vy` à
+chaque image, et le dragonneau reste posé quoi qu'Adam fasse. Le rebond garantit qu'il
+passe du temps en l'air dès la leçon 07, donc que `ESPACE` se voit immédiatement. Le
+rebond disparaît en 09b, remplacé par le suivi de pente.
