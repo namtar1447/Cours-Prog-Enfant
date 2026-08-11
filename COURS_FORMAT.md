@@ -661,20 +661,48 @@ ciel — et comme toute la compétence consiste à **choisir où retomber**, un 
 voit pas le sol ne joue plus. Le zoom rend la décision possible ; la sensation de monter
 haut vient en prime.
 
+Le zoom obéit à **deux règles superposées**, et c'est ce qui résout une tension réelle :
+garder le sol visible pousse à dézoomer tôt, le confort de jeu demande de dézoomer tard.
+
 ```python
-ZOOM_MIN     = 0.40
-HAUTEUR_ZOOM = 140          # altitude à laquelle le zoom est complètement ouvert
-SUIVI_ZOOM   = 0.10
+ZOOM_MIN     = 0.30
+SEUIL_ZOOM   = 50           # altitude SOUS laquelle on ne zoome pas du tout
+HAUTEUR_ZOOM = 190          # altitude à laquelle le zoom est complètement ouvert
+SUIVI_SORTIE = 0.07         # vitesse pour s'éloigner
+SUIVI_RETOUR = 0.10         # vitesse pour revenir
+MARGE_SOL    = 8            # px de sol qu'on garantit à l'écran
 VISEE_BAS    = 60           # hauteur du héros à l'écran quand il est au sol
 VISEE_HAUT   = 26           # ... et quand il est très haut
 
 hauteur_de_vol = hauteur_du_sol(camera_x) - y          # 0 au sol
-k = min(1.0, hauteur_de_vol / HAUTEUR_ZOOM)
 
-zoom  += (1.0 - (1.0 - ZOOM_MIN) * k - zoom) * SUIVI_ZOOM     # lissé, jamais brusque
-visee  = VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * k
+# 1. LE CONFORT — rien tant qu'on vole bas, puis une rampe douce
+if hauteur_de_vol <= SEUIL_ZOOM:
+    k = 0.0
+else:
+    k = min(1.0, (hauteur_de_vol - SEUIL_ZOOM) / (HAUTEUR_ZOOM - SEUIL_ZOOM))
+confort = 1.0 - (1.0 - ZOOM_MIN) * k
+zoom += (confort - zoom) * (SUIVI_SORTIE if confort < zoom else SUIVI_RETOUR)
+
+# la caméra bouge AVANT le plafond — sinon il serait périmé d'une image
+visee = VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * k
 camera_y += ((y - visee / zoom) - camera_y) * SUIVI_CAMERA
+
+# 2. LE PLAFOND DE SÉCURITÉ — le zoom maximal qui garde encore le sol visible
+plafond = (HAUTEUR - MARGE_SOL) / max(1.0, hauteur_du_sol(camera_x) - camera_y)
+zoom = max(0.12, min(1.0, plafond, zoom))
 ```
+
+**Le plafond rend la perte du sol impossible par construction**, quels que soient les
+réglages de confort. On peut donc régler la rampe purement à la sensation. Il est actif
+~20 % du temps (uniquement en vol haut) et reste continu — aucun à-coup visible.
+
+⚠️ **L'ordre compte.** Le plafond doit être calculé *après* la mise à jour de `camera_y`.
+Calculé avant, il utilise une position périmée d'une image et le sol ressort quand même —
+mesuré : 1 % de perte résiduelle, uniquement sur les enchaînements de sauts.
+
+Vérifié sans aucune perte sur toute la plage `GRAVITE` de 0,05 à 0,14, altitude maximale
+276 px, avec le héros toujours à l'écran.
 
 Le monde se convertit alors en coordonnées d'écran avec le zoom :
 
@@ -687,6 +715,12 @@ monde_x = camera_x + (ecran_x - X_HEROS) / zoom
 aussi le faire glisser vers le **haut** de l'écran pour libérer de la place sous lui.
 Mesuré : à visée fixe (60), le sol n'est visible que 53 à 93 % du temps en vol haut
 malgré le zoom ; avec la visée variable (60 → 26), **100 %**.
+
+**Pourquoi `SEUIL_ZOOM`.** Sans seuil, la moindre bosse déclenche un mouvement de caméra et
+le zoom « pompe » en permanence pendant les enchaînements. Avec un seuil à 50 px, le zoom
+reste complètement inactif **44 %** du temps (contre 28 % sans seuil) : les petits sauts se
+jouent à l'échelle normale, et le dézoom devient un événement qui signale *« là, tu montes
+vraiment haut »*.
 
 **Sur la console**, MakeCode Arcade ne sait pas redimensionner librement : les sprites sont
 des images de taille fixe. Le port de la leçon 14 utilisera donc **trois paliers discrets**

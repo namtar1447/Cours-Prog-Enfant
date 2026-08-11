@@ -47,9 +47,12 @@ DEFAUTS = {
     "D_MAX":            (65, 10, 110, 5, "denivele maxi"),
     "R_DESCENTE":       (0.62, 0.30, 0.90, 0.02, "part en descente"),
     "POINTE":           (2.2, 1.0, 5.0, 0.1, "nettete du sommet"),
-    "ZOOM_MIN":         (0.40, 0.15, 1.00, 0.05, "zoom le plus large"),
-    "HAUTEUR_ZOOM":     (140, 40, 300, 10, "altitude du zoom complet"),
-    "SUIVI_ZOOM":       (0.10, 0.02, 0.40, 0.02, "vitesse du zoom"),
+    "ZOOM_MIN":         (0.30, 0.15, 1.00, 0.05, "zoom le plus large"),
+    "SEUIL_ZOOM":       (50, 0, 150, 5, "altitude SOUS laquelle on ne zoome pas"),
+    "HAUTEUR_ZOOM":     (190, 60, 400, 10, "altitude du zoom complet"),
+    "SUIVI_SORTIE":     (0.07, 0.02, 0.40, 0.01, "vitesse pour s'eloigner"),
+    "SUIVI_RETOUR":     (0.10, 0.02, 0.40, 0.01, "vitesse pour revenir"),
+    "MARGE_SOL":        (8, 0, 40, 2, "px de sol garantis a l'ecran"),
     "VISEE_BAS":        (60, 20, 100, 2, "hauteur du heros au sol"),
     "VISEE_HAUT":       (26, 6, 100, 2, "hauteur du heros en vol"),
     "SUIVI_CAMERA":     (0.14, 0.02, 0.50, 0.02, "vitesse de la camera"),
@@ -209,6 +212,8 @@ class Jeu:
         self.gain_atterrissage = 0.0
         self.eclat = 0
         self.vx_max_vu = 0.0
+        self.hauteur_max_vue = 0.0
+        self.plafond_actif = False
 
     # --- Le moteur --------------------------------------------
     def mettre_a_jour(self, bouton_tenu):
@@ -247,17 +252,34 @@ class Jeu:
             self.temps_en_vol += 1
 
         self.vx_max_vu = max(self.vx_max_vu, self.vx)
+        self.hauteur_max_vue = max(self.hauteur_max_vue, sol - self.y)
 
-        # Zoom + visée : plus il monte, plus on s'éloigne ET plus il remonte
-        # vers le haut de l'écran — sinon le sol sort par le bas.
+        # --- Zoom : deux règles superposées ---------------------
+        # 1. le CONFORT : rien tant qu'on vole bas (SEUIL_ZOOM), puis une
+        #    rampe douce. C'est ce réglage-là qui donne la sensation.
+        # 2. le PLAFOND DE SÉCURITÉ : le zoom maximal qui garde encore le
+        #    sol à l'écran. Appliqué APRÈS le lissage, donc la perte du sol
+        #    devient impossible quels que soient les réglages de confort.
         hauteur_de_vol = max(0.0, sol - self.y)
-        k = min(1.0, hauteur_de_vol / R["HAUTEUR_ZOOM"])
-        zoom_vise = 1.0 - (1.0 - R["ZOOM_MIN"]) * k
-        self.zoom += (zoom_vise - self.zoom) * R["SUIVI_ZOOM"]
-        visee = R["VISEE_BAS"] + (R["VISEE_HAUT"] - R["VISEE_BAS"]) * k
+        if hauteur_de_vol <= R["SEUIL_ZOOM"]:
+            k = 0.0
+        else:
+            k = min(1.0, (hauteur_de_vol - R["SEUIL_ZOOM"]) /
+                    max(1.0, R["HAUTEUR_ZOOM"] - R["SEUIL_ZOOM"]))
 
+        confort = 1.0 - (1.0 - R["ZOOM_MIN"]) * k
+        suivi = R["SUIVI_SORTIE"] if confort < self.zoom else R["SUIVI_RETOUR"]
+        self.zoom += (confort - self.zoom) * suivi
+
+        # La caméra bouge D'ABORD : sinon le plafond serait calculé sur une
+        # position périmée d'une image, et le sol ressortirait quand même.
+        visee = R["VISEE_BAS"] + (R["VISEE_HAUT"] - R["VISEE_BAS"]) * k
         self.camera_x += self.vx
         self.camera_y += ((self.y - visee / self.zoom) - self.camera_y) * R["SUIVI_CAMERA"]
+
+        plafond = (HAUTEUR - R["MARGE_SOL"]) / max(1.0, sol - self.camera_y)
+        self.zoom = max(0.12, min(1.0, plafond, self.zoom))
+        self.plafond_actif = plafond < 1.0 and self.zoom >= plafond - 1e-9
         self.animation += 0.25 if self.au_sol else 0.12
         if self.eclat > 0:
             self.eclat -= 1
@@ -331,8 +353,10 @@ def dessiner_panneau(ecran, i_sel, jeu):
         ecran.blit(gros.render(txt, True, coul), (14, y))
         y += 14
     y += 4
-    ecran.blit(gros.render(f"vitesse max atteinte : {jeu.vx_max_vu:.1f}"
-                           f"   plus long vol : {jeu.meilleur_vol} img",
+    ecran.blit(gros.render(f"vx max {jeu.vx_max_vu:.1f}   vol max {jeu.meilleur_vol} img"
+                           f"   altitude max {jeu.hauteur_max_vue:.0f} px"
+                           f"   zoom {jeu.zoom:.2f}"
+                           + ("  [PLAFOND]" if jeu.plafond_actif else ""),
                            True, (166, 227, 161)), (14, y))
     y += 14
     ecran.blit(gros.render("F1 fermer   ^v choisir   <> modifier   F5 defaut",
