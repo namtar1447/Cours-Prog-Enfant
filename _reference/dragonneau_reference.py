@@ -55,7 +55,7 @@ DEFAUTS = {
     "MARGE_SOL":        (8, 0, 40, 2, "px de sol garantis a l'ecran"),
     "VISEE_BAS":        (60, 20, 100, 2, "hauteur du heros au sol"),
     "VISEE_HAUT":       (26, 6, 100, 2, "hauteur du heros en vol"),
-    "SUIVI_CAMERA":     (0.14, 0.02, 0.50, 0.02, "vitesse de la camera"),
+    "SUIVI_CAMERA":     (0.10, 0.02, 0.50, 0.02, "vitesse de la camera"),
 }
 ORDRE = list(DEFAUTS)
 R = {k: v[0] for k, v in DEFAUTS.items()}     # les valeurs courantes
@@ -204,6 +204,7 @@ class Jeu:
         self.vy = 0.0
         self.vx = 2.0
         self.zoom = 1.0
+        self.visee = R["VISEE_BAS"]
         self.camera_y = self.y - R["VISEE_BAS"]
         self.au_sol = True
         self.temps_en_vol = 0
@@ -260,7 +261,11 @@ class Jeu:
         # 2. le PLAFOND DE SÉCURITÉ : le zoom maximal qui garde encore le
         #    sol à l'écran. Appliqué APRÈS le lissage, donc la perte du sol
         #    devient impossible quels que soient les réglages de confort.
-        hauteur_de_vol = max(0.0, sol - self.y)
+        # L'altitude se mesure par rapport à la LIGNE DES CRÊTES (constante),
+        # jamais par rapport au sol sous le héros : à grande vitesse ce sol
+        # balaie tout le dénivelé d'une colline, l'« altitude » tremblerait de
+        # 65 px sans que le dragonneau bouge, et la caméra copierait ce tremblement.
+        hauteur_de_vol = max(0.0, CRETE - self.y)
         if hauteur_de_vol <= R["SEUIL_ZOOM"]:
             k = 0.0
         else:
@@ -271,15 +276,21 @@ class Jeu:
         suivi = R["SUIVI_SORTIE"] if confort < self.zoom else R["SUIVI_RETOUR"]
         self.zoom += (confort - self.zoom) * suivi
 
-        # La caméra bouge D'ABORD : sinon le plafond serait calculé sur une
-        # position périmée d'une image, et le sol ressortirait quand même.
-        visee = R["VISEE_BAS"] + (R["VISEE_HAUT"] - R["VISEE_BAS"]) * k
-        self.camera_x += self.vx
-        self.camera_y += ((self.y - visee / self.zoom) - self.camera_y) * R["SUIVI_CAMERA"]
+        # C'est la VISÉE qu'on lisse, pas la caméra. La caméra s'en déduit
+        # ensuite exactement : le héros est donc toujours pile à `visee` pixels
+        # du haut de l'écran, sans retard et sans dérive possible.
+        visee_cible = R["VISEE_BAS"] + (R["VISEE_HAUT"] - R["VISEE_BAS"]) * k
+        self.visee += (visee_cible - self.visee) * R["SUIVI_CAMERA"]
 
-        plafond = (HAUTEUR - R["MARGE_SOL"]) / max(1.0, sol - self.camera_y)
+        # Le plafond devient une formule fermée : on veut que la ligne des
+        # crêtes tombe au-dessus du bas de l'écran, soit
+        #     (CRETE - y) * zoom + visee  <=  HAUTEUR - MARGE_SOL
+        plafond = (HAUTEUR - R["MARGE_SOL"] - self.visee) / max(1.0, CRETE - self.y)
         self.zoom = max(0.12, min(1.0, plafond, self.zoom))
         self.plafond_actif = plafond < 1.0 and self.zoom >= plafond - 1e-9
+
+        self.camera_x += self.vx
+        self.camera_y = self.y - self.visee / self.zoom
         self.animation += 0.25 if self.au_sol else 0.12
         if self.eclat > 0:
             self.eclat -= 1

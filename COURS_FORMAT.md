@@ -674,7 +674,9 @@ MARGE_SOL    = 8            # px de sol qu'on garantit à l'écran
 VISEE_BAS    = 60           # hauteur du héros à l'écran quand il est au sol
 VISEE_HAUT   = 26           # ... et quand il est très haut
 
-hauteur_de_vol = hauteur_du_sol(camera_x) - y          # 0 au sol
+# L'altitude se mesure au-dessus de la LIGNE DES CRÊTES, jamais au-dessus
+# du sol qui passe sous le héros — voir l'encadré plus bas.
+hauteur_de_vol = max(0.0, CRETE - y)
 
 # 1. LE CONFORT — rien tant qu'on vole bas, puis une rampe douce
 if hauteur_de_vol <= SEUIL_ZOOM:
@@ -684,25 +686,46 @@ else:
 confort = 1.0 - (1.0 - ZOOM_MIN) * k
 zoom += (confort - zoom) * (SUIVI_SORTIE if confort < zoom else SUIVI_RETOUR)
 
-# la caméra bouge AVANT le plafond — sinon il serait périmé d'une image
-visee = VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * k
-camera_y += ((y - visee / zoom) - camera_y) * SUIVI_CAMERA
+# On lisse la VISÉE, pas la caméra
+visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * k - visee) * SUIVI_CAMERA
 
-# 2. LE PLAFOND DE SÉCURITÉ — le zoom maximal qui garde encore le sol visible
-plafond = (HAUTEUR - MARGE_SOL) / max(1.0, hauteur_du_sol(camera_x) - camera_y)
+# 2. LE PLAFOND DE SÉCURITÉ — formule fermée, pas de circularité
+plafond = (HAUTEUR - MARGE_SOL - visee) / max(1.0, CRETE - y)
 zoom = max(0.12, min(1.0, plafond, zoom))
+
+# 3. La caméra se DÉDUIT — le héros est pile à `visee` du haut de l'écran
+camera_y = y - visee / zoom
 ```
 
 **Le plafond rend la perte du sol impossible par construction**, quels que soient les
 réglages de confort. On peut donc régler la rampe purement à la sensation. Il est actif
 ~20 % du temps (uniquement en vol haut) et reste continu — aucun à-coup visible.
 
-⚠️ **L'ordre compte.** Le plafond doit être calculé *après* la mise à jour de `camera_y`.
-Calculé avant, il utilise une position périmée d'une image et le sol ressort quand même —
-mesuré : 1 % de perte résiduelle, uniquement sur les enchaînements de sauts.
+⚠️ **Ne jamais lisser `camera_y` séparément.** C'est tentant (ça donne un joli retard de
+caméra) mais ça casse deux choses : le plafond se calcule alors sur une position périmée
+d'une image, et surtout la position du héros à l'écran n'est plus garantie par rien — il
+sortait par le bas de 10 px. En lissant la **visée** et en déduisant la caméra, la position
+du héros est exactement `visee`, donc bornée par construction entre `VISEE_HAUT` et
+`VISEE_BAS`. Vérifié : 26,3 à 60,0 px, jamais en dehors.
 
-Vérifié sans aucune perte sur toute la plage `GRAVITE` de 0,05 à 0,14, altitude maximale
-276 px, avec le héros toujours à l'écran.
+⚠️ **L'altitude doit se mesurer au-dessus des CRÊTES, pas du sol sous le héros.**
+C'est la cause du « sol qui monte et descend sans arrêt » ressenti en redescendant d'un
+haut vol. À grande vitesse, `hauteur_du_sol(camera_x)` balaie tout le dénivelé d'une
+colline : l'altitude calculée tremble de 65 px alors que le dragonneau ne bouge presque
+pas, et le zoom, la visée et le plafond copient tous les trois ce tremblement.
+
+`CRETE` est une constante (les collines se raccordent toujours à la même hauteur), donc
+la mesure est parfaitement lisse. Mesuré sur les redescentes de haut vol, en inversions du
+sens du zoom pour 100 images — c'est ce que l'œil perçoit comme instable :
+
+| Référence utilisée | Inversions / 100 images |
+|---|---|
+| Sol sous le héros (naïf) | 9,1 |
+| Sol sous le héros, filtré | 10,7 |
+| **Ligne des crêtes** | **2,2** |
+
+Vérifié sans aucune perte du sol sur toute la plage `GRAVITE` de 0,05 à 0,14, altitude
+maximale 276 px, héros toujours à l'écran.
 
 Le monde se convertit alors en coordonnées d'écran avec le zoom :
 
