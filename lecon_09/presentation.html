@@ -902,7 +902,7 @@ const cvJ = document.getElementById('cv-jeu');
 const ctxJ = cvJ.getContext('2d');
 
 const VITESSE = 1.5, GRAVITE = 0.14, GRAVITE_PLONGEON = 0.40;
-const REBOND = 0.6, REBOND_MINI = 2.4, VISEE = 60;
+const REBOND = 0.6, REBOND_MINI = 2.4, VISEE = 60, MI_HAUTEUR = 6;
 
 let jy = 10, jvy = 0, jcx = 0, jcy = 0, janim = 0;
 let jSuivi = 0.12, jTimer = null, jHeld = false;
@@ -934,7 +934,7 @@ function jeuStep() {
   jy  += jvy;
   jcx += VITESSE;
 
-  const sol = hauteurDuSol(jcx);
+  const sol = hauteurDuSol(jcx) - MI_HAUTEUR;   // y est le CENTRE du sprite
   if (jy >= sol) {
     jy = sol;
     jvy = -jvy * REBOND;

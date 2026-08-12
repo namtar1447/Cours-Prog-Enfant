@@ -20,6 +20,7 @@ import pygame
 LARGEUR, HAUTEUR = 160, 120      # la taille du monde, en pixels
 ZOOM = 4                         # la loupe : la fenêtre fait 640 x 480
 X_DRAGON = 40                    # le dragonneau reste dans cette colonne
+MI_HAUTEUR = 6                   # la moitié du sprite : y est son CENTRE
 
 # --- Les collines ---
 L_COLLINE = 200                  # longueur d'une colline, en pixels
@@ -210,7 +211,7 @@ while en_marche:
 
     # (déjà écrit) Le sol n'est plus plat : sa hauteur dépend d'où on
     # est dans le monde. Le rebond, lui, ne change pas.
-    sol = hauteur_du_sol(camera_x)
+    sol = hauteur_du_sol(camera_x) - MI_HAUTEUR   # y est son CENTRE
 
     if y >= sol:
         y = sol

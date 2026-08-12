@@ -19,6 +19,8 @@ LARGEUR, HAUTEUR = 160, 120      # la taille du monde, en pixels
 ZOOM = 4                         # la loupe : la fenêtre fait 640 x 480
 X_DRAGON = 40                    # le dragonneau reste dans cette colonne
 SOL_PLAT = 100                   # la hauteur du sol
+MI_HAUTEUR = 6                   # la moitié du sprite : y est son CENTRE
+POSE = SOL_PLAT - MI_HAUTEUR     # la hauteur du centre quand il est posé
 PLAFOND = 10                     # il ne monte pas plus haut que ça
 
 GRAVITE = 0.14                   # chute normale, ailes ouvertes
@@ -152,8 +154,8 @@ while en_marche:
 
     # (déjà écrit) Le sol est un trampoline : il ne s'arrête jamais tout
     # à fait, sinon on ne verrait plus l'effet du bouton.
-    if y >= SOL_PLAT:
-        y = SOL_PLAT
+    if y >= POSE:
+        y = POSE
         vy = -vy * REBOND
         if vy > -REBOND_MINI:
             vy = -REBOND_MINI
@@ -183,7 +185,8 @@ while en_marche:
     #          Modèle : surf.blit(image, (gauche, haut))
     #          Attention : blit veut le coin EN HAUT À GAUCHE, pas le centre.
     #          L'image fait 16 de large et 12 de haut, et le dragonneau
-    #          doit être centré sur (X_DRAGON, y).
+    #          doit être centré sur (X_DRAGON, y) — c'est pour ça que
+    #          la moitié de sa hauteur s'appelle MI_HAUTEUR là-haut.
     #          Écris aussi int(y) : un pixel, ça ne se coupe pas en deux
     #          — et la console de la leçon 14 refuse les virgules.
 

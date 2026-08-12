@@ -20,6 +20,8 @@ LARGEUR, HAUTEUR = 160, 120      # la taille du monde, en pixels
 ZOOM = 4                         # la loupe : la fenêtre fait 640 x 480
 X_DRAGON = 40                    # le dragonneau reste dans cette colonne
 SOL_PLAT = 100                   # la hauteur du sol
+RAYON = 6                        # le dragonneau est un rond de 6 pixels de rayon
+POSE = SOL_PLAT - RAYON          # la hauteur de son CENTRE quand il est posé
 GRAVITE = 0.14                   # combien la vitesse augmente à chaque tour
 REBOND = 0.6                     # ce qu'il reste de vitesse après un rebond
 
@@ -83,7 +85,10 @@ while en_marche:
 
     # TODO 3 : Empêche-le de traverser le sol.
     #          Quand il est arrivé au sol ou plus bas, repose-le
-    #          exactement sur le sol.
+    #          exactement dessus.
+    #          Attention : y est le CENTRE du rond. S'il descend jusqu'à
+    #          SOL_PLAT, la moitié du dragonneau est déjà sous l'herbe —
+    #          la bonne hauteur est donc POSE, en haut du fichier.
     #          (une seule ligne suffit pour l'instant — le rebond arrive après)
 
 
@@ -96,7 +101,7 @@ while en_marche:
 
     # (déjà écrit) Quand les rebonds deviennent minuscules, on l'arrête net.
     # Sans ça, il tremblote sur place pour toujours.
-    if y >= SOL_PLAT and -0.4 < vy < 0:
+    if y >= POSE and -0.4 < vy < 0:
         vy = 0.0
 
     # --- 3. DESSINER ---------------------------------------
@@ -105,7 +110,7 @@ while en_marche:
     pygame.draw.rect(surf, COULEUR_OMBRE, (0, SOL_PLAT, LARGEUR, 3))
 
     # TODO 5 : Dessine le dragonneau.
-    #          Pour l'instant c'est un simple rond de 6 pixels de rayon,
+    #          Pour l'instant c'est un simple rond de rayon RAYON,
     #          de la couleur COULEUR_DRAGON, dans la colonne X_DRAGON,
     #          à la hauteur où il se trouve.
     #          Modèle : pygame.draw.circle(surf, couleur, (x, y), rayon)

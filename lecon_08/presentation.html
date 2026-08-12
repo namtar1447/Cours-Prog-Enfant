@@ -924,6 +924,7 @@ function animSlide() {
 // Section 4 — plonger (mêmes constantes que jeu.py)
 // ════════════════════════════════════════════════════════════
 const SOL_PLAT = 100, PLAFOND = 10;
+const MI_HAUTEUR = 6, POSE = SOL_PLAT - MI_HAUTEUR;   // y est le CENTRE du sprite
 const GRAVITE = 0.14, GRAVITE_PLONGEON = 0.40;
 const REBOND = 0.6, REBOND_MINI = 2.4;
 const ECH = 2;                     // 160x120 affiché en 320x240
@@ -949,8 +950,8 @@ function diveRender() {
 function diveStep() {
   dvy += held2 ? GRAVITE_PLONGEON : GRAVITE;
   dy  += dvy;
-  if (dy >= SOL_PLAT) {
-    dy = SOL_PLAT;
+  if (dy >= POSE) {
+    dy = POSE;
     dvy = -dvy * REBOND;
     if (dvy > -REBOND_MINI) dvy = -REBOND_MINI;
   }

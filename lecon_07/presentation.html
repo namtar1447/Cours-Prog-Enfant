@@ -582,9 +582,16 @@
   <h3>Le rebond</h3>
 
   <div class="code-block">
-<span class="kw">if</span> <span class="var">y</span> <span class="op">&gt;=</span> <span class="var">SOL_PLAT</span>:
-    <span class="var">y</span> <span class="op">=</span> <span class="var">SOL_PLAT</span>          <span class="cm"># on le repose pile sur le sol</span>
+<span class="kw">if</span> <span class="var">y</span> <span class="op">&gt;=</span> <span class="var">POSE</span>:
+    <span class="var">y</span> <span class="op">=</span> <span class="var">POSE</span>              <span class="cm"># on le repose pile sur le sol</span>
     <span class="var">vy</span> <span class="op">=</span> <span class="op">-</span><span class="var">vy</span> <span class="op">*</span> <span class="num">0.6</span>      <span class="cm"># il repart vers le haut, moins fort</span></div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ y est le CENTRE du rond</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">RAYON</span> <span class="op">=</span> <span class="num">6</span>
+<span class="var">POSE</span> <span class="op">=</span> <span class="var">SOL_PLAT</span> <span class="op">-</span> <span class="var">RAYON</span>   <span class="cm"># sinon la moitié du dragonneau est sous l'herbe</span></div>
+  </div>
 
   <div class="card warning">
     <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Le signe moins fait tout</div>
@@ -819,6 +826,8 @@ function setCoord(y) {
 // Section 4 — gravité + rebond
 // ════════════════════════════════════════════════════════════
 const SOL_PLAT = 110;          // en coordonnées du jeu (160x120)
+const RAYON = 3.5;             // le rond de la démo
+const POSE = SOL_PLAT - RAYON; // y est son CENTRE : il se pose plus haut
 let gy = 10, gvy = 0;
 let gGravite = 0.14, gRebond = 0.6;
 let gravAnim = null;
@@ -832,8 +841,8 @@ function gravRender() {
 function gravStep() {
   gvy += gGravite;
   gy  += gvy;
-  if (gy >= SOL_PLAT) {
-    gy = SOL_PLAT;
+  if (gy >= POSE) {
+    gy = POSE;
     gvy = -gvy * gRebond;
     if (Math.abs(gvy) < 0.35) gvy = 0;     // il finit par se poser
   }
