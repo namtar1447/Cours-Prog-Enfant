@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 08 — Le bouton unique, sprites, animation</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Bouton « à tenir » ── */
+    .hold-btn {
+      display: block; width: 100%; max-width: 340px; margin: 0 auto;
+      padding: 18px 20px; border-radius: 14px; cursor: pointer;
+      background: rgba(247,162,106,.12); border: 2px solid var(--accent2);
+      color: var(--accent2); font-size: 1.05em; font-weight: bold;
+      font-family: 'Segoe UI', sans-serif; user-select: none;
+      transition: transform .06s, background .12s;
+    }
+    .hold-btn.down {
+      background: var(--accent2); color: #1e1e2e; transform: translateY(3px);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+
+    /* ── Grille de pixels (sprite) ── */
+    .pix-grid {
+      display: grid; grid-template-columns: repeat(16, var(--cell));
+      grid-auto-rows: var(--cell); width: max-content;
+      image-rendering: pixelated;
+    }
+    .pix-grid.showgrid .pix { outline: 1px solid rgba(255,255,255,.06); }
+    .pix {
+      width: var(--cell); height: var(--cell);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Courier New', monospace; font-size: 11px;
+      color: rgba(205,214,244,.5);
+    }
+    .sprite-stage {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 210px; background: #26144222; border-radius: 10px; padding: 10px;
+    }
+
+    /* ── Mini écran de jeu ── */
+    .screen {
+      position: relative; background: #261c42;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      margin: 0 auto; overflow: hidden;
+    }
+    .screen .sol {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: #3a8a44; border-top: 6px solid #2a6432;
+    }
+    .flyer { position: absolute; }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+
+    /* ── Slider ── */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .mini-card {
+      background: var(--surface); border-radius: 10px; padding: 14px 18px;
+    }
+    .mini-card .t { color: var(--accent2); font-weight: bold; font-size: .95em; }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em;
+    }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Checklist visuelle ── */
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. Le bouton</span>
+  <span class="progress-item" id="prog-2">2. Le sprite</span>
+  <span class="progress-item" id="prog-3">3. Les ailes</span>
+  <span class="progress-item" id="prog-4">4. Plonger</span>
+  <span class="progress-item" id="prog-5">5. Design</span>
+  <span class="progress-item" id="prog-6">6. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 08 — Le bouton unique</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Savoir si une touche est <strong>tenue en ce moment</strong></li>
+      <li>Dessiner un <strong>sprite</strong> — une image faite à la main, pixel par pixel</li>
+      <li>L'<strong>animer</strong> avec deux images et un seul compteur</li>
+      <li>Donner au bouton son <strong>vrai pouvoir</strong> : plonger</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 55–70 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Là où on en est</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>✅ <strong>Leçon 07</strong> &nbsp;→&nbsp; un rond tombe et rebondit</span>
+      <span>🎯 <strong>Aujourd'hui</strong> &nbsp;→&nbsp; un dragonneau qui bat des ailes, et un bouton</span>
+      <span>⛰️ <strong>Leçon 09</strong> &nbsp;→&nbsp; le sol plat devient des collines</span>
+    </div>
+  </div>
+
+  <!-- ── Rappel leçon 07 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçon 07</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">La boucle</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">while</span> <span class="var">en_marche</span>:
+    <span class="cm"># écouter</span>
+    <span class="cm"># calculer</span>
+    <span class="cm"># dessiner</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">La gravité</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">vy</span> <span class="op">+=</span> <span class="var">GRAVITE</span>
+<span class="var">y</span>  <span class="op">+=</span> <span class="var">vy</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">y descend</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">y</span> <span class="op">=</span> <span class="num">0</span>     <span class="cm"># en haut</span>
+<span class="var">y</span> <span class="op">=</span> <span class="num">119</span>   <span class="cm"># en bas</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — LE BOUTON -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Tenu, pas appuyé</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la sonnette et l'interrupteur</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🔔 <strong>Sonnette</strong> &nbsp;→&nbsp; ça sonne <em>une fois</em> <span style="color:var(--muted)">(un événement)</span></span>
+      <span>💡 <strong>Interrupteur</strong> &nbsp;→&nbsp; c'est allumé <em>tant qu'on tient</em> <span style="color:var(--muted)">(un état)</span></span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — tiens le bouton (ou la barre d'espace)</div>
+
+    <div class="hold-btn" id="hold-1">⬇ TIENS-MOI</div>
+
+    <div class="compare-grid" style="margin-top:18px;">
+      <div class="mini-card">
+        <div class="t">🔔 événement KEYDOWN</div>
+        <div class="readout" style="text-align:left; margin-top:6px;">
+          reçus : <b id="ev-count">0</b>
+        </div>
+        <div style="color:var(--muted); font-size:.8em;">une seule fois par appui</div>
+      </div>
+      <div class="mini-card">
+        <div class="t">💡 touches[K_SPACE]</div>
+        <div class="readout" style="text-align:left; margin-top:6px;">
+          vaut : <b id="st-val">False</b>
+        </div>
+        <div style="color:var(--muted); font-size:.8em;">vrai à <span id="st-count">0</span> tours de boucle</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn secondary" onclick="holdReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="cm"># une seule fois, au moment de l'appui</span>
+<span class="kw">if</span> <span class="var">evenement</span>.<span class="var">type</span> <span class="op">==</span> <span class="mod">pygame</span>.<span class="var">KEYDOWN</span>:
+    ...
+
+<span class="cm"># l'état, à chaque tour de boucle</span>
+<span class="var">touches</span> <span class="op">=</span> <span class="mod">pygame</span>.<span class="mod">key</span>.<span class="fn">get_pressed</span>()
+<span class="var">bouton</span>  <span class="op">=</span> <span class="var">touches</span>[<span class="mod">pygame</span>.<span class="var">K_SPACE</span>]</div>
+
+  <div class="card info">
+    <div class="label code">Lequel pour quoi ?</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Sauter, tirer, ouvrir</strong> &nbsp;— l'événement</li>
+      <li><strong>Courir, plonger, freiner</strong> &nbsp;— l'état</li>
+      <li><strong>Notre dragonneau</strong> &nbsp;— il plonge <em>tant qu'on tient</em></li>
+    </ul>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — Adam veut que le dragonneau plonge <em>tant que</em> la barre est tenue. Il utilise quoi ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">l'événement KEYDOWN</div>
+      <div class="quiz-option">pygame.key.get_pressed()</div>
+      <div class="quiz-option">l'événement QUIT</div>
+      <div class="quiz-option">input()</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — LE SPRITE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Un sprite, c'est du texte</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le coloriage codé</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🔤 <strong>Une lettre</strong> &nbsp;→&nbsp; une case du quadrillage</span>
+      <span>🎨 <strong>Chaque lettre</strong> &nbsp;→&nbsp; une couleur <span style="color:var(--muted)">(C = corps, A = aile)</span></span>
+      <span>👉 <strong>Le point</strong> &nbsp;&nbsp;→&nbsp; on ne peint rien <span style="color:var(--muted)">(on voit le ciel)</span></span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — le dragonneau, case par case</div>
+
+    <div class="sprite-stage"><div id="sprite-view"></div></div>
+
+    <div class="readout" id="sprite-read">16 colonnes × 12 lignes = 192 cases</div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="spriteShow('haute')">Aile en haut</button>
+      <button class="demo-btn" onclick="spriteShow('basse')">Aile en bas</button>
+      <button class="demo-btn secondary" onclick="spriteLettres()">🔤 Lettres</button>
+      <button class="demo-btn secondary" onclick="spriteReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">DRAGON_AILE_HAUTE</span> <span class="op">=</span> [
+    <span class="str">"......AAAA......"</span>,
+    <span class="str">".....AAAAAA....."</span>,
+    <span class="cm"># ... 10 lignes de plus</span>
+]
+
+<span class="var">image</span>.<span class="fn">set_at</span>((<span class="var">x</span>, <span class="var">y</span>), <span class="var">couleur</span>)   <span class="cm"># peindre UNE case</span></div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ blit prend le coin, pas le centre</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">surf</span>.<span class="fn">blit</span>(<span class="var">image</span>, (<span class="var">X_DRAGON</span> <span class="op">-</span> <span class="num">8</span>, <span class="kw">int</span>(<span class="var">y</span>) <span class="op">-</span> <span class="num">6</span>))
+<span class="cm"># 16 de large → 8 ·  12 de haut → 6</span></div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Pourquoi pas une vraie image ?</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Zéro fichier</strong> &nbsp;— le dessin est <em>dans</em> le programme</li>
+      <li><strong>Zéro place</strong> &nbsp;— la console n'a que 512 Ko</li>
+      <li><strong>Modifiable</strong> &nbsp;— change une lettre, relance, c'est fait</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — L'ANIMATION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Deux images, un compteur</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — l'horloge à deux heures</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>⏱️ <code style="color:var(--accent2)">animation</code> &nbsp;→&nbsp; monte tout droit, sans jamais redescendre</span>
+      <span>🔁 <code style="color:var(--accent2)">% 2</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le reste : 0, 1, 0, 1… <span style="color:var(--muted)">(pair ou impair)</span></span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">animation</span> <span class="op">+=</span> <span class="var">VITESSE_AILES</span>          <span class="cm"># 0.15 par tour</span>
+<span class="var">image</span> <span class="op">=</span> <span class="var">SPRITES</span>[<span class="kw">int</span>(<span class="var">animation</span>) <span class="op">%</span> <span class="num">2</span>]   <span class="cm"># 0 ou 1, jamais autre chose</span></div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — regarde le compteur et l'aile</div>
+
+    <div class="sprite-stage" style="min-height:130px;"><div id="anim-view"></div></div>
+
+    <div class="readout">
+      animation = <b id="anim-c">0.00</b> &nbsp;→&nbsp; int() = <b id="anim-i">0</b> &nbsp;→&nbsp; % 2 = <b id="anim-m">0</b>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:.85em; color:var(--muted); margin-bottom:4px;">
+        <span>VITESSE_AILES</span><span id="anim-v" style="color:var(--accent2); font-family:'Courier New';">0.15</span>
+      </div>
+      <input type="range" id="anim-slider" min="1" max="60" value="15" oninput="animSlide()">
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="animPlay()" id="anim-btn">▶ Lancer</button>
+      <button class="demo-btn secondary" onclick="animStep()">⏭ Une image</button>
+      <button class="demo-btn secondary" onclick="animReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 2 — <code>animation</code> vaut 3.7. Quelle image montre-t-on ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">SPRITES[0]  — aile en haut</div>
+      <div class="quiz-option">SPRITES[1]  — aile en bas</div>
+      <div class="quiz-option">SPRITES[3]</div>
+      <div class="quiz-option">SPRITES[3.7]</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — PLONGER -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Le bouton change la gravité</h2>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Une seule ligne devient deux</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Relâché</strong> &nbsp;<code>vy += 0.14</code> — il plane</li>
+      <li><strong>Tenu</strong> &nbsp;&nbsp;&nbsp;&nbsp;<code>vy += 0.40</code> — il plonge lourd</li>
+      <li><strong>Le reste</strong> &nbsp;— identique à la leçon 07</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+<span class="kw">if</span> <span class="var">bouton</span>:
+    <span class="var">vy</span> <span class="op">+=</span> <span class="var">GRAVITE_PLONGEON</span>
+<span class="kw">else</span>:
+    <span class="var">vy</span> <span class="op">+=</span> <span class="var">GRAVITE</span></div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — tiens le bouton et regarde les bonds</div>
+
+    <div class="screen" id="scr-dive" style="width:320px; height:240px;">
+      <div class="sol" style="height:40px;"></div>
+      <div class="flyer" id="dive-dragon"></div>
+    </div>
+
+    <div class="readout">
+      y = <b id="dive-y">10.0</b> &nbsp;·&nbsp; vy = <b id="dive-vy">0.00</b> &nbsp;·&nbsp; gravité = <b id="dive-g">0.14</b>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div class="hold-btn" id="hold-2">⬇ TIENS POUR PLONGER</div>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="divePlay()" id="dive-btn">▶ Lancer</button>
+      <button class="demo-btn secondary" onclick="diveReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Le sol plat est un trampoline</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="kw">if</span> <span class="var">vy</span> <span class="op">&gt;</span> <span class="op">-</span><span class="var">REBOND_MINI</span>:
+    <span class="var">vy</span> <span class="op">=</span> <span class="op">-</span><span class="var">REBOND_MINI</span>   <span class="cm"># sinon il se pose, et le bouton ne se voit plus</span></div>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">🕵️ À découvrir tout seul</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>⬇ <strong>Tenir en descendant</strong> &nbsp;→&nbsp; ?</span>
+      <span>⬆ <strong>Tenir en montant</strong> &nbsp;&nbsp;&nbsp;→&nbsp; ?</span>
+      <span style="color:var(--muted)">Essaie les deux dans la démo. C'est tout le jeu qui se cache là.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — DESIGN DE JEU -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>🎮 Design de jeu — un seul verbe</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Un bouton, zéro explication</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎮 <strong>12 boutons</strong> &nbsp;→&nbsp; il faut un tutoriel</span>
+      <span>🕹️ <strong>1 bouton</strong> &nbsp;&nbsp;→&nbsp; on comprend en 3 secondes</span>
+      <span>⏱️ <strong>La difficulté</strong> &nbsp;→&nbsp; <em>quand</em> appuyer, pas <em>sur quoi</em></span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">La profondeur ne vient pas du nombre de boutons</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Un verbe</strong> &nbsp;— plonger</li>
+      <li><strong>Des situations</strong> &nbsp;— en montée, en descente, en l'air</li>
+      <li><strong>Le jeu</strong> &nbsp;— choisir le bon moment, encore et encore</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top:16px; font-size:.95em;">La console qui t'attend à la leçon 14 n'a qu'un bouton pour le jeu. Ce n'est pas une limite : c'est le design.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>key.get_pressed()</td>
+        <td>La liste de toutes les touches, maintenant</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">touches = ...get_pressed()</td>
+      </tr>
+      <tr>
+        <td>touches[K_SPACE]</td>
+        <td>Vrai tant que la barre est tenue</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">True ou False</td>
+      </tr>
+      <tr>
+        <td>if … else …</td>
+        <td>Deux gravités : plonger ou planer</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.40 ou 0.14</td>
+      </tr>
+      <tr>
+        <td>Surface(…, SRCALPHA)</td>
+        <td>Une image qui a du transparent</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">le ciel se voit autour</td>
+      </tr>
+      <tr>
+        <td>image.set_at((x,y), c)</td>
+        <td>Peint UNE case du sprite</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">192 cases en tout</td>
+      </tr>
+      <tr>
+        <td>surf.blit(image, (x,y))</td>
+        <td>Colle l'image — par son coin haut-gauche</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">(X_DRAGON-8, int(y)-6)</td>
+      </tr>
+      <tr>
+        <td>animation += 0.15</td>
+        <td>Le compteur des ailes avance</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">à chaque tour</td>
+      </tr>
+      <tr>
+        <td>int(animation) % 2</td>
+        <td>Donne 0 ou 1 — jamais autre chose</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">SPRITES[0] ou SPRITES[1]</td>
+      </tr>
+      <tr>
+        <td>liste[0], liste[1]</td>
+        <td>Choisir dans une liste d'images</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">SPRITES = [haute, basse]</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Un <strong>événement</strong> arrive une fois ; un <strong>état</strong> dure tant qu'on tient</li>
+      <li>Un sprite, c'est juste <strong>des lettres</strong> transformées en couleurs</li>
+      <li><code style="color:var(--accent2)">blit</code> place le <strong>coin</strong> de l'image, alors on recule de la moitié</li>
+      <li>Deux images + un compteur qui monte = <strong>une animation</strong></li>
+    </ul>
+  </div>
+
+  <!-- ── Checklist visuelle (remplace tests.py dans le bloc 2) ── -->
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">On regarde l'écran, pas un rapport de tests. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-08">
+    <li><span class="box"></span><span>Ce n'est plus un rond : on voit un dragonneau</span></li>
+    <li><span class="box"></span><span>Le ciel se voit autour de lui — pas de carré noir</span></li>
+    <li><span class="box"></span><span>Il bat des ailes sans arrêt</span></li>
+    <li><span class="box"></span><span>Il rebondit toujours, même petit — il ne se pose jamais pour de bon</span></li>
+    <li><span class="box"></span><span>Tenir ESPACE le fait tomber nettement plus vite</span></li>
+    <li><span class="box"></span><span>Relâcher ESPACE le fait redevenir léger</span></li>
+    <li><span class="box"></span><span>Ses bonds sont plus courts et plus rapides quand on tient</span></li>
+    <li><span class="box"></span><span>Il ne sort jamais par le haut de l'écran</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 09 — Le terrain-tremplin</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Le sol plat disparaît : de vraies collines défilent sous le dragonneau, dessinées colonne par colonne.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny et complète les <code style="color:var(--text)">TODO</code> dans l'ordre.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5','sec-6'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Le sprite — mêmes lettres que dans jeu.py
+// ════════════════════════════════════════════════════════════
+const MOTIFS = {
+  haute: [
+    "......AAAA......",
+    ".....AAAAAA.....",
+    "....AAAAAAA.....",
+    "....AAAAAA.D.D..",
+    "......CCCCCCCC..",
+    "D....CCCCCCCCC..",
+    "DD..CCCCCCCOCCC.",
+    ".DDCCCCCCCCCCCCC",
+    "..DCCCCCCCCCCC..",
+    "...DCCCCCCCC....",
+    "....DDDDDD......",
+    "................"
+  ],
+  basse: [
+    "................",
+    "................",
+    "................",
+    "......CC...D.D..",
+    "......CCCCCCCC..",
+    "D....CCCCCCCCC..",
+    "DD..CCCCCCCOCCC.",
+    ".DDCCCCCCCCCCCCC",
+    "..DCCCCAAACCCC..",
+    "...DCCAAAAAA....",
+    "....DAAAAAA.....",
+    ".....AAAA......."
+  ]
+};
+
+const COULEURS = { C: '#e85c38', D: '#a83428', A: '#a83428', O: '#141420' };
+
+function makeGrid(motif, cell, lettres) {
+  const g = document.createElement('div');
+  g.className = 'pix-grid' + (lettres ? ' showgrid' : '');
+  g.style.setProperty('--cell', cell + 'px');
+  motif.forEach(ligne => {
+    for (const ch of ligne) {
+      const c = document.createElement('div');
+      c.className = 'pix';
+      if (COULEURS[ch]) c.style.background = COULEURS[ch];
+      if (lettres) {
+        c.textContent = ch;
+        if (COULEURS[ch]) c.style.color = 'rgba(19,19,31,.8)';
+      }
+      g.appendChild(c);
+    }
+  });
+  return g;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — événement vs état
+// ════════════════════════════════════════════════════════════
+let evCount = 0, stCount = 0, holdTimer = null;
+let held1 = false;
+
+function hold1Render() {
+  document.getElementById('ev-count').textContent = evCount;
+  document.getElementById('st-val').textContent  = held1 ? 'True' : 'False';
+  document.getElementById('st-val').style.color  = held1 ? 'var(--success)' : 'var(--muted)';
+  document.getElementById('st-count').textContent = stCount;
+}
+
+function hold1Down() {
+  if (held1) return;            // l'événement n'arrive qu'UNE fois
+  held1 = true;
+  evCount++;
+  document.getElementById('hold-1').classList.add('down');
+  if (!holdTimer) holdTimer = setInterval(() => { if (held1) { stCount++; hold1Render(); } }, 16);
+  hold1Render();
+}
+
+function hold1Up() {
+  held1 = false;
+  document.getElementById('hold-1').classList.remove('down');
+  hold1Render();
+}
+
+function holdReset() {
+  evCount = 0; stCount = 0;
+  hold1Up();
+}
+
+// ════════════════════════════════════════════════════════════
+// Boutons « à tenir » — souris, doigt et barre d'espace
+// ════════════════════════════════════════════════════════════
+function brancherHold(id, onDown, onUp) {
+  const el = document.getElementById(id);
+  el.addEventListener('mousedown',  e => { e.preventDefault(); onDown(); });
+  el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); }, { passive: false });
+  ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(
+    ev => el.addEventListener(ev, onUp));
+}
+
+brancherHold('hold-1', hold1Down, hold1Up);
+
+// La vraie barre d'espace pilote la démo la plus proche de l'écran.
+function demoVisible() {
+  const s1 = document.getElementById('sec-1').getBoundingClientRect();
+  const s4 = document.getElementById('sec-4').getBoundingClientRect();
+  const visible = r => r.top < window.innerHeight * 0.75 && r.bottom > 0;
+  if (visible(s4)) return 4;
+  if (visible(s1)) return 1;
+  return 0;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.repeat) return;
+  const d = demoVisible();
+  if (d === 0) return;
+  e.preventDefault();
+  if (d === 1) hold1Down(); else dive2Down();
+});
+
+document.addEventListener('keyup', e => {
+  if (e.code !== 'Space') return;
+  hold1Up(); dive2Up();
+});
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — le sprite case par case
+// ════════════════════════════════════════════════════════════
+let spriteAile = 'haute', spriteLettresOn = false;
+
+function spriteRender() {
+  const box = document.getElementById('sprite-view');
+  box.innerHTML = '';
+  box.appendChild(makeGrid(MOTIFS[spriteAile], spriteLettresOn ? 18 : 12, spriteLettresOn));
+  document.getElementById('sprite-read').textContent = spriteLettresOn
+    ? 'C = corps · D = corps foncé · A = aile · O = oeil · . = transparent'
+    : '16 colonnes × 12 lignes = 192 cases';
+}
+
+function spriteShow(aile) { spriteAile = aile; spriteRender(); }
+function spriteLettres()  { spriteLettresOn = !spriteLettresOn; spriteRender(); }
+function spriteReset()    { spriteAile = 'haute'; spriteLettresOn = false; spriteRender(); }
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — l'animation
+// ════════════════════════════════════════════════════════════
+let animC = 0, animVitesse = 0.15, animTimer = null, animIdx = -1;
+
+function animRender() {
+  const i = Math.floor(animC) % 2;
+  if (i !== animIdx) {
+    animIdx = i;
+    const box = document.getElementById('anim-view');
+    box.innerHTML = '';
+    box.appendChild(makeGrid(MOTIFS[i === 0 ? 'haute' : 'basse'], 8, false));
+  }
+  document.getElementById('anim-c').textContent = animC.toFixed(2);
+  document.getElementById('anim-i').textContent = Math.floor(animC);
+  document.getElementById('anim-m').textContent = i;
+}
+
+function animStep() { animC += animVitesse; animRender(); }
+
+function animPlay() {
+  const btn = document.getElementById('anim-btn');
+  if (animTimer) {
+    clearInterval(animTimer); animTimer = null;
+    btn.textContent = '▶ Lancer';
+    return;
+  }
+  btn.textContent = '⏸ Pause';
+  animTimer = setInterval(animStep, 16);
+}
+
+function animReset() {
+  if (animTimer) { clearInterval(animTimer); animTimer = null; }
+  document.getElementById('anim-btn').textContent = '▶ Lancer';
+  animC = 0; animIdx = -1;
+  animRender();
+}
+
+function animSlide() {
+  animVitesse = document.getElementById('anim-slider').value / 100;
+  document.getElementById('anim-v').textContent = animVitesse.toFixed(2);
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — plonger (mêmes constantes que jeu.py)
+// ════════════════════════════════════════════════════════════
+const SOL_PLAT = 100, PLAFOND = 10;
+const GRAVITE = 0.14, GRAVITE_PLONGEON = 0.40;
+const REBOND = 0.6, REBOND_MINI = 2.4;
+const ECH = 2;                     // 160x120 affiché en 320x240
+
+let dy = 10, dvy = 0, dAnim = 0, dIdx = -1;
+let diveTimer = null, held2 = false;
+
+function diveRender() {
+  const i = Math.floor(dAnim) % 2;
+  const el = document.getElementById('dive-dragon');
+  if (i !== dIdx) {
+    dIdx = i;
+    el.innerHTML = '';
+    el.appendChild(makeGrid(MOTIFS[i === 0 ? 'haute' : 'basse'], ECH, false));
+  }
+  el.style.left = (80 * ECH - 8 * ECH) + 'px';
+  el.style.top  = (dy * ECH - 6 * ECH) + 'px';
+  document.getElementById('dive-y').textContent  = dy.toFixed(1);
+  document.getElementById('dive-vy').textContent = dvy.toFixed(2);
+  document.getElementById('dive-g').textContent  = (held2 ? GRAVITE_PLONGEON : GRAVITE).toFixed(2);
+}
+
+function diveStep() {
+  dvy += held2 ? GRAVITE_PLONGEON : GRAVITE;
+  dy  += dvy;
+  if (dy >= SOL_PLAT) {
+    dy = SOL_PLAT;
+    dvy = -dvy * REBOND;
+    if (dvy > -REBOND_MINI) dvy = -REBOND_MINI;
+  }
+  if (dy < PLAFOND) { dy = PLAFOND; dvy = 0; }
+  dAnim += 0.15;
+  diveRender();
+}
+
+function divePlay() {
+  const btn = document.getElementById('dive-btn');
+  if (diveTimer) {
+    clearInterval(diveTimer); diveTimer = null;
+    btn.textContent = '▶ Lancer';
+    return;
+  }
+  btn.textContent = '⏸ Pause';
+  diveTimer = setInterval(diveStep, 16);
+}
+
+function diveReset() {
+  if (diveTimer) { clearInterval(diveTimer); diveTimer = null; }
+  document.getElementById('dive-btn').textContent = '▶ Lancer';
+  dy = 10; dvy = 0; dAnim = 0; dIdx = -1;
+  dive2Up();
+  diveRender();
+}
+
+function dive2Down() {
+  held2 = true;
+  document.getElementById('hold-2').classList.add('down');
+  if (!diveTimer) divePlay();       // tenir le bouton lance la démo
+  diveRender();
+}
+
+function dive2Up() {
+  held2 = false;
+  document.getElementById('hold-2').classList.remove('down');
+  diveRender();
+}
+
+brancherHold('hold-2', dive2Down, dive2Up);
+
+// ════════════════════════════════════════════════════════════
+// Checklist visuelle
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-08 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz system
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'L\'événement n\'arrive qu\'une fois. Et pendant les 200 tours suivants ?',
+  'Il faut l\'ÉTAT de la touche à chaque tour — c\'est get_pressed().'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'Deux étapes : d\'abord int(3.7), ensuite le reste de la division par 2.',
+  'int(3.7) donne 3, et 3 % 2 donne 1 — donc SPRITES[1].'
+]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ des démos
+// ════════════════════════════════════════════════════════════
+hold1Render();
+spriteReset();
+animReset();
+diveReset();
+</script>
+
+</body>
+</html>

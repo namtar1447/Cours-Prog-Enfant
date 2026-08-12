@@ -234,7 +234,7 @@
   <div class="header-totals">
     <div class="header-total">
       <div class="header-total-num" id="total-ex-num">0</div>
-      <div class="header-total-label">exercices complétés</div>
+      <div class="header-total-label">exercices et ateliers complétés</div>
     </div>
     <div class="header-total">
       <div class="header-total-num" id="total-proj-num">0</div>
@@ -247,7 +247,7 @@
 
   <div class="legend">
     <div class="legend-item">📖 <span>Ouvre la présentation de la leçon</span></div>
-    <div class="legend-item">☑️ <span>Coche quand l'exercice est terminé</span></div>
+    <div class="legend-item">☑️ <span>Coche quand l'exercice ou l'atelier est terminé</span></div>
     <div class="legend-item">🏆 <span>Projet — grand accomplissement !</span></div>
     <div class="legend-item">🔒 <span>Leçon à venir</span></div>
   </div>
@@ -260,8 +260,10 @@
 // ═══════════════════════════════════════════════════════
 // DONNÉES DU COURS
 // available: true  → leçon débloquée
-// exercises: ['exercice_01.py', ...]  → liste des exercices
+// exercises: ['exercice_01.py', ...]  → liste des cases à cocher
+//              (bloc 2 : un seul « atelier » par leçon, il n'y a pas d'exercices séparés)
 // isProject: true  → leçon-projet (trophée)
+// unit: 'exercices' | 'ateliers'  → le mot employé dans la barre de progression
 // ═══════════════════════════════════════════════════════
 
 const BLOCS = [
@@ -270,6 +272,7 @@ const BLOCS = [
     title: 'Bloc 1 — Python fondamentaux',
     icon: '🐍',
     ide: 'Thonny',
+    unit: 'exercices',
     lessons: [
       {
         num: '00', folder: 'lecon_00',
@@ -335,20 +338,21 @@ const BLOCS = [
     title: 'Bloc 2 — Le Dragonneau, jeu 2D avec pygame',
     icon: '🎮',
     ide: 'Thonny',
+    unit: 'ateliers',
     lessons: [
       {
         num: '07', folder: 'lecon_07',
         title: 'Fenêtre, boucle de jeu, gravité',
         project: 'La boucle update → draw → repeat',
         available: true,
-        exercises: [],
+        exercises: ['🐉 Atelier — jeu.py terminé'],
       },
       {
         num: '08', folder: 'lecon_08',
         title: 'Le bouton unique, sprites, animation',
         project: 'Un seul verbe, beaucoup de profondeur',
-        available: false,
-        exercises: [],
+        available: true,
+        exercises: ['🐉 Atelier — jeu.py terminé'],
       },
       {
         num: '09', folder: 'lecon_09',
@@ -627,10 +631,11 @@ function updateBlocProgress() {
     const label = document.getElementById(`bloc-label-${bloc.id}`);
     if (!fill || !label) return;
 
+    const unite = bloc.unit || 'exercices';
     fill.style.width = total === 0 ? '0%' : (done / total * 100) + '%';
     label.textContent = total === 0
-      ? 'Aucun exercice disponible'
-      : `${done} / ${total} exercices complétés`;
+      ? `Aucun ${unite.slice(0, -1)} disponible`
+      : `${done} / ${total} ${unite} complétés`;
   });
 }
 
