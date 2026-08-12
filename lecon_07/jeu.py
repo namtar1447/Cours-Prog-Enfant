@@ -4,7 +4,7 @@
 # ============================================================
 # OBJECTIF : Faire tomber le dragonneau et le faire rebondir sur le sol.
 #            C'est le tout début de ton jeu : tu vas garder ce fichier
-#            et l'agrandir jusqu'à la leçon 13.
+#            et l'agrandir jusqu'à la leçon 14.
 #
 # COMMENT TESTER : Clique sur ▶
 #            Puis regarde l'écran et coche la liste « Ça doit faire ça »
@@ -109,7 +109,8 @@ while en_marche:
     #          de la couleur COULEUR_DRAGON, dans la colonne X_DRAGON,
     #          à la hauteur où il se trouve.
     #          Modèle : pygame.draw.circle(surf, couleur, (x, y), rayon)
-    #          Attention : pygame veut des nombres entiers pour la position.
+    #          Écris int(y) : un pixel, ça ne se coupe pas en deux
+    #          — et la console de la leçon 14 refuse les virgules.
 
 
     # --- 4. AFFICHER (déjà écrit) --------------------------

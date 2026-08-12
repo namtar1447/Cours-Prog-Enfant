@@ -497,7 +497,7 @@ le héros ne vole jamais vraiment, il exploite le relief. C'est le jeu, et c'est
 
 ### 9.2 Contraintes matérielles — à respecter dès la leçon 07
 
-Le jeu est porté sur **ElecFreaks Retro (MakeCode Arcade)** à la leçon 13. Ces contraintes
+Le jeu est porté sur **ElecFreaks Retro (MakeCode Arcade)** à la leçon 14. Ces contraintes
 sont adoptées dès le début pour que le port soit mécanique plutôt qu'une réécriture.
 
 | Contrainte | Valeur | Pourquoi |
@@ -510,7 +510,7 @@ sont adoptées dès le début pour que le port soit mécanique plutôt qu'une r�
 | Images | Aucun gros asset | Le flash est la ressource rare — voir 9.6 |
 
 ⚠️ **Le code Python ne migre pas.** Le format `.uf2` est un conteneur de flashage, pas un
-runtime : la console n'a ni CPython ni SDL. C'est le **design** qui migre. La leçon 13
+runtime : la console n'a ni CPython ni SDL. C'est le **design** qui migre. La leçon 14
 réécrit le jeu en MakeCode Arcade — et c'est précisément la leçon (*même jeu, deux moteurs*).
 
 ### 9.3 Le moteur physique
@@ -878,7 +878,7 @@ versions de MakeCode pour faire tenir certains jeux). Le design l'évite par con
 - **Sprites** — le dragonneau seul, 16×16, 2 images d'animation
 - **Sons** — générés (bips MakeCode), pas de fichiers `.wav` embarqués
 
-Si le jeu ne compile pas à la leçon 13, couper dans cet ordre : particules, puis thèmes
+Si le jeu ne compile pas à la leçon 14, couper dans cet ordre : particules, puis thèmes
 supplémentaires, puis animation du héros.
 
 ### 9.9 Découpage leçon par leçon
