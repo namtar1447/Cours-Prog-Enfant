@@ -165,6 +165,51 @@ def basculerMode():
 
 
 # ============================================================
+# Le clavier de l'ordinateur
+# ============================================================
+# Chaque touche fait exactement la même chose que le bouton.
+
+TOUCHES = {
+    "+": "+", "-": "-", "*": "×", "/": "÷",
+    "(": "(", ")": ")", "^": "^", "!": "!", "²": "²",
+}
+
+NOMS = {
+    "asciicircum": "^",   # la touche ^ des claviers anglais
+    "Multi_key": "^",     # la même touche, « morte », sur clavier canadien-français
+}
+
+
+def toucheClavier(evenement):
+    caractere = evenement.char
+    nom = evenement.keysym
+
+    if caractere in "0123456789" and caractere != "":
+        taper(caractere)
+
+    elif caractere in TOUCHES:
+        taper(TOUCHES[caractere])
+
+    elif nom in NOMS:
+        taper(NOMS[nom])
+
+    elif caractere in (".", ","):
+        period()
+
+    elif nom in ("x", "X"):
+        taper("X")
+
+    elif nom in ("Return", "KP_Enter", "equal"):
+        btn_action.invoke()
+
+    elif nom == "BackSpace":
+        retour()
+
+    elif nom in ("Escape", "Delete"):
+        clear()
+
+
+# ============================================================
 # Le graphique — trace y = f(X)
 # ============================================================
 
@@ -416,6 +461,8 @@ def main():
     ajouterBtn(clavier, "0", lambda: taper("0"), 8, 1)
     ajouterBtn(clavier, ".", period, 8, 2)
     ajouterBtn(clavier, "+", lambda: taper("+"), 8, 3, couleurs=ORANGE)
+
+    fenetre.bind("<Key>", toucheClavier)
 
     rafraichir()
     majHistorique()
