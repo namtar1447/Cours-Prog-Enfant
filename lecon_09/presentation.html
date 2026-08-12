@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 09 — Le terrain-tremplin</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    .hold-btn {
+      display: block; width: 100%; max-width: 340px; margin: 0 auto;
+      padding: 16px 20px; border-radius: 14px; cursor: pointer;
+      background: rgba(247,162,106,.12); border: 2px solid var(--accent2);
+      color: var(--accent2); font-size: 1.05em; font-weight: bold;
+      user-select: none; text-align: center;
+      transition: transform .06s, background .12s;
+    }
+    .hold-btn.down { background: var(--accent2); color: #1e1e2e; transform: translateY(3px); }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+    canvas {
+      display: block; margin: 0 auto; max-width: 100%;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      background: #101020; image-rendering: pixelated;
+    }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+    .slider-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 12px;
+      font-size: .85em; color: var(--muted);
+    }
+    .slider-row span:first-child { width: 110px; flex-shrink: 0; }
+    .slider-row span:last-child  { width: 54px; text-align: right;
+      color: var(--accent2); font-family: 'Courier New'; }
+    input[type=range] {
+      -webkit-appearance: none; flex: 1; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Compare grid ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .mini-card { background: var(--surface); border-radius: 10px; padding: 14px 18px; }
+    .mini-card .t { color: var(--accent2); font-weight: bold; font-size: .95em; }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em; }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Checklist ── */
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. Une formule</span>
+  <span class="progress-item" id="prog-2">2. La colline</span>
+  <span class="progress-item" id="prog-3">3. Les colonnes</span>
+  <span class="progress-item" id="prog-4">4. La caméra</span>
+  <span class="progress-item" id="prog-5">5. Design</span>
+  <span class="progress-item" id="prog-6">6. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 09 — Le terrain-tremplin</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Fabriquer un paysage <strong>avec une formule</strong>, sans aucun dessin</li>
+      <li>Découper avec <code style="color:var(--accent2)">//</code> et <code style="color:var(--accent2)">%</code> — quelle colline, et où dedans</li>
+      <li>Dessiner l'écran <strong>colonne par colonne</strong></li>
+      <li>Faire suivre une <strong>caméra</strong> — le monde bouge, pas le héros</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 60–75 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Là où on en est</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>✅ <strong>Leçon 08</strong> &nbsp;→&nbsp; il bat des ailes et plonge, sur un sol plat</span>
+      <span>🎯 <strong>Aujourd'hui</strong> &nbsp;→&nbsp; le sol plat devient des collines qui défilent</span>
+      <span>🚀 <strong>Leçon 09b</strong> &nbsp;→&nbsp; il glissera sur ces pentes, et décollera</span>
+    </div>
+  </div>
+
+  <!-- ── Rappel leçon 08 ── -->
+  <div style="margin-top: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <span style="font-size: 1.1em;">🔁</span>
+      <span style="color: var(--muted); font-size: .9em; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;">Rappel — Leçons 04 et 08</span>
+      <span style="color: var(--muted); font-size: .8em;">(2 min)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Une fonction</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">def</span> <span class="fn">double</span>(<span class="var">n</span>):
+    <span class="kw">return</span> <span class="var">n</span> <span class="op">*</span> <span class="num">2</span></div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Une boucle</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">160</span>):
+    <span class="fn">print</span>(<span class="var">i</span>)</div>
+      </div>
+      <div class="card info" style="margin: 0;">
+        <div class="label code" style="font-size:.75em; margin-bottom: 6px;">Le bouton</div>
+        <div class="code-block" style="margin: 0; padding: 10px 14px; font-size: .85em; line-height: 1.7;">
+<span class="var">bouton</span> <span class="op">=</span> <span class="var">touches</span>[<span class="var">K_SPACE</span>]
+<span class="var">vy</span> <span class="op">+=</span> <span class="var">GRAVITE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — UNE FORMULE, PAS UN DESSIN -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Un paysage sans dessin</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la recette plutôt que le gâteau</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🖼️ <strong>Une image de terrain</strong> &nbsp;→&nbsp; il faut la stocker <span style="color:var(--muted)">(et elle finit)</span></span>
+      <span>📐 <strong>Une formule</strong> &nbsp;→&nbsp; elle répond partout <span style="color:var(--muted)">(le monde ne finit jamais)</span></span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="kw">def</span> <span class="fn">hauteur_du_sol</span>(<span class="var">x</span>):
+    <span class="cm"># « à la position x du monde, le sol est à quelle hauteur ? »</span>
+    ...
+    <span class="kw">return</span> <span class="var">hauteur</span></div>
+
+  <div class="card info">
+    <div class="label code">Deux opérations, tout le paysage</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>//</strong> &nbsp;<code>450 // 200 = 2</code> — dans quelle colline</li>
+      <li><strong>%</strong> &nbsp;&nbsp;<code>450 % 200 = 50</code> — à quelle distance de son début</li>
+      <li><strong>÷ longueur</strong> &nbsp;<code>50 / 200 = 0.25</code> — le quart de la colline</li>
+    </ul>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — glisse le long du monde</div>
+
+    <canvas id="cv-profil" width="760" height="240"></canvas>
+
+    <div class="readout">
+      x = <b id="pf-x">0</b> &nbsp;·&nbsp; colline n° <b id="pf-i">0</b> &nbsp;·&nbsp; t = <b id="pf-t">0.00</b> &nbsp;·&nbsp; sol = <b id="pf-y">46</b>
+    </div>
+
+    <div class="slider-row">
+      <span>x dans le monde</span>
+      <input type="range" id="pf-slider" min="0" max="800" value="0" oninput="profilSlide()">
+      <span id="pf-val">0</span>
+    </div>
+
+    <div style="text-align:center; margin-top:12px;">
+      <button class="demo-btn secondary" onclick="profilReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — <code>L_COLLINE = 200</code>. Le dragonneau est à <code>x = 450</code>. Dans quelle colline ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">la colline n° 1</div>
+      <div class="quiz-option">la colline n° 2</div>
+      <div class="quiz-option">la colline n° 50</div>
+      <div class="quiz-option">la colline n° 450</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — LA FORME D'UNE COLLINE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>La forme d'une colline</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la piste de ski</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎿 <strong>La descente</strong> &nbsp;→&nbsp; longue et douce <span style="color:var(--muted)">(62 % de la colline)</span></span>
+      <span>⛰️ <strong>La remontée</strong> &nbsp;→&nbsp; courte et cambrée <span style="color:var(--muted)">(le tremplin)</span></span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="kw">if</span> <span class="var">t</span> <span class="op">&lt;</span> <span class="var">R_DESCENTE</span>:                 <span class="cm"># la descente, en cosinus</span>
+    <span class="var">u</span> <span class="op">=</span> <span class="var">t</span> <span class="op">/</span> <span class="var">R_DESCENTE</span>
+    <span class="kw">return</span> <span class="var">CRETE</span> <span class="op">+</span> <span class="var">creux</span> <span class="op">*</span> (<span class="num">1</span> <span class="op">-</span> <span class="mod">math</span>.<span class="fn">cos</span>(<span class="mod">math</span>.<span class="var">pi</span> <span class="op">*</span> <span class="var">u</span>)) <span class="op">/</span> <span class="num">2</span>
+
+<span class="var">u</span> <span class="op">=</span> (<span class="var">t</span> <span class="op">-</span> <span class="var">R_DESCENTE</span>) <span class="op">/</span> (<span class="num">1</span> <span class="op">-</span> <span class="var">R_DESCENTE</span>)   <span class="cm"># la remontée « en goutte »</span>
+<span class="kw">return</span> <span class="var">CRETE</span> <span class="op">+</span> <span class="var">creux</span> <span class="op">*</span> <span class="mod">math</span>.<span class="fn">cos</span>(<span class="mod">math</span>.<span class="var">pi</span> <span class="op">*</span> <span class="var">u</span> <span class="op">/</span> <span class="num">2</span>) <span class="op">**</span> <span class="var">POINTE</span></div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — change la forme et regarde</div>
+
+    <canvas id="cv-forme" width="760" height="240"></canvas>
+
+    <div class="slider-row">
+      <span>creux</span>
+      <input type="range" id="fm-creux" min="10" max="110" value="48" oninput="formeDraw()">
+      <span id="fm-creux-v">48</span>
+    </div>
+    <div class="slider-row">
+      <span>R_DESCENTE</span>
+      <input type="range" id="fm-rd" min="20" max="90" value="62" oninput="formeDraw()">
+      <span id="fm-rd-v">0.62</span>
+    </div>
+    <div class="slider-row">
+      <span>POINTE</span>
+      <input type="range" id="fm-pointe" min="10" max="50" value="22" oninput="formeDraw()">
+      <span id="fm-pointe-v">2.2</span>
+    </div>
+
+    <div style="text-align:center; margin-top:12px;">
+      <button class="demo-btn secondary" onclick="formeReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ CRETE ne change jamais</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">CRETE</span> <span class="op">=</span> <span class="num">46</span>   <span class="cm"># tous les sommets à la même hauteur → les collines se raccordent</span></div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Ce qui change d'une colline à l'autre</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Le creux</strong> &nbsp;— entre 30 et 65 px, tiré au sort</li>
+      <li><strong>Toujours le même</strong> &nbsp;— pour un numéro donné, le tirage ne bouge pas</li>
+      <li><strong>Pourquoi</strong> &nbsp;— des collines identiques, et il n'y a plus rien à décider</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — DESSINER EN COLONNES -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Dessiner colonne par colonne</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le peigne</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🪮 <strong>160 traits verticaux</strong> &nbsp;→&nbsp; un par colonne de l'écran</span>
+      <span>📏 <strong>Chacun part du sol</strong> &nbsp;→&nbsp; et descend jusqu'en bas</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="kw">for</span> <span class="var">colonne</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="var">LARGEUR</span>):
+    <span class="var">monde_x</span> <span class="op">=</span> <span class="var">camera_x</span> <span class="op">+</span> <span class="var">colonne</span> <span class="op">-</span> <span class="var">X_DRAGON</span>
+    <span class="var">sy</span> <span class="op">=</span> <span class="kw">int</span>(<span class="fn">hauteur_du_sol</span>(<span class="var">monde_x</span>) <span class="op">-</span> <span class="var">camera_y</span>)
+    <span class="mod">pygame</span>.<span class="mod">draw</span>.<span class="fn">line</span>(<span class="var">surf</span>, <span class="var">COULEUR_SOL</span>, (<span class="var">colonne</span>, <span class="var">sy</span>), (<span class="var">colonne</span>, <span class="var">HAUTEUR</span>))</div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — une colonne à la fois</div>
+
+    <canvas id="cv-colonnes" width="640" height="480"></canvas>
+
+    <div class="readout">
+      colonne <b id="co-n">0</b> &nbsp;·&nbsp; monde_x = <b id="co-mx">-40</b> &nbsp;·&nbsp; sol = <b id="co-sy">46</b>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="colStep(1)">▶ Une colonne</button>
+      <button class="demo-btn" onclick="colStep(10)">⏩ Dix</button>
+      <button class="demo-btn" onclick="colAll()">⏭ Les 160</button>
+      <button class="demo-btn secondary" onclick="colReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ La colonne de l'écran n'est pas la position du monde</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">monde_x</span> <span class="op">=</span> <span class="var">camera_x</span> <span class="op">+</span> <span class="var">colonne</span> <span class="op">-</span> <span class="var">X_DRAGON</span>
+<span class="cm"># colonne 40 (X_DRAGON) → pile là où est le dragonneau</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — LA CAMÉRA -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>La caméra</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le tapis roulant</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏃 <strong>Le dragonneau</strong> &nbsp;→&nbsp; ne bouge jamais de sa colonne</span>
+      <span>🌍 <strong>Le monde</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; c'est lui qui défile <span style="color:var(--muted)">(camera_x + VITESSE)</span></span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">camera_x</span> <span class="op">+=</span> <span class="var">VITESSE</span>                              <span class="cm"># le monde avance</span>
+<span class="var">camera_y</span> <span class="op">+=</span> (<span class="var">y</span> <span class="op">-</span> <span class="var">VISEE</span> <span class="op">-</span> <span class="var">camera_y</span>) <span class="op">*</span> <span class="var">SUIVI</span>    <span class="cm"># elle rattrape doucement</span></div>
+
+  <div class="card info">
+    <div class="label code">Rattraper une part du chemin</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>SUIVI = 1</strong> &nbsp;— tout le chemin d'un coup : ça saute</li>
+      <li><strong>SUIVI = 0.12</strong> &nbsp;— un huitième par image : ça glisse</li>
+      <li><strong>SUIVI = 0.01</strong> &nbsp;— la caméra traîne, on perd le héros</li>
+    </ul>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — ton jeu de cette leçon, en vrai</div>
+
+    <canvas id="cv-jeu" width="640" height="480"></canvas>
+
+    <div class="readout">
+      camera_x = <b id="jx-cx">0</b> &nbsp;·&nbsp; camera_y = <b id="jx-cy">0.0</b> &nbsp;·&nbsp; le dragonneau est à <b id="jx-ey">60</b> px du haut
+    </div>
+
+    <div class="slider-row">
+      <span>SUIVI</span>
+      <input type="range" id="jx-suivi" min="1" max="100" value="12" oninput="jeuSlide()">
+      <span id="jx-suivi-v">0.12</span>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="hold-btn" id="hold-jeu">⬇ TIENS POUR PLONGER</div>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="jeuPlay()" id="jx-btn">▶ Lancer</button>
+      <button class="demo-btn secondary" onclick="jeuReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 2 — Le sol est dessiné, mais il reste collé au bas de l'écran quand le dragonneau monte. Qu'est-ce qui manque ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">enlever camera_y à la hauteur du sol</div>
+      <div class="quiz-option">une couleur plus claire</div>
+      <div class="quiz-option">appeler hauteur_du_sol plus souvent</div>
+      <div class="quiz-option">augmenter VITESSE</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — DESIGN DE JEU -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>🎮 Design de jeu — le monde qui défile</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Un niveau qui ne finit jamais</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>💾 <strong>Zéro octet</strong> &nbsp;→&nbsp; le terrain n'est pas stocké, il est calculé</span>
+      <span>🎲 <strong>Des creux différents</strong> &nbsp;→&nbsp; sinon on s'installe dans un rythme</span>
+      <span>🔁 <strong>Toujours pareil</strong> &nbsp;→&nbsp; même monde à chaque partie, on peut s'entraîner</span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">La variation, c'est la décision</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Collines identiques</strong> &nbsp;— le joueur trouve le rythme et s'endort</li>
+      <li><strong>Creux tirés au sort</strong> &nbsp;— chaque atterrissage se vise</li>
+      <li><strong>Mesuré</strong> &nbsp;— sans variation, jouer bien ne rapporte presque plus rien</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top:16px; font-size:.95em;">Le sommet arrondi n'est pas là pour faire joli : c'est lui qui décidera, à la leçon 09b, si le dragonneau décolle ou pas.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>x // L</td>
+        <td>Le numéro du morceau</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">450 // 200 = 2</td>
+      </tr>
+      <tr>
+        <td>x % L</td>
+        <td>Ce qui reste — la place dans le morceau</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">450 % 200 = 50</td>
+      </tr>
+      <tr>
+        <td>x % L / L</td>
+        <td>La même chose entre 0.0 et 1.0</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">50 / 200 = 0.25</td>
+      </tr>
+      <tr>
+        <td>def hauteur_du_sol(x)</td>
+        <td>Le sol devient une fonction, pas une image</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">appelée 160 fois par image</td>
+      </tr>
+      <tr>
+        <td>math.cos(math.pi * u)</td>
+        <td>Une courbe douce entre deux hauteurs</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">la descente</td>
+      </tr>
+      <tr>
+        <td>for colonne in range(160)</td>
+        <td>Balayer l'écran de gauche à droite</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">une ligne par colonne</td>
+      </tr>
+      <tr>
+        <td>draw.line(surf, c, a, b)</td>
+        <td>Trace un trait entre deux points</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">(colonne, sy) → (colonne, 120)</td>
+      </tr>
+      <tr>
+        <td>camera_x += VITESSE</td>
+        <td>Le monde défile, le héros reste</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">1.5 px par image</td>
+      </tr>
+      <tr>
+        <td>camera_y += (cible - camera_y) * SUIVI</td>
+        <td>Rattraper une part du chemin, à chaque image</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">SUIVI = 0.12</td>
+      </tr>
+      <tr>
+        <td>… - camera_y</td>
+        <td>Passer du monde à l'écran</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">le sol ET le dragonneau</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Un décor peut être une <strong>fonction</strong> : on lui demande, elle répond</li>
+      <li><code style="color:var(--accent2)">//</code> et <code style="color:var(--accent2)">%</code> découpent l'infini en morceaux qui se répètent</li>
+      <li>On dessine le relief en <strong>traits verticaux</strong>, un par colonne</li>
+      <li>Une caméra qui <strong>rattrape</strong> vaut mieux qu'une caméra qui saute</li>
+    </ul>
+  </div>
+
+  <!-- ── Checklist visuelle ── -->
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">On regarde l'écran, pas un rapport de tests. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-09">
+    <li><span class="box"></span><span>Le sol plat a disparu : on voit des collines</span></li>
+    <li><span class="box"></span><span>Le paysage défile vers la gauche, sans à-coups</span></li>
+    <li><span class="box"></span><span>Les collines n'ont pas toutes le même creux</span></li>
+    <li><span class="box"></span><span>Les sommets se raccordent — aucune marche d'escalier</span></li>
+    <li><span class="box"></span><span>Le dragonneau rebondit sur le relief, pas dans le vide</span></li>
+    <li><span class="box"></span><span>Quand il monte, la caméra le suit en douceur</span></li>
+    <li><span class="box"></span><span>Tenir ESPACE le fait toujours plonger</span></li>
+    <li><span class="box"></span><span>Il reste toujours visible à l'écran</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 09b — Glisser, décoller, atterrir</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Le rebond disparaît. Le dragonneau suit la pente, prend de la vitesse en descendant, décolle au sommet — et rate ses atterrissages. C'est là qu'est le jeu.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny et complète les <code style="color:var(--text)">TODO</code> dans l'ordre.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5','sec-6'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Le terrain — exactement la formule de jeu.py
+// ════════════════════════════════════════════════════════════
+const LARGEUR = 160, HAUTEUR = 120, X_DRAGON = 40;
+const L_COLLINE = 200, CRETE = 46, D_MIN = 30, D_MAX = 65;
+const R_DESCENTE = 0.62, POINTE = 2.2;
+
+const CIEL = '#261c42', SOL = '#3a8a44', OMBRE = '#2a6432';
+
+function creuxDe(i) {
+  return D_MIN + (D_MAX - D_MIN) * (((i * 7919) % 1000) / 1000);
+}
+
+function hauteurDuSol(x, rd = R_DESCENTE, pointe = POINTE, creuxFixe = null) {
+  const i = Math.floor(x / L_COLLINE);
+  const t = ((x % L_COLLINE) + L_COLLINE) % L_COLLINE / L_COLLINE;
+  const creux = creuxFixe === null ? creuxDe(i) : creuxFixe;
+  if (t < rd) {
+    const u = t / rd;
+    return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+  }
+  const u = (t - rd) / (1 - rd);
+  return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), pointe);
+}
+
+// ════════════════════════════════════════════════════════════
+// Le sprite (mêmes lettres que jeu.py)
+// ════════════════════════════════════════════════════════════
+const MOTIFS = [
+  ["......AAAA......",".....AAAAAA.....","....AAAAAAA.....","....AAAAAA.D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCCCCCCCC..","...DCCCCCCCC....","....DDDDDD......","................"],
+  ["................","................","................","......CC...D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCAAACCCC..","...DCCAAAAAA....","....DAAAAAA.....",".....AAAA......."]
+];
+const COULEURS = { C: '#e85c38', D: '#a83428', A: '#a83428', O: '#141420' };
+
+function dessinerSprite(ctx, motif, gx, gy, k) {
+  motif.forEach((ligne, ly) => {
+    for (let lx = 0; lx < ligne.length; lx++) {
+      const c = COULEURS[ligne[lx]];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect((gx + lx) * k, (gy + ly) * k, k, k);
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — le profil du monde
+// ════════════════════════════════════════════════════════════
+const cvP = document.getElementById('cv-profil');
+const ctxP = cvP.getContext('2d');
+const P_ECH = cvP.width / 800;          // 800 px de monde dans la largeur
+
+function profilDraw(x) {
+  ctxP.fillStyle = CIEL;
+  ctxP.fillRect(0, 0, cvP.width, cvP.height);
+
+  // le relief
+  ctxP.fillStyle = SOL;
+  ctxP.beginPath();
+  ctxP.moveTo(0, cvP.height);
+  for (let px = 0; px <= cvP.width; px++) {
+    const mondeX = px / P_ECH;
+    ctxP.lineTo(px, hauteurDuSol(mondeX) * 2);
+  }
+  ctxP.lineTo(cvP.width, cvP.height);
+  ctxP.fill();
+
+  // les frontières de collines
+  ctxP.strokeStyle = 'rgba(205,214,244,.25)';
+  ctxP.setLineDash([4, 4]);
+  for (let i = 0; i * L_COLLINE <= 800; i++) {
+    const px = i * L_COLLINE * P_ECH;
+    ctxP.beginPath(); ctxP.moveTo(px, 0); ctxP.lineTo(px, cvP.height); ctxP.stroke();
+    ctxP.setLineDash([]);
+    ctxP.fillStyle = 'rgba(205,214,244,.45)';
+    ctxP.font = '13px Courier New';
+    ctxP.fillText('colline ' + i, px + 6, 18);
+    ctxP.setLineDash([4, 4]);
+  }
+  ctxP.setLineDash([]);
+
+  // le curseur
+  const cx = x * P_ECH, cy = hauteurDuSol(x) * 2;
+  ctxP.strokeStyle = '#f7a26a';
+  ctxP.beginPath(); ctxP.moveTo(cx, 0); ctxP.lineTo(cx, cvP.height); ctxP.stroke();
+  ctxP.fillStyle = '#f7a26a';
+  ctxP.beginPath(); ctxP.arc(cx, cy, 6, 0, Math.PI * 2); ctxP.fill();
+
+  document.getElementById('pf-x').textContent = Math.round(x);
+  document.getElementById('pf-i').textContent = Math.floor(x / L_COLLINE);
+  document.getElementById('pf-t').textContent = ((x % L_COLLINE) / L_COLLINE).toFixed(2);
+  document.getElementById('pf-y').textContent = hauteurDuSol(x).toFixed(1);
+  document.getElementById('pf-val').textContent = Math.round(x);
+}
+
+function profilSlide() { profilDraw(+document.getElementById('pf-slider').value); }
+function profilReset() { document.getElementById('pf-slider').value = 0; profilDraw(0); }
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — la forme d'une colline
+// ════════════════════════════════════════════════════════════
+const cvF = document.getElementById('cv-forme');
+const ctxF = cvF.getContext('2d');
+
+function formeDraw() {
+  const creux = +document.getElementById('fm-creux').value;
+  const rd    = +document.getElementById('fm-rd').value / 100;
+  const pointe= +document.getElementById('fm-pointe').value / 10;
+
+  document.getElementById('fm-creux-v').textContent  = creux;
+  document.getElementById('fm-rd-v').textContent     = rd.toFixed(2);
+  document.getElementById('fm-pointe-v').textContent = pointe.toFixed(1);
+
+  ctxF.fillStyle = CIEL;
+  ctxF.fillRect(0, 0, cvF.width, cvF.height);
+
+  const ech = cvF.width / (2 * L_COLLINE);      // deux collines dans la largeur
+  ctxF.fillStyle = SOL;
+  ctxF.beginPath();
+  ctxF.moveTo(0, cvF.height);
+  for (let px = 0; px <= cvF.width; px++) {
+    ctxF.lineTo(px, hauteurDuSol(px / ech, rd, pointe, creux) * 2);
+  }
+  ctxF.lineTo(cvF.width, cvF.height);
+  ctxF.fill();
+
+  // la frontière descente / remontée
+  ctxF.strokeStyle = 'rgba(247,162,106,.8)';
+  ctxF.setLineDash([5, 5]);
+  for (const base of [0, L_COLLINE]) {
+    const px = (base + rd * L_COLLINE) * ech;
+    ctxF.beginPath(); ctxF.moveTo(px, 0); ctxF.lineTo(px, cvF.height); ctxF.stroke();
+  }
+  ctxF.setLineDash([]);
+
+  ctxF.fillStyle = 'rgba(205,214,244,.5)';
+  ctxF.font = '13px Courier New';
+  ctxF.fillText('descente', 10, 20);
+  ctxF.fillText('remontée', (rd * L_COLLINE + 6) * ech, 20);
+}
+
+function formeReset() {
+  document.getElementById('fm-creux').value  = 48;
+  document.getElementById('fm-rd').value     = 62;
+  document.getElementById('fm-pointe').value = 22;
+  formeDraw();
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — le dessin en colonnes
+// ════════════════════════════════════════════════════════════
+const cvC = document.getElementById('cv-colonnes');
+const ctxC = cvC.getContext('2d');
+const K = cvC.width / LARGEUR;          // 4 px d'écran par pixel du jeu
+const CO_CAMX = 260, CO_CAMY = 0;       // une position de caméra figée
+
+let colN = 0;
+
+function colFond() {
+  ctxC.fillStyle = CIEL;
+  ctxC.fillRect(0, 0, cvC.width, cvC.height);
+}
+
+function colDrawUpTo(n) {
+  colFond();
+  for (let c = 0; c < n; c++) {
+    const mondeX = CO_CAMX + c - X_DRAGON;
+    const sy = Math.floor(hauteurDuSol(mondeX) - CO_CAMY);
+    ctxC.fillStyle = SOL;
+    ctxC.fillRect(c * K, sy * K, K, (HAUTEUR - sy) * K);
+  }
+  // la colonne qui vient d'être tracée
+  if (n > 0 && n < LARGEUR) {
+    ctxC.fillStyle = 'rgba(247,162,106,.9)';
+    ctxC.fillRect(n * K, 0, K, cvC.height);
+  }
+  const mondeX = CO_CAMX + Math.min(n, LARGEUR - 1) - X_DRAGON;
+  document.getElementById('co-n').textContent  = Math.min(n, LARGEUR);
+  document.getElementById('co-mx').textContent = Math.round(mondeX);
+  document.getElementById('co-sy').textContent = hauteurDuSol(mondeX).toFixed(1);
+}
+
+function colStep(k) { colN = Math.min(LARGEUR, colN + k); colDrawUpTo(colN); }
+function colAll()   { colN = LARGEUR; colDrawUpTo(colN); }
+function colReset() { colN = 0; colDrawUpTo(0); }
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — le jeu de la leçon, en vrai
+// ════════════════════════════════════════════════════════════
+const cvJ = document.getElementById('cv-jeu');
+const ctxJ = cvJ.getContext('2d');
+
+const VITESSE = 1.5, GRAVITE = 0.14, GRAVITE_PLONGEON = 0.40;
+const REBOND = 0.6, REBOND_MINI = 2.4, VISEE = 60;
+
+let jy = 10, jvy = 0, jcx = 0, jcy = 0, janim = 0;
+let jSuivi = 0.12, jTimer = null, jHeld = false;
+
+function jeuDraw() {
+  ctxJ.fillStyle = CIEL;
+  ctxJ.fillRect(0, 0, cvJ.width, cvJ.height);
+
+  for (let c = 0; c < LARGEUR; c++) {
+    const mondeX = jcx + c - X_DRAGON;
+    const sy = Math.floor(hauteurDuSol(mondeX) - jcy);
+    if (sy >= HAUTEUR) continue;
+    ctxJ.fillStyle = SOL;
+    ctxJ.fillRect(c * K, sy * K, K, (HAUTEUR - sy) * K);
+    ctxJ.fillStyle = OMBRE;
+    ctxJ.fillRect(c * K, sy * K, K, 3 * K);
+  }
+
+  dessinerSprite(ctxJ, MOTIFS[Math.floor(janim) % 2],
+                 X_DRAGON - 8, Math.floor(jy - jcy) - 6, K);
+
+  document.getElementById('jx-cx').textContent = Math.round(jcx);
+  document.getElementById('jx-cy').textContent = jcy.toFixed(1);
+  document.getElementById('jx-ey').textContent = Math.round(jy - jcy);
+}
+
+function jeuStep() {
+  jvy += jHeld ? GRAVITE_PLONGEON : GRAVITE;
+  jy  += jvy;
+  jcx += VITESSE;
+
+  const sol = hauteurDuSol(jcx);
+  if (jy >= sol) {
+    jy = sol;
+    jvy = -jvy * REBOND;
+    if (jvy > -REBOND_MINI) jvy = -REBOND_MINI;
+  }
+
+  jcy += (jy - VISEE - jcy) * jSuivi;
+  janim += 0.15;
+  jeuDraw();
+}
+
+function jeuPlay() {
+  const btn = document.getElementById('jx-btn');
+  if (jTimer) {
+    clearInterval(jTimer); jTimer = null;
+    btn.textContent = '▶ Lancer';
+    return;
+  }
+  btn.textContent = '⏸ Pause';
+  jTimer = setInterval(jeuStep, 16);
+}
+
+function jeuReset() {
+  if (jTimer) { clearInterval(jTimer); jTimer = null; }
+  document.getElementById('jx-btn').textContent = '▶ Lancer';
+  jy = 10; jvy = 0; jcx = 0; jcy = 0; janim = 0;
+  jeuHoldUp();
+  jeuDraw();
+}
+
+function jeuSlide() {
+  jSuivi = +document.getElementById('jx-suivi').value / 100;
+  document.getElementById('jx-suivi-v').textContent = jSuivi.toFixed(2);
+}
+
+function jeuHoldDown() {
+  jHeld = true;
+  document.getElementById('hold-jeu').classList.add('down');
+  if (!jTimer) jeuPlay();
+}
+
+function jeuHoldUp() {
+  jHeld = false;
+  document.getElementById('hold-jeu').classList.remove('down');
+}
+
+const holdEl = document.getElementById('hold-jeu');
+holdEl.addEventListener('mousedown',  e => { e.preventDefault(); jeuHoldDown(); });
+holdEl.addEventListener('touchstart', e => { e.preventDefault(); jeuHoldDown(); }, { passive: false });
+['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(
+  ev => holdEl.addEventListener(ev, jeuHoldUp));
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.repeat) return;
+  const r = document.getElementById('sec-4').getBoundingClientRect();
+  if (r.top > window.innerHeight * 0.75 || r.bottom < 0) return;
+  e.preventDefault();
+  jeuHoldDown();
+});
+document.addEventListener('keyup', e => { if (e.code === 'Space') jeuHoldUp(); });
+
+// ════════════════════════════════════════════════════════════
+// Checklist visuelle
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-09 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'Compte les collines : 0 à 199, puis 200 à 399, puis…',
+  '450 // 200 : combien de fois 200 entre-t-il dans 450 ?'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 0, [
+  'Le sol est dessiné dans le monde. L\'écran, lui, bouge.',
+  'Le dragonneau utilise y - camera_y. Le sol doit faire pareil.'
+]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ des démos
+// ════════════════════════════════════════════════════════════
+profilReset();
+formeReset();
+colReset();
+jeuReset();
+</script>
+
+</body>
+</html>
