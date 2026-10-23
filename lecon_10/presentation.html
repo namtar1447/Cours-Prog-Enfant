@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 10 — La caméra qui dézoome, et le HUD</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    /* ── Labels ── */
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    /* ── Buttons ── */
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+    canvas {
+      display: block; margin: 0 auto; max-width: 100%;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      background: #101020; image-rendering: pixelated;
+    }
+    .duel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .duel figure { text-align: center; }
+    .duel figcaption { font-size: .85em; color: var(--muted); margin-top: 6px; font-family: 'Courier New'; }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+    .slider-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 12px;
+      font-size: .85em; color: var(--muted);
+    }
+    .slider-row span:first-child { width: 120px; flex-shrink: 0; }
+    .slider-row span:last-child  { width: 60px; text-align: right;
+      color: var(--accent2); font-family: 'Courier New'; }
+    input[type=range] {
+      -webkit-appearance: none; flex: 1; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    /* ── Quiz ── */
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    /* ── Summary table ── */
+    .summary-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em; }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    /* ── Checklist ── */
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. Le problème</span>
+  <span class="progress-item" id="prog-2">2. L'altitude</span>
+  <span class="progress-item" id="prog-3">3. Le zoom</span>
+  <span class="progress-item" id="prog-4">4. Le HUD</span>
+  <span class="progress-item" id="prog-5">5. Design</span>
+  <span class="progress-item" id="prog-6">6. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 0 — EN-TÊTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 10 — La caméra qui recule</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Mesurer une altitude <strong>qui ne tremble pas</strong></li>
+      <li>Fabriquer une <strong>rampe</strong> : de « entre tant et tant » à « entre 0 et 1 »</li>
+      <li>Dessiner le monde <strong>à l'échelle</strong> du zoom</li>
+      <li>Afficher un <strong>HUD</strong> — distance et vitesse</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 20 min de présentation · 45–60 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Ton jeu a maintenant DEUX fichiers</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>⛰️ <code style="color:var(--accent2)">terrain.py</code> &nbsp;→&nbsp; les collines <span style="color:var(--muted)">(ton code de la leçon 09)</span></span>
+      <span>🐉 <code style="color:var(--accent2)">jeu.py</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le dragonneau, la caméra, le dessin</span>
+      <span style="color:var(--muted)">Les deux doivent rester dans le même dossier.</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="kw">from</span> <span class="mod">terrain</span> <span class="kw">import</span> <span class="fn">hauteur_du_sol</span>, <span class="var">CRETE</span>
+<span class="cm"># l'import de la leçon 06, deuxième forme : on nomme ce qu'on prend</span></div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — LE PROBLÈME -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>234 pixels de vol, 120 pixels d'écran</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — sauter les yeux fermés</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🙈 <strong>Sans voir le sol</strong> &nbsp;→&nbsp; impossible de choisir où retomber</span>
+      <span>🎯 <strong>Et choisir où retomber</strong> &nbsp;→&nbsp; c'était TOUTE la leçon 09b</span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — le même vol, deux caméras (pilote automatique)</div>
+
+    <div class="duel">
+      <figure>
+        <canvas id="cv-sans" width="320" height="240"></canvas>
+        <figcaption>❌ sans zoom (leçon 09b)</figcaption>
+      </figure>
+      <figure>
+        <canvas id="cv-avec" width="320" height="240"></canvas>
+        <figcaption>✅ avec zoom (aujourd'hui)</figcaption>
+      </figure>
+    </div>
+
+    <div class="readout">
+      altitude <b id="du-alt">0</b> px &nbsp;·&nbsp; zoom <b id="du-zoom">1.00</b> &nbsp;·&nbsp;
+      sol visible : sans <b id="du-vs">160</b> &nbsp;/&nbsp; avec <b id="du-va">160</b> colonnes
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="duelPlay()" id="du-btn">▶ Lancer</button>
+      <button class="demo-btn secondary" onclick="duelReset()">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Ce n'est pas du décor</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Sans zoom</strong> &nbsp;— au sommet, l'écran est vide : que du ciel</li>
+      <li><strong>Avec zoom</strong> &nbsp;— le sol reste visible, <em>toujours</em></li>
+      <li><strong>Mesuré</strong> &nbsp;— 0 image sur 6 000 sans sol à l'écran</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — L'ALTITUDE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Mesurer l'altitude — au-dessus de quoi ?</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — l'altimètre de l'avion</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏔️ <strong>Au-dessus du sol qui défile</strong> &nbsp;→&nbsp; le chiffre saute sans arrêt</span>
+      <span>🌊 <strong>Au-dessus d'un repère fixe</strong> &nbsp;→&nbsp; un chiffre calme</span>
+      <span style="color:var(--muted)">Les avions mesurent au-dessus de la mer, pas des montagnes.</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">hauteur_de_vol</span> <span class="op">=</span> <span class="fn">max</span>(<span class="num">0.0</span>, <span class="var">CRETE</span> <span class="op">-</span> <span class="var">y</span>)
+<span class="cm"># CRETE ne bouge JAMAIS : tous les sommets sont à la même hauteur</span></div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — l'altitude mesurée des deux façons, sur le même vol</div>
+
+    <canvas id="cv-tremble" width="760" height="240"></canvas>
+
+    <div class="readout" style="margin-top:8px;">
+      <span style="color:#f38ba8">■</span> au-dessus du sol qui passe dessous &nbsp;&nbsp;
+      <span style="color:#a6e3a1">■</span> au-dessus de la ligne des crêtes
+    </div>
+    <div class="readout">
+      saut moyen d'une image à l'autre : <b id="tr-sol">0</b> contre <b id="tr-crete">0</b>
+    </div>
+
+    <div style="text-align:center; margin-top:12px;">
+      <button class="demo-btn secondary" onclick="trembleDraw()">↺ Rejouer un vol</button>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Le bug que ça évite</div>
+    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">À pleine vitesse, le dragonneau survole une colline entière en moins d'une demi-seconde : le sol sous lui monte et descend de 65 px pendant que lui ne bouge presque pas. Mesuré ci-dessus : la mesure saute de <strong>3,7 px</strong> par image au lieu de <strong>2,6</strong>. Régler le zoom là-dessus, c'est le faire respirer pour rien.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — LE ZOOM -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>La rampe, et le dessin à l'échelle</h2>
+  </div>
+
+  <div class="code-block">
+<span class="kw">if</span> <span class="var">hauteur_de_vol</span> <span class="op">&lt;=</span> <span class="var">SEUIL_ZOOM</span>:
+    <span class="var">part</span> <span class="op">=</span> <span class="num">0.0</span>                 <span class="cm"># vol bas : on ne bouge pas la caméra</span>
+<span class="kw">else</span>:
+    <span class="var">part</span> <span class="op">=</span> <span class="fn">min</span>(<span class="num">1.0</span>, (<span class="var">hauteur_de_vol</span> <span class="op">-</span> <span class="var">SEUIL_ZOOM</span>) <span class="op">/</span> (<span class="var">HAUTEUR_ZOOM</span> <span class="op">-</span> <span class="var">SEUIL_ZOOM</span>))
+
+<span class="var">confort</span> <span class="op">=</span> <span class="num">1.0</span> <span class="op">-</span> (<span class="num">1.0</span> <span class="op">-</span> <span class="var">ZOOM_MIN</span>) <span class="op">*</span> <span class="var">part</span></div>
+
+  <div class="card info">
+    <div class="label code">Pourquoi un seuil</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Sans seuil</strong> &nbsp;— la moindre bosse fait pomper la caméra</li>
+      <li><strong>Avec seuil</strong> &nbsp;— elle ne bouge pas 42 % du temps</li>
+      <li><strong>Résultat</strong> &nbsp;— reculer devient un <em>événement</em> : « là, tu montes vraiment »</li>
+    </ul>
+  </div>
+
+  <h3>Du monde à l'écran</h3>
+
+  <div class="code-block">
+<span class="var">monde_x</span> <span class="op">=</span> <span class="var">camera_x</span> <span class="op">+</span> (<span class="var">colonne</span> <span class="op">-</span> <span class="var">X_DRAGON</span>) <span class="op">/</span> <span class="var">zoom</span>
+<span class="var">sy</span> <span class="op">=</span> <span class="kw">int</span>((<span class="fn">hauteur_du_sol</span>(<span class="var">monde_x</span>) <span class="op">-</span> <span class="var">camera_y</span>) <span class="op">*</span> <span class="var">zoom</span>)</div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — tourne le bouton du zoom</div>
+
+    <canvas id="cv-zoom" width="640" height="480"></canvas>
+
+    <div class="slider-row">
+      <span>zoom</span>
+      <input type="range" id="zo-slider" min="30" max="100" value="100" oninput="zoomDraw()">
+      <span id="zo-val">1.00</span>
+    </div>
+
+    <div class="readout">
+      la colonne 0 montre le monde à <b id="zo-g">-40</b> &nbsp;·&nbsp; la colonne 159 à <b id="zo-d">119</b>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ Diviser d'un côté, multiplier de l'autre</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># pour SAVOIR quel monde on regarde  → on divise</span>
+<span class="cm"># pour DESSINER à la bonne hauteur   → on multiplie</span></div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — Avec <code>zoom = 0.5</code>, combien de pixels du monde tiennent dans les 160 colonnes ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">80</div>
+      <div class="quiz-option">160</div>
+      <div class="quiz-option">320</div>
+      <div class="quiz-option">toujours 160</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — LE HUD -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Le HUD</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le tableau de bord</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📏 <strong>La distance</strong> &nbsp;→&nbsp; ton score, en mètres</span>
+      <span>⚡ <strong>La jauge</strong> &nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; ta vitesse, d'un coup d'œil</span>
+      <span style="color:var(--muted)">Deux chiffres, pas douze : on joue, on ne lit pas.</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="fn">ecrire</span>(<span class="var">surf</span>, <span class="str">f"{</span><span class="kw">int</span><span class="str">(camera_x / 10)} m"</span>, <span class="num">3</span>, <span class="num">2</span>)
+<span class="cm"># 10 pixels du monde = 1 mètre</span></div>
+
+  <div class="card info">
+    <div class="label code">Une jauge, c'est une règle de trois</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>La vitesse</strong> &nbsp;— entre <code>VX_MIN</code> et <code>VX_MAX</code></li>
+      <li><strong>La barre</strong> &nbsp;— entre 0 et 24 pixels</li>
+      <li><strong>La même rampe</strong> &nbsp;— que pour le zoom, en fait</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — DESIGN DE JEU -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>🎮 Design de jeu — voir pour décider</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">La caméra fait partie des règles</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>👁️ <strong>Ce qu'on voit</strong> &nbsp;→&nbsp; ce qu'on peut décider</span>
+      <span>🎚️ <strong>Le garde-fou</strong> &nbsp;→&nbsp; perdre le sol devient impossible</span>
+      <span>✨ <strong>En prime</strong> &nbsp;→&nbsp; reculer donne la sensation de monter haut</span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Et sur la console ? (leçon 14)</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>MakeCode</strong> &nbsp;— ne sait pas redimensionner librement</li>
+      <li><strong>Trois paliers</strong> &nbsp;— 1.0 / 0.65 / 0.45, deux tailles de sprite</li>
+      <li><strong>Le terrain</strong> &nbsp;— dessiné en colonnes : il s'adapte tout seul</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top:16px; font-size:.95em;">Question à se poser pour le port : qu'est-ce qu'on coupe quand la machine ne suit pas ? Un palier bien choisi se lit comme un style, pas comme un défaut.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — RÉSUMÉ -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>from terrain import …</td>
+        <td>Prendre une fonction dans un autre fichier</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">hauteur_du_sol, CRETE</td>
+      </tr>
+      <tr>
+        <td>max(0.0, CRETE - y)</td>
+        <td>L'altitude, jamais négative, mesurée sur un repère fixe</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0 quand il est bas</td>
+      </tr>
+      <tr>
+        <td>(mesure - debut) / (fin - debut)</td>
+        <td>Une rampe : « entre tant et tant » devient « entre 0 et 1 »</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">120 → 0.5</td>
+      </tr>
+      <tr>
+        <td>min(1.0, part)</td>
+        <td>Ne jamais dépasser le maximum</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">le plafond de la rampe</td>
+      </tr>
+      <tr>
+        <td>zoom += (cible - zoom) * SUIVI</td>
+        <td>Y aller doucement — comme la caméra de la leçon 09</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.07 pour partir, 0.10 pour revenir</td>
+      </tr>
+      <tr>
+        <td>(colonne - X_DRAGON) / zoom</td>
+        <td>De l'écran vers le monde — on divise</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">reculé = plus de monde</td>
+      </tr>
+      <tr>
+        <td>(monde_y - camera_y) * zoom</td>
+        <td>Du monde vers l'écran — on multiplie</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">le sol ET le héros</td>
+      </tr>
+      <tr>
+        <td>ecrire(surf, texte, x, y)</td>
+        <td>Un petit texte par-dessus le jeu</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">"138 m"</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>On mesure toujours par rapport à quelque chose qui <strong>ne bouge pas</strong></li>
+      <li>Une <strong>rampe</strong> transforme n'importe quelle mesure en effet progressif</li>
+      <li>Diviser pour <em>regarder</em> le monde, multiplier pour le <em>dessiner</em></li>
+      <li>Un <strong>garde-fou</strong> vaut mieux qu'un réglage parfait : il rend la faute impossible</li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">On regarde l'écran, pas un rapport de tests. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-10">
+    <li><span class="box"></span><span>En vol bas, rien ne change : la caméra reste collée</span></li>
+    <li><span class="box"></span><span>Dans un grand vol, l'image recule doucement</span></li>
+    <li><span class="box"></span><span>On voit le sol <strong>tout le temps</strong>, même au sommet</span></li>
+    <li><span class="box"></span><span>Le dragonneau rapetisse quand la caméra recule</span></li>
+    <li><span class="box"></span><span>Il glisse vers le haut de l'écran quand il monte</span></li>
+    <li><span class="box"></span><span>Le retour au sol se fait sans à-coup, sans tremblement</span></li>
+    <li><span class="box"></span><span>La distance en mètres s'affiche en haut à gauche et augmente</span></li>
+    <li><span class="box"></span><span>La jauge de vitesse se remplit quand il accélère</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 11 — Les îles et la tombée de la nuit</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Jusqu'ici ton jeu ne finit jamais. La nuit va se mettre à tomber, et seuls tes bons atterrissages pourront la repousser.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny et complète les <code style="color:var(--text)">TODO</code>. Garde <code style="color:var(--text)">terrain.py</code> dans le même dossier — sans lui, le jeu ne démarre pas.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5','sec-6'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Le monde (mêmes valeurs que terrain.py et jeu.py)
+// ════════════════════════════════════════════════════════════
+const LARGEUR = 160, HAUTEUR = 120, X_DRAGON = 40, MI_HAUTEUR = 6;
+const L_COLLINE = 200, CRETE = 46, D_MIN = 30, D_MAX = 65;
+const R_DESCENTE = 0.62, POINTE = 2.2;
+
+const GRAVITE = 0.08, GRAVITE_PLONGEON = 0.30;
+const ACCEL_DESCENTE = 0.22, FREIN_MONTEE = 0.28;
+const BONUS_PLONGEON = 2.6, MALUS_PLONGEON = 3.5;
+const FRICTION = 0.997, VX_MIN = 1.2, VX_MAX = 9.0;
+
+const ZOOM_MIN = 0.30, SEUIL_ZOOM = 50, HAUTEUR_ZOOM = 190;
+const SUIVI_SORTIE = 0.07, SUIVI_RETOUR = 0.10, MARGE_SOL = 8;
+const VISEE_BAS = 60, VISEE_HAUT = 26, SUIVI_CAMERA = 0.10;
+
+const CIEL = '#261c42', SOL = '#3a8a44', OMBRE = '#2a6432';
+
+function hauteurDuSol(x) {
+  const i = Math.floor(x / L_COLLINE);
+  const t = (((x % L_COLLINE) + L_COLLINE) % L_COLLINE) / L_COLLINE;
+  const creux = D_MIN + (D_MAX - D_MIN) * (((i * 7919) % 1000) / 1000);
+  if (t < R_DESCENTE) {
+    const u = t / R_DESCENTE;
+    return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+  }
+  const u = (t - R_DESCENTE) / (1 - R_DESCENTE);
+  return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
+}
+
+const MOTIFS = [
+  ["......AAAA......",".....AAAAAA.....","....AAAAAAA.....","....AAAAAA.D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCCCCCCCC..","...DCCCCCCCC....","....DDDDDD......","................"],
+  ["................","................","................","......CC...D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCAAACCCC..","...DCCAAAAAA....","....DAAAAAA.....",".....AAAA......."]
+];
+const COULEURS = { C: '#e85c38', D: '#a83428', A: '#a83428', O: '#141420' };
+
+function dessinerSprite(ctx, motif, cxPix, cyPix, k, zoom) {
+  const taille = Math.max(1, k * (zoom < 0.85 ? zoom : 1));
+  motif.forEach((ligne, ly) => {
+    for (let lx = 0; lx < ligne.length; lx++) {
+      const c = COULEURS[ligne[lx]];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(cxPix + (lx - 8) * taille, cyPix + (ly - 6) * taille,
+                   Math.ceil(taille), Math.ceil(taille));
+    }
+  });
+}
+
+function rendreMonde(ctx, k, camX, camY, zoom, anim, ey) {
+  ctx.fillStyle = CIEL;
+  ctx.fillRect(0, 0, LARGEUR * k, HAUTEUR * k);
+  let vus = 0;
+  for (let c = 0; c < LARGEUR; c++) {
+    const mx = camX + (c - X_DRAGON) / zoom;
+    const sy = Math.floor((hauteurDuSol(mx) - camY) * zoom);
+    if (sy >= HAUTEUR) continue;
+    vus++;
+    ctx.fillStyle = SOL;
+    ctx.fillRect(c * k, sy * k, k, (HAUTEUR - sy) * k);
+    ctx.fillStyle = OMBRE;
+    ctx.fillRect(c * k, sy * k, k, Math.max(1, 3 * zoom) * k);
+  }
+  dessinerSprite(ctx, MOTIFS[Math.floor(anim) % 2], X_DRAGON * k, ey * k, k, zoom);
+  return vus;
+}
+
+// Le moteur de la leçon 09b, en pilote automatique (plonge en descente)
+function joueurNeuf() {
+  const y = hauteurDuSol(0) - MI_HAUTEUR;
+  return { cx: 0, y: y, vy: 0, vx: 2, anim: 0, sol: true,
+           zoom: 1, visee: VISEE_BAS, cy: y - VISEE_BAS };
+}
+
+function avancer(e) {
+  const h0 = hauteurDuSol(e.cx);
+  const bouton = (hauteurDuSol(e.cx + 1) - h0) > 0;     // pilote auto
+  e.vy += bouton ? GRAVITE_PLONGEON : GRAVITE;
+  e.y += e.vy;
+  const h = hauteurDuSol(e.cx), sol = h - MI_HAUTEUR;
+  if (e.y >= sol) {
+    e.y = sol;
+    const pente = hauteurDuSol(e.cx + 1) - h;
+    if (!e.sol) {
+      e.vx = Math.max(VX_MIN, Math.min(VX_MAX, (e.vx + e.vy * pente) / (1 + pente * pente)));
+    }
+    e.vy = pente * e.vx;
+    const accel = pente > 0
+      ? ACCEL_DESCENTE * (bouton ? BONUS_PLONGEON : 1)
+      : FREIN_MONTEE   * (bouton ? MALUS_PLONGEON : 1);
+    e.vx = Math.max(VX_MIN, Math.min(VX_MAX, (e.vx + pente * accel) * FRICTION));
+    e.sol = true;
+  } else {
+    e.sol = false;
+  }
+  e.cx += e.vx;
+  e.anim += 0.15;
+  return Math.max(0, CRETE - e.y);
+}
+
+function camera(e, avecZoom) {
+  const vol = Math.max(0, CRETE - e.y);
+  if (!avecZoom) { e.zoom = 1; e.visee = VISEE_BAS; e.cy = e.y - VISEE_BAS; return vol; }
+  const part = vol <= SEUIL_ZOOM ? 0
+             : Math.min(1, (vol - SEUIL_ZOOM) / (HAUTEUR_ZOOM - SEUIL_ZOOM));
+  const confort = 1 - (1 - ZOOM_MIN) * part;
+  e.zoom += (confort - e.zoom) * (confort < e.zoom ? SUIVI_SORTIE : SUIVI_RETOUR);
+  e.visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * part - e.visee) * SUIVI_CAMERA;
+  const plafond = (HAUTEUR - MARGE_SOL - e.visee) / Math.max(1, CRETE - e.y);
+  e.zoom = Math.max(0.12, Math.min(1, plafond, e.zoom));
+  e.cy = e.y - e.visee / e.zoom;
+  return vol;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — sans zoom / avec zoom
+// ════════════════════════════════════════════════════════════
+const cvS = document.getElementById('cv-sans'), ctxS = cvS.getContext('2d');
+const cvA = document.getElementById('cv-avec'), ctxA = cvA.getContext('2d');
+const KD = 2;
+let sans, avec, duelTimer = null;
+
+function duelStep() {
+  const vol = avancer(sans);
+  avancer(avec);
+  camera(sans, false);
+  camera(avec, true);
+
+  const vs = rendreMonde(ctxS, KD, sans.cx, sans.cy, 1, sans.anim, sans.y - sans.cy);
+  const va = rendreMonde(ctxA, KD, avec.cx, avec.cy, avec.zoom, avec.anim,
+                         (avec.y - avec.cy) * avec.zoom);
+
+  document.getElementById('du-alt').textContent  = Math.round(vol);
+  document.getElementById('du-zoom').textContent = avec.zoom.toFixed(2);
+  document.getElementById('du-vs').textContent   = vs;
+  document.getElementById('du-va').textContent   = va;
+}
+
+function duelPlay() {
+  const btn = document.getElementById('du-btn');
+  if (duelTimer) { clearInterval(duelTimer); duelTimer = null; btn.textContent = '▶ Lancer'; return; }
+  btn.textContent = '⏸ Pause';
+  duelTimer = setInterval(duelStep, 16);
+}
+
+function duelReset() {
+  if (duelTimer) { clearInterval(duelTimer); duelTimer = null; }
+  document.getElementById('du-btn').textContent = '▶ Lancer';
+  sans = joueurNeuf(); avec = joueurNeuf();
+  duelStep();
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — crêtes contre sol qui défile
+// ════════════════════════════════════════════════════════════
+const cvT = document.getElementById('cv-tremble'), ctxT = cvT.getContext('2d');
+
+function trembleDraw() {
+  const e = joueurNeuf();
+  const altC = [], altS = [];
+
+  for (let i = 0; i < 1400; i++) {
+    avancer(e);
+    altC.push(Math.max(0, CRETE - e.y));                       // ligne des crêtes
+    altS.push(Math.max(0, hauteurDuSol(e.cx) - e.y));          // sol sous le héros
+  }
+
+  const haut = Math.max(...altS, ...altC, 10);
+
+  ctxT.fillStyle = '#13131f';
+  ctxT.fillRect(0, 0, cvT.width, cvT.height);
+
+  ctxT.strokeStyle = 'rgba(205,214,244,.12)';
+  for (let a = 0; a <= haut; a += 50) {
+    const py = cvT.height - a / haut * (cvT.height - 20) - 10;
+    ctxT.beginPath(); ctxT.moveTo(0, py); ctxT.lineTo(cvT.width, py); ctxT.stroke();
+    ctxT.fillStyle = 'rgba(205,214,244,.35)';
+    ctxT.font = '11px Courier New';
+    ctxT.fillText(a + ' px', 6, py - 3);
+  }
+
+  function trace(tab, couleur) {
+    ctxT.strokeStyle = couleur; ctxT.lineWidth = 2;
+    ctxT.beginPath();
+    tab.forEach((a, i) => {
+      const px = i / tab.length * cvT.width;
+      const py = cvT.height - a / haut * (cvT.height - 20) - 10;
+      i ? ctxT.lineTo(px, py) : ctxT.moveTo(px, py);
+    });
+    ctxT.stroke();
+    ctxT.lineWidth = 1;
+  }
+  trace(altS, '#f38ba8');
+  trace(altC, '#a6e3a1');
+
+  ctxT.fillStyle = 'rgba(205,214,244,.5)';
+  ctxT.font = '12px Courier New';
+  ctxT.fillText('altitude mesurée', cvT.width - 130, 18);
+
+  // de combien la mesure saute d'une image à l'autre, quand il vole
+  function saut(tab) {
+    let somme = 0, n = 0;
+    for (let i = 1; i < tab.length; i++) {
+      if (altC[i] <= 0) continue;
+      somme += Math.abs(tab[i] - tab[i - 1]); n++;
+    }
+    return n ? (somme / n).toFixed(2) : '0';
+  }
+  document.getElementById('tr-sol').textContent   = saut(altS) + ' px';
+  document.getElementById('tr-crete').textContent = saut(altC) + ' px';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — le curseur de zoom
+// ════════════════════════════════════════════════════════════
+const cvZ = document.getElementById('cv-zoom'), ctxZ = cvZ.getContext('2d');
+const KZ = cvZ.width / LARGEUR;
+const ZO_CAMX = 520;
+
+function zoomDraw() {
+  const zoom = +document.getElementById('zo-slider').value / 100;
+  document.getElementById('zo-val').textContent = zoom.toFixed(2);
+
+  const y = hauteurDuSol(ZO_CAMX) - 60;
+  const visee = VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * (1 - (zoom - ZOOM_MIN) / (1 - ZOOM_MIN));
+  const camY = y - visee / zoom;
+
+  rendreMonde(ctxZ, KZ, ZO_CAMX, camY, zoom, 0, (y - camY) * zoom);
+
+  document.getElementById('zo-g').textContent =
+    Math.round(ZO_CAMX + (0 - X_DRAGON) / zoom);
+  document.getElementById('zo-d').textContent =
+    Math.round(ZO_CAMX + (LARGEUR - 1 - X_DRAGON) / zoom);
+}
+
+// ════════════════════════════════════════════════════════════
+// Checklist
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-10 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 2, [
+  'Reculer, c\'est voir PLUS de monde dans le même écran.',
+  'Chaque colonne montre 1 / 0.5 = 2 pixels du monde. 160 × 2 = 320.'
+]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ
+// ════════════════════════════════════════════════════════════
+duelReset();
+trembleDraw();
+zoomDraw();
+</script>
+
+</body>
+</html>
