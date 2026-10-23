@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 11 — Les îles et la tombée de la nuit</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    .hold-btn {
+      display: block; width: 100%; max-width: 360px; margin: 0 auto;
+      padding: 16px 20px; border-radius: 14px; cursor: pointer;
+      background: rgba(247,162,106,.12); border: 2px solid var(--accent2);
+      color: var(--accent2); font-size: 1.05em; font-weight: bold;
+      user-select: none; text-align: center;
+      transition: transform .06s, background .12s;
+    }
+    .hold-btn.down { background: var(--accent2); color: #1e1e2e; transform: translateY(3px); }
+
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+    canvas {
+      display: block; margin: 0 auto; max-width: 100%;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      background: #101020; image-rendering: pixelated;
+    }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+    .slider-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 12px;
+      font-size: .85em; color: var(--muted);
+    }
+    .slider-row span:first-child { width: 120px; flex-shrink: 0; }
+    .slider-row span:last-child  { width: 60px; text-align: right;
+      color: var(--accent2); font-family: 'Courier New'; }
+    input[type=range] {
+      -webkit-appearance: none; flex: 1; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    .pastilles { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .pastille { text-align: center; font-family: 'Courier New'; font-size: .75em; color: var(--muted); }
+    .pastille i {
+      display: block; width: 54px; height: 32px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.15); margin-bottom: 4px;
+    }
+
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    .summary-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em; }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. La nuit</span>
+  <span class="progress-item" id="prog-2">2. Mélanger</span>
+  <span class="progress-item" id="prog-3">3. Les îles</span>
+  <span class="progress-item" id="prog-4">4. La repousser</span>
+  <span class="progress-item" id="prog-5">5. Design</span>
+  <span class="progress-item" id="prog-6">6. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 11 — Les îles et la nuit</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Donner enfin une <strong>fin</strong> à ton jeu</li>
+      <li>Faire un <strong>fondu</strong> entre deux couleurs</li>
+      <li>Découper le monde en <strong>îles</strong> de plus en plus dures</li>
+      <li>Récompenser le jeu habile : <strong>repousser la nuit</strong></li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 25 min de présentation · 55–70 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Ton jeu a maintenant TROIS fichiers</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>⛰️ <code style="color:var(--accent2)">terrain.py</code> &nbsp;→&nbsp; les collines, et maintenant les îles</span>
+      <span>🎨 <code style="color:var(--accent2)">themes.py</code> &nbsp;&nbsp;→&nbsp; les couleurs, de jour et de nuit</span>
+      <span>🐉 <code style="color:var(--accent2)">jeu.py</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le dragonneau, la caméra, la partie</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>La nuit tombe</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le sablier</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>⏳ <strong>Un seul nombre</strong> &nbsp;→&nbsp; <code style="color:var(--accent2)">heure</code>, de 0.0 à 1.0</span>
+      <span>🌅 <strong>0.0</strong> &nbsp;→&nbsp; plein jour &nbsp;·&nbsp; <strong>1.0</strong> &nbsp;→&nbsp; nuit noire, partie finie</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span> <span class="op">*</span> (<span class="num">1</span> <span class="op">+</span> <span class="var">FACTEUR_ILE</span> <span class="op">*</span> <span class="var">ile</span>)
+<span class="cm"># île 0 : vitesse normale · île 1 : 1,35× · île 2 : 1,70× …</span></div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — fais tomber la nuit à la main</div>
+
+    <canvas id="cv-nuit" width="640" height="480"></canvas>
+
+    <div class="slider-row">
+      <span>heure</span>
+      <input type="range" id="nu-slider" min="0" max="100" value="0" oninput="nuitDraw()">
+      <span id="nu-val">0.00</span>
+    </div>
+
+    <div class="readout" id="nu-mot">plein jour</div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Ce que l'heure change</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Les couleurs</strong> &nbsp;— ciel, collines, ombre, eau</li>
+      <li><strong>Les étoiles</strong> &nbsp;— elles sortent après 0.6</li>
+      <li><strong>La jauge</strong> &nbsp;— en haut à droite : ton compte à rebours</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Mélanger deux couleurs</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — la gouache</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎨 <strong>Un quart de noir</strong> &nbsp;→&nbsp; trois quarts de la couleur de jour</span>
+      <span>🔢 <strong>Trois nombres</strong> &nbsp;→&nbsp; rouge, vert, bleu : on mélange les trois pareil</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="kw">def</span> <span class="fn">melanger</span>(<span class="var">couleur_jour</span>, <span class="var">couleur_nuit</span>, <span class="var">part_de_nuit</span>):
+    <span class="var">melange</span> <span class="op">=</span> []
+    <span class="kw">for</span> <span class="var">jour</span>, <span class="var">nuit</span> <span class="kw">in</span> <span class="fn">zip</span>(<span class="var">couleur_jour</span>, <span class="var">couleur_nuit</span>):
+        <span class="var">melange</span>.<span class="fn">append</span>(<span class="kw">int</span>(<span class="var">jour</span> <span class="op">+</span> (<span class="var">nuit</span> <span class="op">-</span> <span class="var">jour</span>) <span class="op">*</span> <span class="var">part_de_nuit</span>))
+    <span class="kw">return</span> <span class="fn">tuple</span>(<span class="var">melange</span>)</div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — la même recette, sur une couleur</div>
+
+    <div class="pastilles">
+      <div class="pastille"><i id="pa-jour"></i>de jour</div>
+      <div class="pastille"><i id="pa-mix"></i><span id="pa-part">0.00</span></div>
+      <div class="pastille"><i id="pa-nuit"></i>de nuit</div>
+    </div>
+
+    <div class="readout" id="pa-rgb">(58, 138, 68)</div>
+
+    <div class="slider-row">
+      <span>part de nuit</span>
+      <input type="range" id="pa-slider" min="0" max="100" value="0" oninput="pastilleDraw()">
+      <span id="pa-val">0.00</span>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — <code>melanger((100, 0, 0), (0, 0, 200), 0.5)</code> donne quoi ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">(100, 0, 200)</div>
+      <div class="quiz-option">(50, 0, 100)</div>
+      <div class="quiz-option">(0, 0, 0)</div>
+      <div class="quiz-option">(150, 0, 300)</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Les îles</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — les niveaux, sans les menus</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏝️ <strong>4 000 px</strong> &nbsp;→&nbsp; une île, soit 400 m</span>
+      <span>📈 <strong>À chaque île</strong> &nbsp;→&nbsp; collines plus courtes, creux plus profonds</span>
+      <span>🌊 <strong>Au bout</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une grande rampe, puis l'océan à traverser</span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — trois îles vues de loin</div>
+
+    <canvas id="cv-iles" width="760" height="220"></canvas>
+
+    <div class="readout">
+      île 1 : collines de <b>200</b> px &nbsp;·&nbsp; île 2 : <b>185</b> &nbsp;·&nbsp; île 3 : <b>170</b>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ L'océan ne peut pas te tuer</div>
+    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La rampe de fin d'île te lance très vite : normalement tu voles jusqu'à l'île suivante. Si tu arrives lentement, tu traverses en rasant l'eau — tu ne perds pas la partie, tu perds du temps. Et du temps, c'est de la nuit.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>Repousser la nuit</h2>
+  </div>
+
+  <div class="code-block">
+<span class="kw">if</span> <span class="var">vx</span> <span class="op">&gt;</span> <span class="var">avant</span>:                     <span class="cm"># l'atterrissage lui a RENDU de la vitesse</span>
+    <span class="var">heure</span> <span class="op">=</span> <span class="fn">max</span>(<span class="num">0.0</span>, <span class="var">heure</span> <span class="op">-</span> <span class="var">BONUS_ATTERRISSAGE</span> <span class="op">*</span> (<span class="var">vx</span> <span class="op">-</span> <span class="var">avant</span>))</div>
+
+  <div class="card info">
+    <div class="label code">Deux façons de gagner du jour</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Aller vite</strong> &nbsp;— la nuit compte les <em>images</em>, pas les mètres</li>
+      <li><strong>Bien viser</strong> &nbsp;— chaque atterrissage gagnant rend un peu de jour</li>
+      <li><strong>Le gros morceau</strong> &nbsp;— c'est la vitesse. Le bonus est une prime.</li>
+    </ul>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — une vraie partie, nuit comprise</div>
+
+    <canvas id="cv-jeu" width="640" height="480"></canvas>
+
+    <div class="readout">
+      <b id="jx-m">0</b> m &nbsp;·&nbsp; île <b id="jx-ile">1</b> &nbsp;·&nbsp; heure <b id="jx-h">0.00</b>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="hold-btn" id="hold-jeu">⬇ TIENS POUR PLONGER</div>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="jeuPlay()" id="jx-btn">▶ Lancer</button>
+      <button class="demo-btn secondary" onclick="jeuReset()">↺ Nouvelle partie</button>
+    </div>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Mesuré — une partie complète, par stratégie</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em; font-family:'Courier New';">
+      <span>⬇️ tenir en <strong>descente</strong> &nbsp;→&nbsp; <span style="color:var(--success)">2 126 m</span>, île 6, en 71 s</span>
+      <span>🔁 tenir <strong>tout le temps</strong> &nbsp;→&nbsp; 1 773 m, île 5, en 93 s</span>
+      <span>😴 <strong>ne jamais</strong> appuyer &nbsp;&nbsp;→&nbsp; 1 108 m, île 3, en 86 s</span>
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 2 — Jouer vite fait mourir <em>plus tôt</em> (71 s contre 86 s). Pourquoi est-ce quand même mieux ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">ce n'est pas mieux, c'est un bug</div>
+      <div class="quiz-option">parce que le score, c'est la distance — pas le temps</div>
+      <div class="quiz-option">parce que la nuit tombe moins vite</div>
+      <div class="quiz-option">parce qu'on voit mieux</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>🎮 Design de jeu — donner une fin</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Une fin, ça sert à quoi ?</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>♾️ <strong>Sans fin</strong> &nbsp;→&nbsp; on s'arrête quand on s'ennuie</span>
+      <span>🌙 <strong>Avec la nuit</strong> &nbsp;→&nbsp; chaque partie a une histoire : un début, une course, une fin</span>
+      <span>🔁 <strong>Et surtout</strong> &nbsp;→&nbsp; « encore une partie »</span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Une fin douce, pas un mur</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Pas de mort subite</strong> &nbsp;— aucun piège, aucun trou fatal</li>
+      <li><strong>On la voit venir</strong> &nbsp;— le ciel s'assombrit minute après minute</li>
+      <li><strong>On peut la repousser</strong> &nbsp;— mais jamais l'annuler</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top:16px; font-size:.95em;">C'est la fin du vrai <em>Tiny Wings</em>, et ce n'est pas un hasard : une fin qu'on voit arriver donne envie de se dépêcher, là où un game over brutal donne surtout envie d'arrêter.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>heure += VITESSE * (1 + f * ile)</td>
+        <td>La nuit avance, et accélère par palier</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">+35 % par île</td>
+      </tr>
+      <tr>
+        <td>numero_ile(x)</td>
+        <td>Sur quelle île on est — un <code>//</code> déguisé</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">4 000 px par île</td>
+      </tr>
+      <tr>
+        <td>max(0.0, heure - bonus)</td>
+        <td>Rendre du jour sans jamais passer sous zéro</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">bel atterrissage</td>
+      </tr>
+      <tr>
+        <td>melanger(jour, nuit, heure)</td>
+        <td>Le fondu entre deux couleurs</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.0 → jour, 1.0 → nuit</td>
+      </tr>
+      <tr>
+        <td>zip(a, b)</td>
+        <td>Parcourir deux listes en même temps</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">rouge avec rouge…</td>
+      </tr>
+      <tr>
+        <td>THEME["ciel"]</td>
+        <td>Un thème, c'est un dictionnaire — leçon 05</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">themes.py</td>
+      </tr>
+      <tr>
+        <td>jeu["finie"] = True</td>
+        <td>Un état qu'on retient, et qui change tout</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">plus rien ne bouge</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Un seul nombre, <code style="color:var(--accent2)">heure</code>, suffit à raconter toute une partie</li>
+      <li>Un fondu, c'est <strong>départ + (arrivée − départ) × part</strong></li>
+      <li>La difficulté peut monter <strong>toute seule</strong>, sans écrire de niveaux</li>
+      <li>Une bonne fin se <strong>voit venir</strong> et se <strong>repousse</strong></li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">On regarde l'écran, pas un rapport de tests. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-11">
+    <li><span class="box"></span><span>Le ciel s'assombrit petit à petit pendant la partie</span></li>
+    <li><span class="box"></span><span>Les collines et l'eau foncent elles aussi</span></li>
+    <li><span class="box"></span><span>Des étoiles apparaissent quand il fait assez sombre</span></li>
+    <li><span class="box"></span><span>La jauge de nuit se remplit, en haut à droite</span></li>
+    <li><span class="box"></span><span>Le numéro d'île augmente après chaque océan</span></li>
+    <li><span class="box"></span><span>Les collines sont plus serrées sur la 2<sup>e</sup> île que sur la 1<sup>re</sup></span></li>
+    <li><span class="box"></span><span>Quand il fait nuit noire : « LA NUIT T'A RATTRAPÉ », et tout s'arrête</span></li>
+    <li><span class="box"></span><span>R relance une partie toute neuve</span></li>
+    <li><span class="box"></span><span>Un bel atterrissage éclaircit très légèrement le ciel</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 12 — Écrans multiples et système de thèmes</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Un menu, un écran de fin, et quatre thèmes de couleurs qui se débloquent avec la distance. Ton jeu commencera à ressembler à un vrai jeu, du lancement jusqu'au « rejouer ».</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny. Les trois fichiers restent ensemble dans le même dossier.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5','sec-6'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Le monde (mêmes valeurs que terrain.py, themes.py et jeu.py)
+// ════════════════════════════════════════════════════════════
+const LARGEUR = 160, HAUTEUR = 120, X_DRAGON = 40, MI_HAUTEUR = 6;
+const CRETE = 46, R_DESCENTE = 0.62, POINTE = 2.2;
+const LONGUEUR_ILE = 4000, LARGEUR_OCEAN = 240, NIVEAU_EAU = 108;
+
+const GRAVITE = 0.08, GRAVITE_PLONGEON = 0.30;
+const ACCEL_DESCENTE = 0.22, FREIN_MONTEE = 0.28;
+const BONUS_PLONGEON = 2.6, MALUS_PLONGEON = 3.5;
+const FRICTION = 0.997, VX_MIN = 1.2, VX_MAX = 9.0;
+
+const ZOOM_MIN = 0.30, SEUIL_ZOOM = 50, HAUTEUR_ZOOM = 190;
+const SUIVI_SORTIE = 0.07, SUIVI_RETOUR = 0.10, MARGE_SOL = 8;
+const VISEE_BAS = 60, VISEE_HAUT = 26, SUIVI_CAMERA = 0.10;
+
+const VITESSE_NUIT = 0.00015, FACTEUR_ILE = 0.35;
+const BONUS_ATTERRISSAGE = 0.004, DEBUT_ETOILES = 0.6;
+
+const THEME = {
+  ciel: [38, 28, 66], collines: [58, 138, 68], ombre: [32, 92, 48], eau: [40, 90, 150],
+  ciel_nuit: [6, 6, 16], collines_nuit: [14, 34, 20], ombre_nuit: [8, 22, 14], eau_nuit: [8, 18, 38]
+};
+
+function melanger(jour, nuit, part) {
+  return jour.map((v, i) => Math.round(v + (nuit[i] - v) * part));
+}
+function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
+
+function numeroIle(x) { return Math.floor(x / LONGUEUR_ILE); }
+
+function reglagesIle(i) {
+  return [Math.max(120, 200 - 15 * i), Math.min(110, 65 + 10 * i)];
+}
+
+function hauteurDuSol(x) {
+  const ile = numeroIle(x);
+  const dansIle = ((x % LONGUEUR_ILE) + LONGUEUR_ILE) % LONGUEUR_ILE;
+  const [longueur, creuxMax] = reglagesIle(ile);
+  const debutOcean = LONGUEUR_ILE - LARGEUR_OCEAN;
+
+  if (dansIle >= debutOcean) return NIVEAU_EAU;
+
+  if (dansIle >= debutOcean - longueur) {
+    const t = (dansIle - (debutOcean - longueur)) / longueur;
+    const creux = creuxMax + 15;
+    if (t < 0.75) {
+      const u = t / 0.75;
+      return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+    }
+    const u = (t - 0.75) / 0.25;
+    return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
+  }
+
+  const i = Math.floor(dansIle / longueur);
+  const creux = 30 + (creuxMax - 30) * (((i * 7919 + ile * 104729) % 1000) / 1000);
+  const t = (dansIle % longueur) / longueur;
+  if (t < R_DESCENTE) {
+    const u = t / R_DESCENTE;
+    return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+  }
+  const u = (t - R_DESCENTE) / (1 - R_DESCENTE);
+  return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
+}
+
+const MOTIFS = [
+  ["......AAAA......",".....AAAAAA.....","....AAAAAAA.....","....AAAAAA.D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCCCCCCCC..","...DCCCCCCCC....","....DDDDDD......","................"],
+  ["................","................","................","......CC...D.D..",
+   "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
+   "..DCCCCAAACCCC..","...DCCAAAAAA....","....DAAAAAA.....",".....AAAA......."]
+];
+const COULEURS = { C: '#e85c38', D: '#a83428', A: '#a83428', O: '#141420' };
+const ETOILES = Array.from({ length: 40 }, (_, i) => [(i * 6151) % LARGEUR, (i * 3119) % 60]);
+
+function dessinerSprite(ctx, motif, cxPix, cyPix, k, zoom) {
+  const taille = Math.max(1, k * (zoom < 0.85 ? zoom : 1));
+  motif.forEach((ligne, ly) => {
+    for (let lx = 0; lx < ligne.length; lx++) {
+      const c = COULEURS[ligne[lx]];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(cxPix + (lx - 8) * taille, cyPix + (ly - 6) * taille,
+                   Math.ceil(taille), Math.ceil(taille));
+    }
+  });
+}
+
+// Dessine une image complète du jeu, exactement comme jeu.py
+function rendreJeu(ctx, k, e) {
+  const heure = e.heure;
+  const cCiel  = melanger(THEME.ciel, THEME.ciel_nuit, heure);
+  const cSol   = melanger(THEME.collines, THEME.collines_nuit, heure);
+  const cOmbre = melanger(THEME.ombre, THEME.ombre_nuit, heure);
+  const cEau   = melanger(THEME.eau, THEME.eau_nuit, heure);
+
+  ctx.fillStyle = css(cCiel);
+  ctx.fillRect(0, 0, LARGEUR * k, HAUTEUR * k);
+
+  if (heure > DEBUT_ETOILES) {
+    const force = (heure - DEBUT_ETOILES) / (1 - DEBUT_ETOILES);
+    ctx.fillStyle = css(melanger(cCiel, [255, 255, 255], force));
+    ETOILES.forEach(([ex, ey]) => ctx.fillRect(ex * k, ey * k, k, k));
+  }
+
+  for (let c = 0; c < LARGEUR; c++) {
+    const mx = e.cx + (c - X_DRAGON) / e.zoom;
+    const h = hauteurDuSol(mx);
+    const sy = Math.floor((h - e.cy) * e.zoom);
+    if (sy >= HAUTEUR) continue;
+    if (h >= NIVEAU_EAU - 0.5) {
+      ctx.fillStyle = css(cEau);
+      ctx.fillRect(c * k, sy * k, k, (HAUTEUR - sy) * k);
+    } else {
+      ctx.fillStyle = css(cSol);
+      ctx.fillRect(c * k, sy * k, k, (HAUTEUR - sy) * k);
+      ctx.fillStyle = css(cOmbre);
+      ctx.fillRect(c * k, sy * k, k, Math.max(1, 3 * e.zoom) * k);
+    }
+  }
+
+  dessinerSprite(ctx, MOTIFS[Math.floor(e.anim) % 2], X_DRAGON * k,
+                 (e.y - e.cy) * e.zoom * k, k, e.zoom);
+
+  // HUD
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold ' + (5 * k) + 'px Courier New';
+  ctx.fillText(Math.floor(e.cx / 10) + ' m', 3 * k, 9 * k);
+  ctx.fillText('ile ' + (numeroIle(e.cx) + 1), 3 * k, 18 * k);
+
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, k / 2);
+  ctx.strokeRect((LARGEUR - 29) * k, 3 * k, 26 * k, 5 * k);
+  const plein = Math.floor(24 * (e.vx - VX_MIN) / (VX_MAX - VX_MIN));
+  if (plein > 0) { ctx.fillStyle = '#e85c38'; ctx.fillRect((LARGEUR - 28) * k, 4 * k, plein * k, 3 * k); }
+  ctx.strokeRect((LARGEUR - 29) * k, 11 * k, 26 * k, 5 * k);
+  const pn = Math.floor(24 * Math.min(1, heure));
+  if (pn > 0) { ctx.fillStyle = '#5a5aa0'; ctx.fillRect((LARGEUR - 28) * k, 12 * k, pn * k, 3 * k); }
+  ctx.lineWidth = 1;
+
+  if (e.finie) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (10 * k) + 'px Courier New';
+    ctx.fillText('LA NUIT', 48 * k, 48 * k);
+    ctx.fillText("T'A RATTRAPE", 26 * k, 62 * k);
+    ctx.font = 'bold ' + (5 * k) + 'px Courier New';
+    ctx.fillText(Math.floor(e.cx / 10) + ' m', 66 * k, 80 * k);
+  }
+}
+
+function joueurNeuf() {
+  const y = hauteurDuSol(0) - MI_HAUTEUR;
+  return { cx: 0, y: y, vy: 0, vx: 2, anim: 0, sol: true,
+           zoom: 1, visee: VISEE_BAS, cy: y - VISEE_BAS, heure: 0, finie: false };
+}
+
+function avancer(e, bouton) {
+  if (!e.finie) {
+    e.vy += bouton ? GRAVITE_PLONGEON : GRAVITE;
+    e.y += e.vy;
+    const h = hauteurDuSol(e.cx), sol = h - MI_HAUTEUR;
+    if (e.y >= sol) {
+      e.y = sol;
+      const pente = hauteurDuSol(e.cx + 1) - h;
+      if (!e.sol) {
+        const avant = e.vx;
+        e.vx = Math.max(VX_MIN, Math.min(VX_MAX, (e.vx + e.vy * pente) / (1 + pente * pente)));
+        if (e.vx > avant) e.heure = Math.max(0, e.heure - BONUS_ATTERRISSAGE * (e.vx - avant));
+      }
+      e.vy = pente * e.vx;
+      const accel = pente > 0
+        ? ACCEL_DESCENTE * (bouton ? BONUS_PLONGEON : 1)
+        : FREIN_MONTEE   * (bouton ? MALUS_PLONGEON : 1);
+      e.vx = Math.max(VX_MIN, Math.min(VX_MAX, (e.vx + pente * accel) * FRICTION));
+      e.sol = true;
+    } else {
+      e.sol = false;
+    }
+    e.cx += e.vx;
+    e.anim += 0.15;
+    e.heure += VITESSE_NUIT * (1 + FACTEUR_ILE * numeroIle(e.cx));
+    if (e.heure >= 1) { e.heure = 1; e.finie = true; }
+  }
+
+  const vol = Math.max(0, CRETE - e.y);
+  const part = vol <= SEUIL_ZOOM ? 0
+             : Math.min(1, (vol - SEUIL_ZOOM) / (HAUTEUR_ZOOM - SEUIL_ZOOM));
+  const confort = 1 - (1 - ZOOM_MIN) * part;
+  e.zoom += (confort - e.zoom) * (confort < e.zoom ? SUIVI_SORTIE : SUIVI_RETOUR);
+  e.visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * part - e.visee) * SUIVI_CAMERA;
+  const plafond = (HAUTEUR - MARGE_SOL - e.visee) / Math.max(1, CRETE - e.y);
+  e.zoom = Math.max(0.12, Math.min(1, plafond, e.zoom));
+  e.cy = e.y - e.visee / e.zoom;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — le curseur de nuit
+// ════════════════════════════════════════════════════════════
+const cvN = document.getElementById('cv-nuit'), ctxN = cvN.getContext('2d');
+const KN = cvN.width / LARGEUR;
+const scene = joueurNeuf();
+scene.cx = 1200;
+scene.y = hauteurDuSol(1200) - MI_HAUTEUR;
+scene.cy = scene.y - VISEE_BAS;
+scene.vx = 5;
+
+function nuitDraw() {
+  const h = +document.getElementById('nu-slider').value / 100;
+  scene.heure = h;
+  document.getElementById('nu-val').textContent = h.toFixed(2);
+  rendreJeu(ctxN, KN, scene);
+  const mots = h < 0.15 ? 'plein jour' : h < 0.45 ? 'après-midi'
+             : h < 0.65 ? 'crépuscule' : h < 0.9 ? 'les étoiles sortent' : 'nuit noire — fin de partie';
+  document.getElementById('nu-mot').textContent = mots;
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — les pastilles de couleur
+// ════════════════════════════════════════════════════════════
+function pastilleDraw() {
+  const p = +document.getElementById('pa-slider').value / 100;
+  const mix = melanger(THEME.collines, THEME.collines_nuit, p);
+  document.getElementById('pa-jour').style.background = css(THEME.collines);
+  document.getElementById('pa-nuit').style.background = css(THEME.collines_nuit);
+  document.getElementById('pa-mix').style.background  = css(mix);
+  document.getElementById('pa-part').textContent = p.toFixed(2);
+  document.getElementById('pa-val').textContent  = p.toFixed(2);
+  document.getElementById('pa-rgb').textContent  = '(' + mix.join(', ') + ')';
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — trois îles vues de loin
+// ════════════════════════════════════════════════════════════
+const cvI = document.getElementById('cv-iles'), ctxI = cvI.getContext('2d');
+
+function ilesDraw() {
+  const total = 3 * LONGUEUR_ILE;
+  const ech = cvI.width / total;
+
+  ctxI.fillStyle = css(THEME.ciel);
+  ctxI.fillRect(0, 0, cvI.width, cvI.height);
+
+  for (let px = 0; px < cvI.width; px++) {
+    const x = px / ech;
+    const h = hauteurDuSol(x);
+    const py = (h - 20) * 1.3;
+    ctxI.fillStyle = h >= NIVEAU_EAU - 0.5 ? css(THEME.eau) : css(THEME.collines);
+    ctxI.fillRect(px, py, 1, cvI.height - py);
+  }
+
+  ctxI.strokeStyle = 'rgba(205,214,244,.3)';
+  ctxI.setLineDash([4, 4]);
+  ctxI.fillStyle = 'rgba(205,214,244,.6)';
+  ctxI.font = '13px Courier New';
+  for (let i = 0; i < 3; i++) {
+    const px = i * LONGUEUR_ILE * ech;
+    ctxI.beginPath(); ctxI.moveTo(px, 0); ctxI.lineTo(px, cvI.height); ctxI.stroke();
+    ctxI.fillText('île ' + (i + 1), px + 8, 18);
+  }
+  ctxI.setLineDash([]);
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 4 — la partie jouable
+// ════════════════════════════════════════════════════════════
+const cvJ = document.getElementById('cv-jeu'), ctxJ = cvJ.getContext('2d');
+const KJ = cvJ.width / LARGEUR;
+let moi, jeuTimer = null, jHeld = false;
+
+function jeuStep() {
+  avancer(moi, jHeld);
+  rendreJeu(ctxJ, KJ, moi);
+  document.getElementById('jx-m').textContent   = Math.floor(moi.cx / 10);
+  document.getElementById('jx-ile').textContent = numeroIle(moi.cx) + 1;
+  document.getElementById('jx-h').textContent   = moi.heure.toFixed(2);
+  if (moi.finie && jeuTimer) {
+    clearInterval(jeuTimer); jeuTimer = null;
+    document.getElementById('jx-btn').textContent = '▶ Lancer';
+  }
+}
+
+function jeuPlay() {
+  const btn = document.getElementById('jx-btn');
+  if (jeuTimer) { clearInterval(jeuTimer); jeuTimer = null; btn.textContent = '▶ Lancer'; return; }
+  if (moi.finie) jeuReset();
+  btn.textContent = '⏸ Pause';
+  jeuTimer = setInterval(jeuStep, 16);
+}
+
+function jeuReset() {
+  if (jeuTimer) { clearInterval(jeuTimer); jeuTimer = null; }
+  document.getElementById('jx-btn').textContent = '▶ Lancer';
+  moi = joueurNeuf();
+  jeuHoldUp();
+  jeuStep();
+}
+
+function jeuHoldDown() {
+  jHeld = true;
+  document.getElementById('hold-jeu').classList.add('down');
+  if (!jeuTimer && !moi.finie) jeuPlay();
+}
+function jeuHoldUp() {
+  jHeld = false;
+  document.getElementById('hold-jeu').classList.remove('down');
+}
+
+const holdEl = document.getElementById('hold-jeu');
+holdEl.addEventListener('mousedown',  e => { e.preventDefault(); jeuHoldDown(); });
+holdEl.addEventListener('touchstart', e => { e.preventDefault(); jeuHoldDown(); }, { passive: false });
+['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(
+  ev => holdEl.addEventListener(ev, jeuHoldUp));
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.repeat) return;
+  const r = document.getElementById('sec-4').getBoundingClientRect();
+  if (r.top > window.innerHeight * 0.75 || r.bottom < 0) return;
+  e.preventDefault();
+  jeuHoldDown();
+});
+document.addEventListener('keyup', e => { if (e.code === 'Space') jeuHoldUp(); });
+
+// ════════════════════════════════════════════════════════════
+// Checklist
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-11 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'On mélange chaque nombre séparément : le rouge avec le rouge, etc.',
+  'Rouge : 100 + (0 - 100) × 0.5 = 50. Bleu : 0 + (200 - 0) × 0.5 = 100.'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'Qu\'est-ce qui s\'affiche en haut à gauche de l\'écran ?',
+  'Le but n\'est pas de survivre longtemps : c\'est d\'aller loin avant la nuit.'
+]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ
+// ════════════════════════════════════════════════════════════
+nuitDraw();
+pastilleDraw();
+ilesDraw();
+jeuReset();
+</script>
+
+</body>
+</html>
