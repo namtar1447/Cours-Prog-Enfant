@@ -23,7 +23,7 @@ import pygame
 
 import random
 
-from terrain import hauteur_du_sol, numero_ile, est_eau, CRETE
+from terrain import hauteur_du_sol, numero_ile, est_eau, CRETE, NIVEAU_EAU
 from themes import DRAGONNEAU, melanger
 
 # --- Les réglages du jeu ---
@@ -303,7 +303,12 @@ while en_marche:
         zoom += (confort - zoom) * SUIVI_RETOUR
 
     visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * part - visee) * SUIVI_CAMERA
-    plafond = (HAUTEUR - MARGE_SOL - visee) / max(1.0, CRETE - y)
+
+    # Le garde-fou garde toujours du sol à l'écran. Au-dessus de la mer,
+    # c'est ELLE qu'il faut garder en vue : elle est bien plus bas que
+    # les crêtes, et parfaitement plate — donc la mesure ne tremble pas.
+    reference = NIVEAU_EAU if est_eau(camera_x) else CRETE
+    plafond = (HAUTEUR - MARGE_SOL - visee) / max(1.0, reference - y)
     zoom = max(0.12, min(1.0, plafond, zoom))
     camera_y = y - visee / zoom
 

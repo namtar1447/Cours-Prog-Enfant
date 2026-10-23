@@ -822,20 +822,41 @@ thèmes de 9.6. Les étoiles apparaissent quand `heure > 0.6`.
 
 #### Les îles
 
-- **Longueur fixe** : 4 000 px par île (affiché « 400 m »), dont 3 760 de terre et 240 de mer
+Une île se lit de gauche à droite : **plage → collines ordinaires → grande descente
+bosselée → petite remontée → océan**. Longueur fixe de 4 800 px (affiché « 480 m »).
+
+```
+  plage      collines ordinaires       grande descente   tremplin   OCÉAN
+  ~~~~/‾‾\__/‾‾\__/‾‾\__/‾‾\__/‾‾\__  \_/‾\_/‾\_/‾\_ ___ /‾‾‾‾‾~~~~~~~~~~~~
+  400 px     ~15 collines              4 collines        60 px      500 px
+```
+
 - **Difficulté croissante** : le creux maximal grandit (65 → 110) et les collines rétrécissent
-  (200 → 120 px) à chaque île
-- **La nuit accélère d'un palier** à chaque île
-- ⚠️ **Le nombre de collines doit être entier.** 3 760 / 200 = 18,8 : la dernière colline est
-  alors coupée en plein milieu et laisse une falaise de 27 px. La longueur réelle se déduit
-  donc du nombre : `nombre = round(3760 / longueur_voulue)`, puis `longueur = 3760 / nombre`
-  (île 1 : 19 collines de 197,9 px).
-- ⚠️ **L'océan a deux plages.** Passer directement de la crête (46) au niveau de la mer (108)
-  fait deux murs verticaux de 62 px. Une plage en cosinus de 80 px de chaque côté descend puis
-  remonte, et l'île suivante se raccorde à la crête.
+  (200 → 120 px) à chaque île.
+- **La nuit accélère d'un palier** à chaque île.
+- **La grande descente** fait plonger la ligne de crête de 48 px vers la mer sur 4 collines,
+  pendant que les bosses s'effacent (`creux × (1 - part)^1.5`) : on finit sur une courbe lisse.
+  C'est elle qui donne la vitesse du saut.
+- **La petite remontée** (26 px, en `sin^1.6`) sert de tremplin et reste **22 px sous la ligne
+  des crêtes** — pas une tour. Son bord tombe de 40 px dans la mer : c'est la seule
+  discontinuité voulue du terrain.
+- **Mesuré** : en plongeant dans les descentes, le saut dure **2,02 s** et franchit les 500 px
+  d'un trait, 4 fois sur 4. En jeu passif ou bouton tenu en permanence, **aucun** saut n'est
+  franchi — on tombe à l'eau et on rame. Le grand saut est donc la récompense du geste de 9.3.
+- ⚠️ **Le nombre de collines doit être entier.** 3 840 / 200 = 19,2 : sinon la dernière est
+  coupée en plein milieu et laisse une falaise de 27 px. La longueur réelle se déduit du
+  nombre : `nombre = round(zone / longueur_voulue)`, puis `longueur = zone / nombre`.
 - ⚠️ **L'eau se reconnaît à sa POSITION, jamais à sa hauteur.** Le fond des vallées descend
-  jusqu'à 126 px, soit plus bas que la mer : un test en hauteur peint des bandes d'eau en
-  pleine terre.
+  plus bas que la mer : un test en hauteur peint des bandes d'eau en pleine terre.
+- ⚠️ **Au-dessus de la mer, le garde-fou du zoom (9.4) doit prendre la MER comme référence**,
+  pas la ligne des crêtes — sinon l'eau sort par le bas de l'écran au sommet du saut. Elle est
+  parfaitement plate, donc la mesure ne tremble pas.
+- ⚠️ **Les îles ne dérivent pas vers le bas.** La mer est le repère fixe : chaque île plonge
+  vers elle et la suivante remonte depuis elle. `CRETE` reste donc constante partout — ce dont
+  le zoom de 9.4 a besoin.
+- **Taille d'écran, pas de goût** : un saut de 3 s (comme l'original) demanderait un apex de
+  330 px, donc un zoom de 0,22 et un héros de 4 px. L'original tourne en 320 × 480. À
+  160 × 120, 2 s est le maximum qui laisse voir son personnage (héros à 6 px au sommet).
 
 **Le dernier saut de chaque île ne peut pas échouer.** La dernière colline est spéciale :
 descente très longue et rampe surdimensionnée. Le dragonneau arrive donc à pleine vitesse

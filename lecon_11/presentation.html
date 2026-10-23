@@ -365,9 +365,10 @@
   <div class="card analogy">
     <div class="label analogy">Analogie — les niveaux, sans les menus</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
-      <span>🏝️ <strong>4 000 px</strong> &nbsp;→&nbsp; une île, soit 400 m</span>
+      <span>🏝️ <strong>4 800 px</strong> &nbsp;→&nbsp; une île, soit 480 m</span>
       <span>📈 <strong>À chaque île</strong> &nbsp;→&nbsp; collines plus courtes, creux plus profonds</span>
-      <span>🌊 <strong>Au bout</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une grande rampe, puis l'océan à traverser</span>
+      <span>⛷️ <strong>Les 4 dernières collines</strong> &nbsp;→&nbsp; une longue descente, les bosses s'effacent</span>
+      <span>🌊 <strong>Puis</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; une petite remontée, et le grand saut par-dessus la mer</span>
     </div>
   </div>
 
@@ -377,13 +378,13 @@
     <canvas id="cv-iles" width="760" height="220"></canvas>
 
     <div class="readout">
-      île 1 : <b>19</b> collines de 198 px &nbsp;·&nbsp; île 2 : <b>20</b> de 188 &nbsp;·&nbsp; île 3 : <b>22</b> de 171
+      île 1 : <b>19</b> collines de 202 px &nbsp;·&nbsp; île 2 : <b>21</b> de 183 &nbsp;·&nbsp; île 3 : <b>23</b> de 167
     </div>
   </div>
 
   <div class="card warning">
-    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ L'océan ne peut pas te tuer</div>
-    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La rampe de fin d'île te lance très vite : normalement tu voles jusqu'à l'île suivante. Si tu arrives lentement, tu descends la plage, tu traverses en rasant l'eau et tu remontes de l'autre côté — tu ne perds pas la partie, tu perds du temps. Et du temps, c'est de la nuit.</p>
+    <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ L'océan ne peut pas te tuer — mais il se mérite</div>
+    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La longue descente te donne de la vitesse, la petite remontée te lance. Mesuré : en plongeant dans les descentes, le saut dure <strong>2 secondes</strong> et tu franchis la mer d'un trait, <strong>à chaque fois</strong>. En jouant mollement, tu n'as pas assez de vitesse : tu tombes à l'eau et tu rames jusqu'à la plage d'en face. Tu ne perds pas la partie — tu perds du temps, et le temps, c'est de la nuit.</p>
   </div>
 </div>
 
@@ -429,14 +430,14 @@
   <div class="card analogy">
     <div class="label analogy">Mesuré — une partie complète, par stratégie</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em; font-family:'Courier New';">
-      <span>⬇️ tenir en <strong>descente</strong> &nbsp;→&nbsp; <span style="color:var(--success)">2 168 m</span>, île 6, en 70 s</span>
-      <span>🔁 tenir <strong>tout le temps</strong> &nbsp;→&nbsp; 1 655 m, île 5, en 96 s</span>
-      <span>😴 <strong>ne jamais</strong> appuyer &nbsp;&nbsp;→&nbsp; 1 136 m, île 3, en 86 s</span>
+      <span>⬇️ tenir en <strong>descente</strong> &nbsp;→&nbsp; <span style="color:var(--success)">2 382 m</span>, île 5, en 76 s &nbsp;<span style="color:var(--muted)">— 4 océans franchis d'un trait</span></span>
+      <span>🔁 tenir <strong>tout le temps</strong> &nbsp;→&nbsp; 1 614 m, île 4, en 91 s <span style="color:var(--muted)">— 3 s à ramer sur l'eau</span></span>
+      <span>😴 <strong>ne jamais</strong> appuyer &nbsp;&nbsp;→&nbsp; 1 257 m, île 3, en 89 s <span style="color:var(--muted)">— aucun vrai saut</span></span>
     </div>
   </div>
 
   <div class="quiz-block">
-    <h4>Question 2 — Jouer vite fait mourir <em>plus tôt</em> (70 s contre 86 s). Pourquoi est-ce quand même mieux ?</h4>
+    <h4>Question 2 — Jouer vite fait mourir <em>plus tôt</em> (76 s contre 89 s). Pourquoi est-ce quand même mieux ?</h4>
     <div class="quiz-options" id="q2-opts">
       <div class="quiz-option">ce n'est pas mieux, c'est un bug</div>
       <div class="quiz-option">parce que le score, c'est la distance — pas le temps</div>
@@ -544,6 +545,8 @@
     <li><span class="box"></span><span>Des étoiles apparaissent quand il fait assez sombre</span></li>
     <li><span class="box"></span><span>La jauge de nuit se remplit, en haut à droite</span></li>
     <li><span class="box"></span><span>Le numéro d'île augmente après chaque océan</span></li>
+    <li><span class="box"></span><span>La fin de l'île est une longue descente, de moins en moins bosselée</span></li>
+    <li><span class="box"></span><span>En plongeant bien, le saut par-dessus la mer dure ~2 secondes et la caméra recule à fond</span></li>
     <li><span class="box"></span><span>Les collines sont plus serrées sur la 2<sup>e</sup> île que sur la 1<sup>re</sup></span></li>
     <li><span class="box"></span><span>Quand il fait nuit noire : « LA NUIT T'A RATTRAPÉ », et tout s'arrête</span></li>
     <li><span class="box"></span><span>R relance une partie toute neuve</span></li>
@@ -587,8 +590,12 @@ sections.forEach(id => { const el = document.getElementById(id); if (el) observe
 // ════════════════════════════════════════════════════════════
 const LARGEUR = 160, HAUTEUR = 120, X_DRAGON = 40, MI_HAUTEUR = 6;
 const CRETE = 46, R_DESCENTE = 0.62, POINTE = 2.2;
-const LONGUEUR_ILE = 4000, LARGEUR_OCEAN = 240, PLAGE = 80, NIVEAU_EAU = 108;
-const LARGEUR_TERRE = LONGUEUR_ILE - LARGEUR_OCEAN;
+const LONGUEUR_ILE = 4800, PLAGE = 400, OCEAN = 500, NIVEAU_EAU = 108;
+const L_REMONTEE = 60, H_REMONTEE = 26, FALAISE = 14, N_DESCENTE = 4;
+const ZONE_COLLINES = LONGUEUR_ILE - PLAGE - L_REMONTEE - OCEAN;
+const DEBUT_REMONTEE = PLAGE + ZONE_COLLINES;
+const DEBUT_OCEAN = DEBUT_REMONTEE + L_REMONTEE;
+const PIED = NIVEAU_EAU - FALAISE;
 
 const GRAVITE = 0.08, GRAVITE_PLONGEON = 0.30;
 const ACCEL_DESCENTE = 0.22, FREIN_MONTEE = 0.28;
@@ -621,13 +628,21 @@ function numeroIle(x) { return Math.floor(Math.max(0, x) / LONGUEUR_ILE); }
 function reglagesIle(i) {
   const longueurVoulue = Math.max(120, 200 - 15 * i);
   const creuxMax = Math.min(110, 65 + 10 * i);
-  const nombre = Math.max(3, Math.round(LARGEUR_TERRE / longueurVoulue));
-  return [LARGEUR_TERRE / nombre, creuxMax, nombre];
+  const nombre = Math.max(N_DESCENTE + 3, Math.round(ZONE_COLLINES / longueurVoulue));
+  return [ZONE_COLLINES / nombre, creuxMax, nombre];
 }
 
 function estEau(x) {
-  const dansIle = Math.max(0, x) % LONGUEUR_ILE;
-  return dansIle >= LARGEUR_TERRE + PLAGE && dansIle < LONGUEUR_ILE - PLAGE;
+  return (Math.max(0, x) % LONGUEUR_ILE) >= DEBUT_OCEAN;
+}
+
+function profilColline(t, creux) {
+  if (t < R_DESCENTE) {
+    const u = t / R_DESCENTE;
+    return creux * (1 - Math.cos(Math.PI * u)) / 2;
+  }
+  const u = (t - R_DESCENTE) / (1 - R_DESCENTE);
+  return creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
 }
 
 function hauteurDuSol(x) {
@@ -636,34 +651,33 @@ function hauteurDuSol(x) {
   const dansIle = x % LONGUEUR_ILE;
   const [longueur, creuxMax, nombre] = reglagesIle(ile);
 
-  if (dansIle >= LARGEUR_TERRE) {
-    const descente = (dansIle - LARGEUR_TERRE) / PLAGE;
-    if (descente < 1) return CRETE + (NIVEAU_EAU - CRETE) * (1 - Math.cos(Math.PI * descente)) / 2;
-    const remontee = (dansIle - (LONGUEUR_ILE - PLAGE)) / PLAGE;
-    if (remontee > 0) return NIVEAU_EAU + (CRETE - NIVEAU_EAU) * (1 - Math.cos(Math.PI * remontee)) / 2;
-    return NIVEAU_EAU;
+  if (dansIle < PLAGE) {                       // la plage d'arrivée
+    if (ile === 0) return CRETE;               // la première île : un plateau
+    const u = dansIle / PLAGE;
+    return NIVEAU_EAU + (CRETE - NIVEAU_EAU) * (1 - Math.cos(Math.PI * u)) / 2;
   }
 
-  const i = Math.floor(dansIle / longueur);
-  const t = (dansIle % longueur) / longueur;
-
-  if (i === nombre - 1) {
-    const creux = creuxMax + 15;
-    if (t < 0.75) {
-      const u = t / 0.75;
-      return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+  if (dansIle < DEBUT_REMONTEE) {              // les collines
+    const dd = dansIle - PLAGE;
+    const i = Math.floor(dd / longueur);
+    const t = (dd % longueur) / longueur;
+    const premiereDescente = nombre - N_DESCENTE;
+    if (i < premiereDescente) {
+      const creux = 30 + (creuxMax - 30) * (((i * 7919 + ile * 104729) % 1000) / 1000);
+      return CRETE + profilColline(t, creux);
     }
-    const u = (t - 0.75) / 0.25;
-    return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
+    // la grande descente : la ligne de crête plonge, les bosses s'effacent
+    const part = (i - premiereDescente + t) / N_DESCENTE;
+    const base = CRETE + (PIED - CRETE) * (1 - Math.cos(Math.PI * part)) / 2;
+    return base + profilColline(t, 30 * Math.pow(1 - part, 1.5));
   }
 
-  const creux = 30 + (creuxMax - 30) * (((i * 7919 + ile * 104729) % 1000) / 1000);
-  if (t < R_DESCENTE) {
-    const u = t / R_DESCENTE;
-    return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
+  if (dansIle < DEBUT_OCEAN) {                 // la petite remontée : le tremplin
+    const u = (dansIle - DEBUT_REMONTEE) / L_REMONTEE;
+    return PIED - H_REMONTEE * Math.pow(Math.sin(Math.PI * u / 2), 1.6);
   }
-  const u = (t - R_DESCENTE) / (1 - R_DESCENTE);
-  return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
+
+  return NIVEAU_EAU;                           // la mer
 }
 
 const MOTIFS = [
@@ -825,7 +839,8 @@ function avancer(e, bouton) {
   const confort = 1 - (1 - ZOOM_MIN) * part;
   e.zoom += (confort - e.zoom) * (confort < e.zoom ? SUIVI_SORTIE : SUIVI_RETOUR);
   e.visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * part - e.visee) * SUIVI_CAMERA;
-  const plafond = (HAUTEUR - MARGE_SOL - e.visee) / Math.max(1, CRETE - e.y);
+  const reference = estEau(e.cx) ? NIVEAU_EAU : CRETE;
+  const plafond = (HAUTEUR - MARGE_SOL - e.visee) / Math.max(1, reference - e.y);
   e.zoom = Math.max(0.12, Math.min(1, plafond, e.zoom));
   e.cy = e.y - e.visee / e.zoom;
 }
