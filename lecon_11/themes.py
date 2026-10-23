@@ -14,20 +14,30 @@
 # Tu n'as rien à modifier ici.
 # ============================================================
 
+# Les couleurs ont été choisies pour que le dragonneau et les collines
+# restent bien visibles À TOUTE HEURE : la nuit assombrit tout, mais
+# jamais au point que deux choses se confondent.
+
 DRAGONNEAU = {
     "nom": "Dragonneau",
 
     # --- de jour ---
-    "ciel":      (38, 28, 66),
-    "collines":  (58, 138, 68),
-    "ombre":     (32, 92, 48),
-    "eau":       (40, 90, 150),
+    "ciel":     (134, 187, 243),
+    "collines": (70, 151, 78),
+    "ombre":    (48, 118, 63),
+    "eau":      (53, 129, 195),
+    "heros":    (222, 88, 54),
+    "aile":     (162, 50, 38),
+    "contour":  (25, 24, 37),
 
     # --- de nuit ---
-    "ciel_nuit":     (6, 6, 16),
-    "collines_nuit": (14, 34, 20),
-    "ombre_nuit":    (8, 22, 14),
-    "eau_nuit":      (8, 18, 38),
+    "ciel_nuit":     (42, 59, 76),
+    "collines_nuit": (15, 32, 16),
+    "ombre_nuit":    (5, 13, 7),
+    "eau_nuit":      (16, 39, 60),
+    "heros_nuit":    (169, 67, 41),
+    "aile_nuit":     (121, 37, 29),
+    "contour_nuit":  (7, 7, 11),
 }
 
 

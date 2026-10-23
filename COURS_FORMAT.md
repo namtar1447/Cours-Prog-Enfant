@@ -629,9 +629,14 @@ sol** survit à l'impact ; la composante perpendiculaire est perdue.
 - Retomber *aligné* sur une descente → `vy × pente > 0` → on **gagne** de la vitesse
 - S'écraser de plein fouet dans une rampe → `pente < 0` → on perd presque tout
 
-Sans cette ligne, le jeu n'a aucune profondeur : ne jamais toucher le bouton donne 85 % de
-temps en vol et fait presque aussi bien que le jeu optimal. Avec elle, l'écart passe de
-1,12× à 3,15×. **C'est la ligne la plus importante du jeu.**
+Mesuré sur le code livré de la leçon 09b (6 000 images, 2026-10-23) : **avec** la formule,
+tenir en descente donne 34 790 px contre 13 657 px en jeu passif, soit **2,55×** ; **sans** elle,
+28 405 px, soit 2,06×. Viser son atterrissage vaut donc environ un quart de la compétence.
+
+> Les valeurs 1,12× → 3,15× qui figuraient ici dataient d'avant la règle « le bouton agit aussi
+> au sol ». À l'époque le bouton n'avait aucun effet pendant la glisse, donc tout reposait sur
+> l'atterrissage. Les deux mécanismes se partagent désormais le mérite — la formule reste la
+> ligne la plus importante du jeu.
 
 **Les collines varient.** Le dénivelé est tiré par numéro de colline. Avec des collines
 identiques, le joueur se cale dans un rythme régulier et n'a plus rien à décider — mesuré :
@@ -640,13 +645,15 @@ l'écart avec le jeu habile tombe à 1,12×. La variation force à viser chaque 
 #### 9.3.1 Résultats mesurés (simulation sur 6 000 images)
 
 Ces chiffres servent de test de non-régression : si un réglage change, les revérifier.
+Revérifiés le 2026-10-23 sur `lecon_09b/jeu.py` ; les deux dernières lignes ont bougé de 1 %
+(18 606 et 34 440 à l'origine, sur le prototype).
 
 | Stratégie | Distance | % en vol | Rapport |
 |---|---|---|---|
 | Tenir **en montée** | 11 747 | 7 % | **0,86×** — pire que ne rien faire |
 | Ne jamais appuyer | 13 657 | 45 % | 1,00× (référence) |
-| Tenir tout le temps | 18 606 | 28 % | 1,36× |
-| **Tenir en descente** | **34 440** | **69 %** | **2,52×** |
+| Tenir tout le temps | 18 809 | 29 % | 1,38× |
+| **Tenir en descente** | **34 790** | **67 %** | **2,55×** |
 
 La hiérarchie est celle demandée : le bon geste domine, et **appuyer en montée est puni**.
 
@@ -724,6 +731,14 @@ sens du zoom pour 100 images — c'est ce que l'œil perçoit comme instable :
 | Sol sous le héros, filtré | 10,7 |
 | **Ligne des crêtes** | **2,2** |
 
+> Mesuré de nouveau le 2026-10-23 sur `lecon_10/jeu.py` : dans la configuration de la leçon,
+> l'écart est bien **plus modeste** — la mesure prise sur le sol qui défile saute de 3,7 px par
+> image contre 2,6 px sur la ligne des crêtes (pointes à 15 contre 9), et le zoom lissé change
+> de sens 3,1 fois contre 2,8 par 100 images actives. Les 9,1 ci-dessus viennent du prototype,
+> mesurés uniquement pendant les redescentes de très haut vol et à des vitesses supérieures.
+> La raison de garder `CRETE` tient donc surtout à ce que la mesure est **stable par
+> construction** : ne pas survendre l'effet auprès de l'apprenant.
+
 Vérifié sans aucune perte du sol sur toute la plage `GRAVITE` de 0,05 à 0,14, altitude
 maximale 276 px, héros toujours à l'écran.
 
@@ -767,15 +782,39 @@ Un compteur `heure` avance à chaque image. Le ciel passe progressivement du jou
 crépuscule puis à la nuit ; quand il fait complètement noir, la partie est finie.
 
 ```python
-VITESSE_NUIT_BASE = 0.00035
-BONUS_ATTERRISSAGE = 0.004      # un bel atterrissage repousse la nuit
+VITESSE_NUIT = 0.00015          # calibré 2026-10-23, voir plus bas
+FACTEUR_ILE = 0.35
+BONUS_ATTERRISSAGE = 0.004      # × la vitesse GAGNÉE, pas un forfait
 
-heure += VITESSE_NUIT_BASE * (1 + 0.35 * numero_ile)   # accélère par paliers
+heure += VITESSE_NUIT * (1 + FACTEUR_ILE * numero_ile)   # accélère par paliers
+
+if vx > avant:                  # l'atterrissage lui a rendu de la vitesse
+    heure = max(0.0, heure - BONUS_ATTERRISSAGE * (vx - avant))
 ```
 
-**Seul l'enchaînement permet de devancer la nuit.** Chaque atterrissage qui *gagne* de la
-vitesse (voir 9.3, `vx` augmente à l'impact) rend un peu de jour. Un atterrissage raté n'en
-rend aucun. La boucle de récompense est donc : bien viser → plus de jour → plus de distance.
+**La vitesse est le mécanisme principal, le bonus est une prime.** La nuit compte les
+*images*, pas les mètres : aller vite est donc la vraie façon de la devancer. Chaque
+atterrissage qui *gagne* de la vitesse (voir 9.3) rend en plus un peu de jour.
+
+⚠️ **Le bonus doit rester petit, et proportionnel au gain.** Mesuré sur le code livré de la
+leçon 11 : avec un bonus **forfaitaire** assez gros pour se sentir, « tenir le bouton tout le
+temps » redevient la meilleure stratégie — rester collé au sol multiplie les atterrissages,
+donc les bonus, et ça écrase le geste de la 09b.
+
+| Réglage du bonus | Ne jamais | Tenir tout le temps | Tenir en descente |
+|---|---|---|---|
+| **0,004 × le gain** (retenu) | 1 136 m | 1 655 m | **2 168 m** ✅ |
+| 0,02 forfaitaire | 1 348 m | **2 554 m** ❌ | 2 189 m |
+| 0,035 forfaitaire | 1 392 m | **3 851 m** ❌ | 2 850 m |
+
+La promesse « seul l'enchaînement de bons atterrissages rend du jour » est donc tenue en
+version **faible** : elle ne peut pas porter le jeu à elle seule sans casser la hiérarchie du
+bouton.
+
+**Résultat d'une partie complète** (leçon 11, mesuré) : jeu passif 86 s et 1 136 m (île 3) ;
+bouton tenu en permanence 96 s et 1 655 m (île 5) ; bouton tenu en descente 70 s et 2 168 m
+(île 6). Le bon joueur meurt **plus tôt** et va **plus loin** — c'est voulu, le score est la
+distance.
 
 Rendu : c'est une **interpolation entre deux palettes** — palette jour et palette nuit du
 thème courant. Quelques octets sur la console, et ça réutilise exactement le système de
@@ -783,9 +822,20 @@ thèmes de 9.6. Les étoiles apparaissent quand `heure > 0.6`.
 
 #### Les îles
 
-- **Longueur fixe** : 20 collines, soit 4 000 px (affiché « 400 m »)
-- **Difficulté croissante** : `D_MAX` grandit et `L_COLLINE` rétrécit à chaque île
+- **Longueur fixe** : 4 000 px par île (affiché « 400 m »), dont 3 760 de terre et 240 de mer
+- **Difficulté croissante** : le creux maximal grandit (65 → 110) et les collines rétrécissent
+  (200 → 120 px) à chaque île
 - **La nuit accélère d'un palier** à chaque île
+- ⚠️ **Le nombre de collines doit être entier.** 3 760 / 200 = 18,8 : la dernière colline est
+  alors coupée en plein milieu et laisse une falaise de 27 px. La longueur réelle se déduit
+  donc du nombre : `nombre = round(3760 / longueur_voulue)`, puis `longueur = 3760 / nombre`
+  (île 1 : 19 collines de 197,9 px).
+- ⚠️ **L'océan a deux plages.** Passer directement de la crête (46) au niveau de la mer (108)
+  fait deux murs verticaux de 62 px. Une plage en cosinus de 80 px de chaque côté descend puis
+  remonte, et l'île suivante se raccorde à la crête.
+- ⚠️ **L'eau se reconnaît à sa POSITION, jamais à sa hauteur.** Le fond des vallées descend
+  jusqu'à 126 px, soit plus bas que la mer : un test en hauteur peint des bandes d'eau en
+  pleine terre.
 
 **Le dernier saut de chaque île ne peut pas échouer.** La dernière colline est spéciale :
 descente très longue et rampe surdimensionnée. Le dragonneau arrive donc à pleine vitesse
@@ -816,14 +866,48 @@ Un thème peut changer des valeurs de **gameplay**, pas seulement des couleurs �
 Lune baisse `gravite` à 0.08. C'est le moment où Adam comprend qu'une donnée peut piloter
 le comportement.
 
-Valeurs RGB validées au rendu (les quatre thèmes restent lisibles en 16 couleurs) :
+### Chaque couleur existe en deux versions : jour et nuit
 
-| Thème | ciel → ciel2 | collines / ombre | héros | Particularité |
+Depuis la leçon 11, un thème porte une palette de **jour** et une palette de **nuit**, et le
+rendu mélange les deux selon `heure`. Valeurs du thème Dragonneau, calibrées le 2026-10-23 :
+
+| | ciel | collines | ombre | eau | héros | aile | contour |
+|---|---|---|---|---|---|---|---|
+| **jour** | `134,187,243` | `70,151,78` | `48,118,63` | `53,129,195` | `222,88,54` | `162,50,38` | `25,24,37` |
+| **nuit** | `42,59,76` | `15,32,16` | `5,13,7` | `16,39,60` | `169,67,41` | `121,37,29` | `7,7,11` |
+
+Les autres thèmes (Ski, Lune, Dauphin — leçon 12) se construisent de la même façon : on part
+des teintes ci-dessous et on fixe les mêmes clartés cibles.
+
+| Thème | teinte ciel | teinte collines | teinte héros | Particularité |
 |---|---|---|---|---|
-| 🐉 **Dragonneau** (défaut) | `38,28,66` → `92,52,90` | `58,138,68` / `32,92,48` | `232,92,56` | — |
 | 🎿 **Ski** | `28,44,86` → `96,140,190` | `238,244,252` / `168,190,220` | `240,80,70` | — |
 | 🚀 **Lune** | `8,8,20` → `40,36,64` | `150,148,158` / `92,90,102` | `238,238,238` | `gravite` 0.08 |
 | 🐬 **Dauphin** | `20,60,110` → `88,170,210` | `30,110,170` / `18,72,120` | `190,225,240` | — |
+
+#### La règle de lisibilité, mesurée
+
+On ne juge pas une palette de cycle jour/nuit à l'œil sur une seule image. La mesure utile est
+l'écart de **clarté perceptuelle** ΔL\* entre deux éléments voisins, pris au **pire moment du
+cycle** (5 = limite du visible, 10 = écart net) :
+
+| | palette d'origine | palette calibrée |
+|---|---|---|
+| collines / ciel | 9,3 | **13,8** |
+| bande d'ombre / collines | 5,3 | 7,3 |
+| eau / ciel | 3,8 | 9,3 |
+| clarté du ciel de jour | L\* 13 (nuit déguisée en jour) | L\* 74 |
+
+⚠️ **Le héros ne peut pas y échapper : il faut un contour.** Le ciel balaie toute la plage de
+clarté au fil de la journée, donc il passe forcément par celle du dragonneau — mesuré, l'écart
+héros / ciel tombe à **0** vers `heure = 0,5`. Un **contour d'un pixel** (dessiné
+automatiquement autour du sprite) garde un écart d'au moins 22 avec le ciel à toute heure.
+Même raison pour le HUD : ombre d'un pixel sous le texte, plaque sombre derrière les jauges.
+
+⚠️ **Les étoiles se tirent au hasard, pas avec un modulo.** `(i * 6151) % 160` et
+`(i * 3119) % 60` donnent un pas constant de (+71, −1) entre deux étoiles consécutives : 39
+fois sur 39, donc des diagonales parfaitement régulières. `random.Random(graine)` donne la
+même reproductibilité sans la grille, et un éclat tiré par étoile évite l'effet pochoir.
 
 Les thèmes se débloquent à la distance parcourue — ça justifie le système au lieu d'en
 faire un gadget.

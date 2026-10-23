@@ -377,13 +377,13 @@
     <canvas id="cv-iles" width="760" height="220"></canvas>
 
     <div class="readout">
-      île 1 : collines de <b>200</b> px &nbsp;·&nbsp; île 2 : <b>185</b> &nbsp;·&nbsp; île 3 : <b>170</b>
+      île 1 : <b>19</b> collines de 198 px &nbsp;·&nbsp; île 2 : <b>20</b> de 188 &nbsp;·&nbsp; île 3 : <b>22</b> de 171
     </div>
   </div>
 
   <div class="card warning">
     <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ L'océan ne peut pas te tuer</div>
-    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La rampe de fin d'île te lance très vite : normalement tu voles jusqu'à l'île suivante. Si tu arrives lentement, tu traverses en rasant l'eau — tu ne perds pas la partie, tu perds du temps. Et du temps, c'est de la nuit.</p>
+    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La rampe de fin d'île te lance très vite : normalement tu voles jusqu'à l'île suivante. Si tu arrives lentement, tu descends la plage, tu traverses en rasant l'eau et tu remontes de l'autre côté — tu ne perds pas la partie, tu perds du temps. Et du temps, c'est de la nuit.</p>
   </div>
 </div>
 
@@ -429,14 +429,14 @@
   <div class="card analogy">
     <div class="label analogy">Mesuré — une partie complète, par stratégie</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em; font-family:'Courier New';">
-      <span>⬇️ tenir en <strong>descente</strong> &nbsp;→&nbsp; <span style="color:var(--success)">2 126 m</span>, île 6, en 71 s</span>
-      <span>🔁 tenir <strong>tout le temps</strong> &nbsp;→&nbsp; 1 773 m, île 5, en 93 s</span>
-      <span>😴 <strong>ne jamais</strong> appuyer &nbsp;&nbsp;→&nbsp; 1 108 m, île 3, en 86 s</span>
+      <span>⬇️ tenir en <strong>descente</strong> &nbsp;→&nbsp; <span style="color:var(--success)">2 168 m</span>, île 6, en 70 s</span>
+      <span>🔁 tenir <strong>tout le temps</strong> &nbsp;→&nbsp; 1 655 m, île 5, en 96 s</span>
+      <span>😴 <strong>ne jamais</strong> appuyer &nbsp;&nbsp;→&nbsp; 1 136 m, île 3, en 86 s</span>
     </div>
   </div>
 
   <div class="quiz-block">
-    <h4>Question 2 — Jouer vite fait mourir <em>plus tôt</em> (71 s contre 86 s). Pourquoi est-ce quand même mieux ?</h4>
+    <h4>Question 2 — Jouer vite fait mourir <em>plus tôt</em> (70 s contre 86 s). Pourquoi est-ce quand même mieux ?</h4>
     <div class="quiz-options" id="q2-opts">
       <div class="quiz-option">ce n'est pas mieux, c'est un bug</div>
       <div class="quiz-option">parce que le score, c'est la distance — pas le temps</div>
@@ -587,7 +587,8 @@ sections.forEach(id => { const el = document.getElementById(id); if (el) observe
 // ════════════════════════════════════════════════════════════
 const LARGEUR = 160, HAUTEUR = 120, X_DRAGON = 40, MI_HAUTEUR = 6;
 const CRETE = 46, R_DESCENTE = 0.62, POINTE = 2.2;
-const LONGUEUR_ILE = 4000, LARGEUR_OCEAN = 240, NIVEAU_EAU = 108;
+const LONGUEUR_ILE = 4000, LARGEUR_OCEAN = 240, PLAGE = 80, NIVEAU_EAU = 108;
+const LARGEUR_TERRE = LONGUEUR_ILE - LARGEUR_OCEAN;
 
 const GRAVITE = 0.08, GRAVITE_PLONGEON = 0.30;
 const ACCEL_DESCENTE = 0.22, FREIN_MONTEE = 0.28;
@@ -602,31 +603,51 @@ const VITESSE_NUIT = 0.00015, FACTEUR_ILE = 0.35;
 const BONUS_ATTERRISSAGE = 0.004, DEBUT_ETOILES = 0.6;
 
 const THEME = {
-  ciel: [38, 28, 66], collines: [58, 138, 68], ombre: [32, 92, 48], eau: [40, 90, 150],
-  ciel_nuit: [6, 6, 16], collines_nuit: [14, 34, 20], ombre_nuit: [8, 22, 14], eau_nuit: [8, 18, 38]
+  ciel: [134, 187, 243], collines: [70, 151, 78], ombre: [48, 118, 63], eau: [53, 129, 195],
+  heros: [222, 88, 54], aile: [162, 50, 38], contour: [25, 24, 37],
+  ciel_nuit: [42, 59, 76], collines_nuit: [15, 32, 16], ombre_nuit: [5, 13, 7],
+  eau_nuit: [16, 39, 60], heros_nuit: [169, 67, 41], aile_nuit: [121, 37, 29],
+  contour_nuit: [7, 7, 11]
 };
+const COULEUR_PLAQUE = [14, 14, 24];
 
 function melanger(jour, nuit, part) {
   return jour.map((v, i) => Math.round(v + (nuit[i] - v) * part));
 }
 function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
 
-function numeroIle(x) { return Math.floor(x / LONGUEUR_ILE); }
+function numeroIle(x) { return Math.floor(Math.max(0, x) / LONGUEUR_ILE); }
 
 function reglagesIle(i) {
-  return [Math.max(120, 200 - 15 * i), Math.min(110, 65 + 10 * i)];
+  const longueurVoulue = Math.max(120, 200 - 15 * i);
+  const creuxMax = Math.min(110, 65 + 10 * i);
+  const nombre = Math.max(3, Math.round(LARGEUR_TERRE / longueurVoulue));
+  return [LARGEUR_TERRE / nombre, creuxMax, nombre];
+}
+
+function estEau(x) {
+  const dansIle = Math.max(0, x) % LONGUEUR_ILE;
+  return dansIle >= LARGEUR_TERRE + PLAGE && dansIle < LONGUEUR_ILE - PLAGE;
 }
 
 function hauteurDuSol(x) {
+  x = Math.max(0, x);
   const ile = numeroIle(x);
-  const dansIle = ((x % LONGUEUR_ILE) + LONGUEUR_ILE) % LONGUEUR_ILE;
-  const [longueur, creuxMax] = reglagesIle(ile);
-  const debutOcean = LONGUEUR_ILE - LARGEUR_OCEAN;
+  const dansIle = x % LONGUEUR_ILE;
+  const [longueur, creuxMax, nombre] = reglagesIle(ile);
 
-  if (dansIle >= debutOcean) return NIVEAU_EAU;
+  if (dansIle >= LARGEUR_TERRE) {
+    const descente = (dansIle - LARGEUR_TERRE) / PLAGE;
+    if (descente < 1) return CRETE + (NIVEAU_EAU - CRETE) * (1 - Math.cos(Math.PI * descente)) / 2;
+    const remontee = (dansIle - (LONGUEUR_ILE - PLAGE)) / PLAGE;
+    if (remontee > 0) return NIVEAU_EAU + (CRETE - NIVEAU_EAU) * (1 - Math.cos(Math.PI * remontee)) / 2;
+    return NIVEAU_EAU;
+  }
 
-  if (dansIle >= debutOcean - longueur) {
-    const t = (dansIle - (debutOcean - longueur)) / longueur;
+  const i = Math.floor(dansIle / longueur);
+  const t = (dansIle % longueur) / longueur;
+
+  if (i === nombre - 1) {
     const creux = creuxMax + 15;
     if (t < 0.75) {
       const u = t / 0.75;
@@ -636,9 +657,7 @@ function hauteurDuSol(x) {
     return CRETE + creux * Math.pow(Math.cos(Math.PI * u / 2), POINTE);
   }
 
-  const i = Math.floor(dansIle / longueur);
   const creux = 30 + (creuxMax - 30) * (((i * 7919 + ile * 104729) % 1000) / 1000);
-  const t = (dansIle % longueur) / longueur;
   if (t < R_DESCENTE) {
     const u = t / R_DESCENTE;
     return CRETE + creux * (1 - Math.cos(Math.PI * u)) / 2;
@@ -655,14 +674,40 @@ const MOTIFS = [
    "......CCCCCCCC..","D....CCCCCCCCC..","DD..CCCCCCCOCCC.",".DDCCCCCCCCCCCCC",
    "..DCCCCAAACCCC..","...DCCAAAAAA....","....DAAAAAA.....",".....AAAA......."]
 ];
-const COULEURS = { C: '#e85c38', D: '#a83428', A: '#a83428', O: '#141420' };
-const ETOILES = Array.from({ length: 40 }, (_, i) => [(i * 6151) % LARGEUR, (i * 3119) % 60]);
+// les mêmes étoiles que jeu.py : tirées au hasard, graine fixe, éclat varié
+function hasardSimple(graine) {
+  let etat = graine;
+  return () => {
+    etat = (etat * 1103515245 + 12345) % 2147483648;
+    return etat / 2147483648;
+  };
+}
+const tirage = hasardSimple(7);
+const ETOILES = Array.from({ length: 44 }, () => [
+  Math.floor(tirage() * LARGEUR), Math.floor(tirage() * 74), 0.35 + tirage() * 0.65]);
 
-function dessinerSprite(ctx, motif, cxPix, cyPix, k, zoom) {
+function dessinerSprite(ctx, motif, cxPix, cyPix, k, zoom, heure) {
   const taille = Math.max(1, k * (zoom < 0.85 ? zoom : 1));
+  const corps   = css(melanger(THEME.heros, THEME.heros_nuit, heure));
+  const aile    = css(melanger(THEME.aile, THEME.aile_nuit, heure));
+  const contour = css(melanger(THEME.contour, THEME.contour_nuit, heure));
+  const couleurs = { C: corps, D: aile, A: aile, O: contour };
+
+  // d'abord le contour : un pixel tout autour de chaque pixel plein
+  ctx.fillStyle = contour;
   motif.forEach((ligne, ly) => {
     for (let lx = 0; lx < ligne.length; lx++) {
-      const c = COULEURS[ligne[lx]];
+      if (!couleurs[ligne[lx]]) continue;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++)
+          ctx.fillRect(cxPix + (lx - 8 + dx) * taille, cyPix + (ly - 6 + dy) * taille,
+                       Math.ceil(taille), Math.ceil(taille));
+    }
+  });
+
+  motif.forEach((ligne, ly) => {
+    for (let lx = 0; lx < ligne.length; lx++) {
+      const c = couleurs[ligne[lx]];
       if (!c) continue;
       ctx.fillStyle = c;
       ctx.fillRect(cxPix + (lx - 8) * taille, cyPix + (ly - 6) * taille,
@@ -684,16 +729,17 @@ function rendreJeu(ctx, k, e) {
 
   if (heure > DEBUT_ETOILES) {
     const force = (heure - DEBUT_ETOILES) / (1 - DEBUT_ETOILES);
-    ctx.fillStyle = css(melanger(cCiel, [255, 255, 255], force));
-    ETOILES.forEach(([ex, ey]) => ctx.fillRect(ex * k, ey * k, k, k));
+    ETOILES.forEach(([ex, ey, eclat]) => {
+      ctx.fillStyle = css(melanger(cCiel, [255, 255, 255], force * eclat));
+      ctx.fillRect(ex * k, ey * k, k, k);
+    });
   }
 
   for (let c = 0; c < LARGEUR; c++) {
     const mx = e.cx + (c - X_DRAGON) / e.zoom;
-    const h = hauteurDuSol(mx);
-    const sy = Math.floor((h - e.cy) * e.zoom);
+    const sy = Math.floor((hauteurDuSol(mx) - e.cy) * e.zoom);
     if (sy >= HAUTEUR) continue;
-    if (h >= NIVEAU_EAU - 0.5) {
+    if (estEau(mx)) {
       ctx.fillStyle = css(cEau);
       ctx.fillRect(c * k, sy * k, k, (HAUTEUR - sy) * k);
     } else {
@@ -705,21 +751,28 @@ function rendreJeu(ctx, k, e) {
   }
 
   dessinerSprite(ctx, MOTIFS[Math.floor(e.anim) % 2], X_DRAGON * k,
-                 (e.y - e.cy) * e.zoom * k, k, e.zoom);
+                 (e.y - e.cy) * e.zoom * k, k, e.zoom, heure);
 
-  // HUD
-  ctx.fillStyle = '#fff';
+  // HUD — le texte porte son ombre, les jauges leur plaque
   ctx.font = 'bold ' + (5 * k) + 'px Courier New';
-  ctx.fillText(Math.floor(e.cx / 10) + ' m', 3 * k, 9 * k);
-  ctx.fillText('ile ' + (numeroIle(e.cx) + 1), 3 * k, 18 * k);
+  const ecrire = (s, x, y) => {
+    ctx.fillStyle = css(COULEUR_PLAQUE);
+    ctx.fillText(s, x * k + 1, y * k + 1);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(s, x * k, y * k);
+  };
+  ecrire(Math.floor(e.cx / 10) + ' m', 3, 9);
+  ecrire('ile ' + (numeroIle(e.cx) + 1), 3, 18);
 
+  ctx.fillStyle = css(COULEUR_PLAQUE);
+  ctx.fillRect((LARGEUR - 30) * k, 2 * k, 28 * k, 15 * k);
   ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, k / 2);
   ctx.strokeRect((LARGEUR - 29) * k, 3 * k, 26 * k, 5 * k);
   const plein = Math.floor(24 * (e.vx - VX_MIN) / (VX_MAX - VX_MIN));
-  if (plein > 0) { ctx.fillStyle = '#e85c38'; ctx.fillRect((LARGEUR - 28) * k, 4 * k, plein * k, 3 * k); }
+  if (plein > 0) { ctx.fillStyle = css(THEME.heros); ctx.fillRect((LARGEUR - 28) * k, 4 * k, plein * k, 3 * k); }
   ctx.strokeRect((LARGEUR - 29) * k, 11 * k, 26 * k, 5 * k);
   const pn = Math.floor(24 * Math.min(1, heure));
-  if (pn > 0) { ctx.fillStyle = '#5a5aa0'; ctx.fillRect((LARGEUR - 28) * k, 12 * k, pn * k, 3 * k); }
+  if (pn > 0) { ctx.fillStyle = 'rgb(120,124,196)'; ctx.fillRect((LARGEUR - 28) * k, 12 * k, pn * k, 3 * k); }
   ctx.lineWidth = 1;
 
   if (e.finie) {
@@ -828,7 +881,7 @@ function ilesDraw() {
     const x = px / ech;
     const h = hauteurDuSol(x);
     const py = (h - 20) * 1.3;
-    ctxI.fillStyle = h >= NIVEAU_EAU - 0.5 ? css(THEME.eau) : css(THEME.collines);
+    ctxI.fillStyle = estEau(x) ? css(THEME.eau) : css(THEME.collines);
     ctxI.fillRect(px, py, 1, cvI.height - py);
   }
 

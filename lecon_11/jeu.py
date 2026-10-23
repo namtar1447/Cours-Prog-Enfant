@@ -21,7 +21,9 @@
 
 import pygame
 
-from terrain import hauteur_du_sol, numero_ile, CRETE, NIVEAU_EAU, LONGUEUR_ILE
+import random
+
+from terrain import hauteur_du_sol, numero_ile, est_eau, CRETE
 from themes import DRAGONNEAU, melanger
 
 # --- Les réglages du jeu ---
@@ -59,10 +61,9 @@ BONUS_ATTERRISSAGE = 0.004       # le jour que rend un atterrissage gagnant
 DEBUT_ETOILES = 0.6              # à partir de quelle nuit on voit les étoiles
 
 THEME = DRAGONNEAU
-COULEUR_DRAGON = (232, 92, 56)
-COULEUR_AILE   = (168, 52, 40)
-COULEUR_OEIL   = (20, 20, 28)
+NIVEAUX_NUIT = 8                 # en combien d'étapes le dragonneau s'assombrit
 COULEUR_HUD    = (255, 255, 255)
+COULEUR_PLAQUE = (14, 14, 24)    # derrière le texte, pour qu'il reste lisible
 
 
 # ============================================================
@@ -121,19 +122,47 @@ DRAGON_AILE_BASSE = [
 ]
 
 
-def faire_sprite(motif):
-    image = pygame.Surface((16, 12), pygame.SRCALPHA)
-    couleurs = {"C": COULEUR_DRAGON, "D": COULEUR_AILE,
-                "A": COULEUR_AILE, "O": COULEUR_OEIL}
+def faire_sprite(motif, part_de_nuit):
+    """Dessine le dragonneau à l'heure voulue, avec un CONTOUR d'un pixel.
+
+    Le contour, c'est ce qui le garde visible quel que soit le fond :
+    au fil de la journée, le ciel passe par toutes les couleurs, et sans
+    contour il finirait par s'y fondre.
+    """
+    couleurs = {
+        "C": melanger(THEME["heros"], THEME["heros_nuit"], part_de_nuit),
+        "D": melanger(THEME["aile"], THEME["aile_nuit"], part_de_nuit),
+        "A": melanger(THEME["aile"], THEME["aile_nuit"], part_de_nuit),
+        "O": melanger(THEME["contour"], THEME["contour_nuit"], part_de_nuit),
+    }
+    contour = melanger(THEME["contour"], THEME["contour_nuit"], part_de_nuit)
+
+    # une marge d'un pixel tout autour, pour avoir la place du contour
+    image = pygame.Surface((18, 14), pygame.SRCALPHA)
+
+    for ligne_y, ligne in enumerate(motif):
+        for ligne_x, lettre in enumerate(ligne):
+            if lettre not in couleurs:
+                continue
+            # d'abord le contour : les huit cases autour
+            for decale_y in (-1, 0, 1):
+                for decale_x in (-1, 0, 1):
+                    image.set_at((ligne_x + 1 + decale_x, ligne_y + 1 + decale_y), contour)
+
     for ligne_y, ligne in enumerate(motif):
         for ligne_x, lettre in enumerate(ligne):
             if lettre in couleurs:
-                image.set_at((ligne_x, ligne_y), couleurs[lettre])
+                image.set_at((ligne_x + 1, ligne_y + 1), couleurs[lettre])
+
     return image
 
 
-# Les étoiles : toujours aux mêmes endroits, calculées une seule fois.
-ETOILES = [((i * 6151) % LARGEUR, (i * 3119) % 60) for i in range(40)]
+# Les étoiles : tirées au hasard UNE fois, mais toujours les mêmes grâce
+# à la graine. Chacune a sa propre luminosité, sinon le ciel a l'air
+# quadrillé.
+hasard = random.Random(7)
+ETOILES = [(hasard.randrange(LARGEUR), hasard.randrange(74),
+            hasard.uniform(0.35, 1.0)) for _ in range(44)]
 
 
 # ============================================================
@@ -150,10 +179,16 @@ GROSSE_POLICE = pygame.font.SysFont("consolas", 14, bold=True)
 
 
 def ecrire(surface, message, x, y, couleur=COULEUR_HUD, police=POLICE):
+    """Le texte, avec son ombre : lisible sur un ciel clair comme sur la nuit."""
+    surface.blit(police.render(message, False, COULEUR_PLAQUE), (x + 1, y + 1))
     surface.blit(police.render(message, False, couleur), (x, y))
 
 
-SPRITES = [faire_sprite(DRAGON_AILE_HAUTE), faire_sprite(DRAGON_AILE_BASSE)]
+# Le dragonneau est préparé à l'avance dans plusieurs clartés : on ne
+# redessine pas 200 pixels à chaque image.
+SPRITES = [[faire_sprite(motif, niveau / (NIVEAUX_NUIT - 1))
+            for motif in (DRAGON_AILE_HAUTE, DRAGON_AILE_BASSE)]
+           for niveau in range(NIVEAUX_NUIT)]
 
 
 def nouvelle_partie():
@@ -293,18 +328,17 @@ while en_marche:
     # (déjà écrit) Les étoiles, quand la nuit est bien avancée.
     if heure > DEBUT_ETOILES:
         force = (heure - DEBUT_ETOILES) / (1.0 - DEBUT_ETOILES)
-        couleur_etoile = melanger(couleur_ciel, (255, 255, 255), force)
-        for etoile_x, etoile_y in ETOILES:
-            surf.set_at((etoile_x, etoile_y), couleur_etoile)
+        for etoile_x, etoile_y, eclat in ETOILES:
+            surf.set_at((etoile_x, etoile_y),
+                        melanger(couleur_ciel, (255, 255, 255), force * eclat))
 
     # (déjà écrit) Le décor, colonne par colonne — leçon 10, plus l'eau.
     for colonne in range(LARGEUR):
         monde_x = camera_x + (colonne - X_DRAGON) / zoom
-        hauteur = hauteur_du_sol(monde_x)
-        sy = int((hauteur - camera_y) * zoom)
+        sy = int((hauteur_du_sol(monde_x) - camera_y) * zoom)
         if sy >= HAUTEUR:
             continue
-        if hauteur >= NIVEAU_EAU - 0.5:
+        if est_eau(monde_x):
             pygame.draw.line(surf, couleur_eau, (colonne, sy), (colonne, HAUTEUR))
         else:
             pygame.draw.line(surf, couleur_sol, (colonne, sy), (colonne, HAUTEUR))
@@ -312,10 +346,11 @@ while en_marche:
                              (colonne, sy + max(1, int(3 * zoom))))
 
     # (déjà écrit) Le dragonneau.
-    image = SPRITES[int(jeu["animation"]) % 2]
+    niveau = min(NIVEAUX_NUIT - 1, int(heure * NIVEAUX_NUIT))
+    image = SPRITES[niveau][int(jeu["animation"]) % 2]
     if zoom < 0.85:
-        image = pygame.transform.scale(image, (max(5, int(16 * zoom)),
-                                               max(4, int(12 * zoom))))
+        image = pygame.transform.scale(image, (max(6, int(18 * zoom)),
+                                               max(5, int(14 * zoom))))
     ecran_y = int((y - camera_y) * zoom)
     surf.blit(image, (X_DRAGON - image.get_width() // 2,
                       ecran_y - image.get_height() // 2))
@@ -324,16 +359,18 @@ while en_marche:
     ecrire(surf, f"{int(camera_x / 10)} m", 3, 2)
     ecrire(surf, f"ile {numero_ile(camera_x) + 1}", 3, 11)
 
+    pygame.draw.rect(surf, COULEUR_PLAQUE, (LARGEUR - 30, 2, 28, 15))
+
     plein = int(24 * (vx - VX_MIN) / (VX_MAX - VX_MIN))
     pygame.draw.rect(surf, COULEUR_HUD, (LARGEUR - 29, 3, 26, 5), 1)
     if plein > 0:
-        pygame.draw.rect(surf, COULEUR_DRAGON, (LARGEUR - 28, 4, plein, 3))
+        pygame.draw.rect(surf, THEME["heros"], (LARGEUR - 28, 4, plein, 3))
 
     # la jauge de nuit : elle se remplit, et c'est le compte à rebours
     pygame.draw.rect(surf, COULEUR_HUD, (LARGEUR - 29, 11, 26, 5), 1)
     nuit_pleine = int(24 * min(1.0, heure))
     if nuit_pleine > 0:
-        pygame.draw.rect(surf, (90, 90, 160), (LARGEUR - 28, 12, nuit_pleine, 3))
+        pygame.draw.rect(surf, (120, 124, 196), (LARGEUR - 28, 12, nuit_pleine, 3))
 
     if jeu["finie"]:
         ecrire(surf, "LA NUIT", 48, 40, (255, 255, 255), GROSSE_POLICE)
