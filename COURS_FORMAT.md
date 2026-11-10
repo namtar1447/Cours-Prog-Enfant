@@ -997,8 +997,32 @@ supplémentaires, puis animation du héros.
 | **10** | Zoom lié à l'altitude, HUD vitesse + distance | Il monte *haut* — et on voit enfin où il va retomber |
 | **11** | Compteur `heure`, palettes jour/nuit, îles, saut d'océan | Le jeu a une **fin** : la nuit le rattrape |
 | **12** | États menu/jeu/game over, dict de thèmes | Menu, game over, 4 thèmes déblocables |
-| **13** | Sons, particules, screen shake | Ça devient *satisfaisant* |
+| **13** | Sons, particules, screen shake, **ailes repliées en plongeon** | Ça devient *satisfaisant* |
 | **14** | Réécriture MakeCode Arcade + `.uf2` | **Son jeu tourne sur la console** |
+
+⚠️ **Les ailes battent en permanence, y compris pendant le plongeon — c'est voulu, ne
+pas « corriger » avant la leçon 13.** Observé par le père en jouant la leçon 09 le
+2026-11-10. Ce n'est pas un bug : `animation += VITESSE_AILES` s'exécute à chaque image
+sans regarder le bouton, et le prototype de référence fait pareil (il ne fait varier que la
+*vitesse* du battement, `0.25` au sol contre `0.12` en vol, jamais selon le bouton).
+
+Ça raconte même la prémisse du jeu : le dragonneau est *trop jeune pour voler*, il bat des
+ailes sans que ça le porte.
+
+La ligne vit dans quatre `jeu.py` (09, 09b, 10, 11) comme code fourni, et c'est Adam qui
+l'écrit en 08 (TODO 3). La changer rétroactivement réécrirait donc sa propre ligne et
+casserait la règle « `jeu.py` = l'état terminé de la leçon précédente ».
+
+**Décision du père (2026-11-10)** : en faire un exercice de la **leçon 13**, dans la version
+« ailes figées pendant le plongeon » :
+
+```python
+image = SPRITES[1] if bouton else SPRITES[int(animation) % 2]
+```
+
+`SPRITES[1]` est l'image « aile basse ». Elle se lit comme des ailes rabattues, mais ça
+reste une image de mi-battement : un **troisième motif 16 × 12 « ailes repliées »** serait
+plus propre, et c'est un bon exercice de pixel art pour Adam.
 
 ⚠️ La leçon **09b** est la plus dense du bloc : elle contient la formule d'atterrissage,
 qui est le cœur du jeu. Prévoir qu'elle déborde et garder la leçon 10 courte en
