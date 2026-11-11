@@ -137,6 +137,49 @@ Label court + bloc de code uniquement — pas de paragraphe explicatif.
 </div>
 ```
 
+#### Cartes « Boîte à outils » — une par TODO (depuis la leçon 11)
+
+Chaque TODO du fichier d'Adam a sa carte dans la présentation, **avec le même
+numéro**, placée dans la section qui enseigne la notion. C'est là qu'il va chercher
+le modèle quand il bloque.
+
+```html
+<div class="card outils">
+  <div class="label outils">🧰 Boîte à outils — TODO 3</div>
+  <div class="code-block" style="margin-top:10px;">…</div>
+</div>
+```
+
+- TODO « **Écris :** » → la carte montre la **ligne exacte**, avec un « avant /
+  après » si Adam modifie une ligne fournie.
+- TODO « **Complète :** » (à trous) → la carte montre un exemple **d'un autre jeu**
+  (`score >= 100`, `vie < 0`) : Adam adapte, il ne recopie pas tel quel.
+- Une clé de dictionnaire qui ne ressemble pas au nom de la variable
+  (`couleur_sol` ↔ `"collines"`) → un petit tableau dans la carte.
+
+#### Cartes « Explique à papa » — à la fin de chaque section de notion
+
+Deux ou trois questions sur **à quoi ça sert**, pas sur le calcul. Le but :
+qu'Adam puisse le dire avec ses mots, même s'il ne sait pas refaire le calcul.
+
+```html
+<div class="card papa">
+  <div class="label papa">🗣️ Explique à papa</div>
+  <ul>…</ul>
+</div>
+```
+
+CSS : `.card.outils` bordure `#89dceb`, `.card.papa` bordure `#f5c2e7` (voir
+`lecon_11/presentation.html`).
+
+#### Les mesures et les justifications vont dans `CORRECTION.md`
+
+La présentation montre **comment** et **à quoi ça sert**. Les chiffres de
+calibrage (« immobile 42 % du temps », « 3,7 px contre 2,6 ») sont pour le père ;
+à l'écran, ils prennent la place de l'explication dont Adam a besoin. Exception :
+une mesure qui sert un quiz ou une discussion de game design (« le bon joueur
+meurt plus tôt et va plus loin »).
+
 #### Ce qui reste complet (ne pas raccourcir)
 
 - **Blocs de code** : complets, syntaxe colorée avec `<span>`, fond `#13131f`
@@ -216,11 +259,51 @@ if __name__ == "__main__":
 > quand `tests.py` importe le fichier comme module — ce qui évite toute duplication.
 
 ### Règles pour les TODO
-- Décrire **ce que le code doit faire**, jamais **comment l'écrire**
-- Maximum **5 TODO** par exercice
+- Maximum **5 TODO** par exercice (un TODO peut avoir deux étapes, `3a` / `3b`)
 - Laisser suffisamment d'espace vide entre les TODO pour que l'apprenant écrive
 - Un commentaire `# --- EXEMPLE ---` précède toujours la partie à compléter
 - Ne jamais donner la réponse dans l'exemple si elle est identique à ce qu'on demande
+
+### Doser la difficulté d'un TODO — leçons apprises (2026-11-11)
+
+**Ce qui s'est passé.** Jusqu'à la leçon 09b, Adam avançait surtout seul. La leçon
+10 a été trop dure : il ne savait pas quoi écrire, et le père a dû faire presque
+tout avec lui. Il n'a avancé qu'en découvrant qu'il pouvait **recopier le résumé de
+fin de leçon**. La leçon 11 bloquait de la même façon et a été refaite.
+
+**Le diagnostic.** Les maths en elles-mêmes passent. Ce qui bloque, c'est de :
+
+1. **combiner** plusieurs équations dans une même ligne
+   (`part = min(1.0, (h - SEUIL) / (HAUT - SEUIL))`) ;
+2. **inventer** la ligne à partir d'une phrase (« proportionnellement »,
+   « 1 + 0.35 fois plus vite »), alors qu'en 09/09b la consigne la donnait
+   (« Modèle : », « Écris : ») ;
+3. **ne pas pouvoir tester** : le code fourni utilisait une variable que seul
+   le dernier TODO créait, donc le jeu plantait (`NameError`) jusqu'à la fin ;
+4. **plafonds et planchers** avec `min` / `max` : mal compris dès la leçon 10.
+
+Adam sait **adapter une ligne qu'il a sous les yeux**. Le format le lui permet
+désormais officiellement.
+
+**Les règles qui en découlent** (appliquées depuis la refonte de la leçon 11) :
+
+| # | Règle | Comment |
+|---|---|---|
+| 1 | **Un TODO = une idée = une ou deux lignes** | Si la ligne combine deux équations, l'une des deux est fournie (`fois_plus_vite = 1 + FACTEUR_ILE * ile`) ou le TODO est coupé en `a` / `b`. |
+| 2 | **Une seule nouvelle équation à écrire par leçon**, au plus | Les autres sont fournies, ou cachées dans une fonction qu'il **appelle** (`melanger(...)`) : appeler une fonction, c'est le niveau de la leçon 04. |
+| 3 | **Chaque TODO a son modèle visible** | « Écris : » + la ligne, ou « Complète : » + une ligne à trous (`if heure >= ___:`), plus sa carte « Boîte à outils » (section 1). |
+| 4 | **Le jeu tourne après chaque TODO** | Le code fourni ne dépend jamais d'une variable que crée un TODO. Sinon : une **valeur par défaut** fournie, qu'Adam **modifie** (`couleur_ciel = THEME["ciel"]` → `melanger(...)`). Vérifier en lançant le jeu avec 0, 1, 2… TODO faits. |
+| 5 | **Une ligne « ▶ Teste : »** par TODO | Ce qu'il doit voir à l'écran. Si l'effet est invisible, ajouter un retour visible dans le code fourni (« + jour ! »), ou le **dire honnêtement** (« rien de nouveau à voir, c'est normal »). |
+| 6 | **Un « Pourquoi ? » d'une phrase** dans chaque TODO | À quoi ça sert dans le jeu, pas comment ça calcule. |
+| 7 | **Pas de `min` / `max` à écrire** | Un plancher s'écrit avec un `if` (leçon 02) : `if heure < 0.0: heure = 0.0`. `min` / `max` restent permis dans le code fourni. |
+| 8 | **L'ordre des TODO suit la leçon, pas le fichier** | L'en-tête du fichier le dit, et explique Ctrl+F pour trouver « TODO 3 ». |
+| 9 | **Des nombres ronds pour expliquer** | Moitiés et quarts (4 cuillères), 200 et 40 plutôt que 134 et 42. Pas de nombres négatifs dans une explication s'il y a moyen de les éviter : `jour × (1 − part) + nuit × part` plutôt que `jour + (nuit − jour) × part`. |
+
+**Ce que ça remplace.** L'ancienne règle « décrire ce que le code doit faire, jamais
+comment l'écrire » reste vraie pour les exercices de **logique** (une boucle, une
+condition, un algorithme) : là, chercher la ligne *est* l'exercice. Elle ne
+s'applique plus aux **formules** du bloc 2 : là, la compétence visée est de savoir
+à quoi la formule sert et où la mettre, pas de la redécouvrir.
 
 ### Niveaux de difficulté des exercices dans une leçon
 1. **Exercice 1** — guidé : structure fournie, l'apprenant remplit les trous
@@ -378,7 +461,10 @@ dans la section **Résumé** de `presentation.html`.
 ## 6. Conventions globales
 
 ### Langue et ton
-- Tout le contenu est en **français**
+- Tout le contenu est en **français québécois** naturel : phrases simples et
+  directes, sujet-verbe-complément. Pas de tournures imagées à la française
+  (« c'est heure qui tient la cuillère » → « l'heure change le nombre de
+  cuillères »). En cas de doute, la version la plus plate est la bonne.
 - Les mots-clés Python restent en anglais (`print`, `if`, `for`, etc.)
 - Ton **encourageant et direct** — s'adresser à "toi" (tutoiement)
 - Éviter le jargon adulte ; utiliser des analogies du quotidien d'un enfant de 9 ans
@@ -474,10 +560,14 @@ Quand tu génères ou modifies du contenu pour ce cours, respecte ces règles :
 1. **Toujours consulter ce fichier** avant de créer quoi que ce soit
 2. **Un fichier à la fois** — ne pas générer toute une leçon d'un coup sans valider le premier fichier
 3. **Tester mentalement** : s'assurer que les exercices sont réalisables par un enfant de 9 ans en moins de 15 minutes chacun
-4. **Pas de solutions dans les exercices** — les `TODO` ne doivent jamais contenir de code solution en commentaire
+4. **Pas de solutions dans les exercices de logique** — pour les formules du bloc 2, voir
+   « Doser la difficulté d'un TODO » (section 2) : là, la ligne est donnée ou à trous
 5. **Le fichier `CORRECTION.md` est séparé** et doit être rappelé à chaque leçon générée
 6. **Respecter la palette de couleurs exacte** définie dans la section HTML
 7. **Signaler** si une leçon risque de dépasser 2 heures au total
+8. **Lancer le jeu après chaque TODO** (bloc 2) — avec 0, puis 1, puis 2… TODO faits,
+   dans l'ordre. Aucun ne doit planter ; noter dans `CORRECTION.md` ce que chaque
+   étape montre à l'écran
 
 ### Commande type pour démarrer une leçon
 > "Crée la leçon 01 du cours selon COURS_FORMAT.md. Commence par `presentation.html`, attends ma validation avant de générer les exercices."

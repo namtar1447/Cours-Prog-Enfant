@@ -158,6 +158,39 @@
       border: 1px solid rgba(255,255,255,.15); margin-bottom: 4px;
     }
 
+    .card.outils { border-left: 4px solid #89dceb; }
+    .label.outils { background: rgba(137,220,235,.2); color: #89dceb; }
+    .card.papa   { border-left: 4px solid #f5c2e7; }
+    .label.papa  { background: rgba(245,194,231,.2); color: #f5c2e7; }
+
+    .cuilleres { display: flex; gap: 12px; justify-content: center; margin: 14px 0 6px; }
+    .cuillere {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.25);
+    }
+    .choix { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .choix .demo-btn.secondary.actif { background: var(--accent); color: white; }
+    .calcul {
+      font-family: 'Courier New', monospace; font-size: .95em;
+      margin: 16px auto 0; border-collapse: collapse;
+    }
+    .calcul th { color: var(--muted); font-weight: normal; font-size: .85em; padding: 0 10px 6px; }
+    .calcul td { padding: 4px 10px; text-align: right; white-space: nowrap; }
+    .calcul td:first-child { text-align: left; color: var(--muted); }
+    .calcul b { color: var(--accent2); }
+    .machine {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      flex-wrap: wrap; font-size: .92em; margin-top: 6px;
+    }
+    .machine .entree {
+      background: #13131f; border: 1px solid rgba(124,106,247,.3);
+      border-radius: 8px; padding: 6px 10px;
+    }
+    .machine .rouage {
+      background: var(--accent); color: white; border-radius: 8px;
+      padding: 8px 14px; font-family: 'Courier New'; font-weight: bold;
+    }
+
     .quiz-block {
       background: var(--surface); border-radius: 12px;
       padding: 20px 24px; margin: 24px 0;
@@ -276,8 +309,17 @@
   </div>
 
   <div class="code-block">
-<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span> <span class="op">*</span> (<span class="num">1</span> <span class="op">+</span> <span class="var">FACTEUR_ILE</span> <span class="op">*</span> <span class="var">ile</span>)
-<span class="cm"># île 0 : vitesse normale · île 1 : 1,35× · île 2 : 1,70× …</span></div>
+<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span>
+<span class="cm"># à chaque image, heure grandit d'un tout petit peu</span></div>
+
+  <div class="card info">
+    <div class="label code">Pourquoi un si petit nombre ?</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>VITESSE_NUIT</strong> &nbsp;— 0.00015, à chaque image</li>
+      <li><strong>60 images</strong> &nbsp;— à chaque seconde</li>
+      <li><strong>Résultat</strong> &nbsp;— presque 2 minutes pour arriver à 1.0</li>
+    </ul>
+  </div>
 
   <div class="demo-box">
     <div class="label demo">Démo — fais tomber la nuit à la main</div>
@@ -301,6 +343,39 @@
       <li><strong>La jauge</strong> &nbsp;— en haut à droite : ton compte à rebours</li>
     </ul>
   </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — l'interrupteur</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🔌 <code style="color:var(--accent2)">jeu["finie"]</code> &nbsp;→&nbsp; un interrupteur : <code>False</code> = on joue, <code>True</code> = c'est fini</span>
+      <span>🌑 <strong>heure arrive à 1.0</strong> &nbsp;→&nbsp; on met l'interrupteur à <code>True</code>, et tout s'arrête</span>
+    </div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 1</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># dans la partie « 3. LA NUIT » — écris-la telle quelle</span>
+<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span></div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 2</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># un AUTRE jeu : la partie est gagnée quand le score arrive à 100</span>
+<span class="kw">if</span> <span class="var">score</span> <span class="op">&gt;=</span> <span class="num">100</span>:
+    <span class="var">jeu</span>[<span class="str">"gagnee"</span>] <span class="op">=</span> <span class="kw">True</span>
+
+<span class="cm"># toi : la partie est finie quand heure arrive à 1.0</span></div>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>Pourquoi <code>VITESSE_NUIT</code> est un si petit nombre ?</li>
+      <li>Qu'est-ce que ça veut dire, <code>jeu["finie"] = True</code> ?</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -311,22 +386,62 @@
   </div>
 
   <div class="card analogy">
-    <div class="label analogy">Analogie — la gouache</div>
+    <div class="label analogy">Analogie — le pot de peinture</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
-      <span>🎨 <strong>Un quart de noir</strong> &nbsp;→&nbsp; trois quarts de la couleur de jour</span>
-      <span>🔢 <strong>Trois nombres</strong> &nbsp;→&nbsp; rouge, vert, bleu : on mélange les trois pareil</span>
+      <span>🥄 <strong>4 cuillères</strong> dans le pot &nbsp;→&nbsp; des cuillères de jour, des cuillères de nuit</span>
+      <span>🌗 <strong>Plus de nuit</strong> &nbsp;→&nbsp; une couleur plus foncée <span style="color:var(--muted)">(mais pas noire d'un coup)</span></span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — combien de cuillères de nuit ?</div>
+
+    <div class="cuilleres" id="cu-cuilleres"></div>
+
+    <div class="choix" id="cu-choix">
+      <button class="demo-btn secondary" onclick="cuilleresDraw(0)">0 de nuit</button>
+      <button class="demo-btn secondary" onclick="cuilleresDraw(1)">1 de nuit</button>
+      <button class="demo-btn secondary" onclick="cuilleresDraw(2)">2 de nuit</button>
+      <button class="demo-btn secondary" onclick="cuilleresDraw(3)">3 de nuit</button>
+      <button class="demo-btn secondary" onclick="cuilleresDraw(4)">4 de nuit</button>
+    </div>
+
+    <div class="pastilles">
+      <div class="pastille"><i id="cu-jour"></i>de jour<br>(200, 160, 240)</div>
+      <div class="pastille"><i id="cu-mix"></i>dans le pot</div>
+      <div class="pastille"><i id="cu-nuit"></i>de nuit<br>(40, 40, 80)</div>
+    </div>
+
+    <table class="calcul" id="cu-calcul"></table>
+    <div class="readout" id="cu-code"></div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">La machine — déjà écrite dans themes.py</div>
+    <div class="machine">
+      <span class="entree">couleur de jour</span>
+      <span class="entree">couleur de nuit</span>
+      <span class="entree">part de nuit</span>
+      <span>→</span>
+      <span class="rouage">melanger</span>
+      <span>→</span>
+      <span class="entree">la couleur du moment</span>
     </div>
   </div>
 
   <div class="code-block">
 <span class="kw">def</span> <span class="fn">melanger</span>(<span class="var">couleur_jour</span>, <span class="var">couleur_nuit</span>, <span class="var">part_de_nuit</span>):
-    <span class="var">melange</span> <span class="op">=</span> []
-    <span class="kw">for</span> <span class="var">jour</span>, <span class="var">nuit</span> <span class="kw">in</span> <span class="fn">zip</span>(<span class="var">couleur_jour</span>, <span class="var">couleur_nuit</span>):
-        <span class="var">melange</span>.<span class="fn">append</span>(<span class="kw">int</span>(<span class="var">jour</span> <span class="op">+</span> (<span class="var">nuit</span> <span class="op">-</span> <span class="var">jour</span>) <span class="op">*</span> <span class="var">part_de_nuit</span>))
-    <span class="kw">return</span> <span class="fn">tuple</span>(<span class="var">melange</span>)</div>
+    <span class="var">part_de_jour</span> <span class="op">=</span> <span class="num">1</span> <span class="op">-</span> <span class="var">part_de_nuit</span>
+
+    <span class="var">rouge</span> <span class="op">=</span> <span class="var">couleur_jour</span>[<span class="num">0</span>] <span class="op">*</span> <span class="var">part_de_jour</span> <span class="op">+</span> <span class="var">couleur_nuit</span>[<span class="num">0</span>] <span class="op">*</span> <span class="var">part_de_nuit</span>
+    <span class="var">vert</span>  <span class="op">=</span> <span class="var">couleur_jour</span>[<span class="num">1</span>] <span class="op">*</span> <span class="var">part_de_jour</span> <span class="op">+</span> <span class="var">couleur_nuit</span>[<span class="num">1</span>] <span class="op">*</span> <span class="var">part_de_nuit</span>
+    <span class="var">bleu</span>  <span class="op">=</span> <span class="var">couleur_jour</span>[<span class="num">2</span>] <span class="op">*</span> <span class="var">part_de_jour</span> <span class="op">+</span> <span class="var">couleur_nuit</span>[<span class="num">2</span>] <span class="op">*</span> <span class="var">part_de_nuit</span>
+
+    <span class="kw">return</span> (<span class="fn">round</span>(<span class="var">rouge</span>), <span class="fn">round</span>(<span class="var">vert</span>), <span class="fn">round</span>(<span class="var">bleu</span>))
+<span class="cm"># Tu ne l'écris pas : tu t'en sers.</span></div>
 
   <div class="demo-box">
-    <div class="label demo">Démo — la même recette, sur une couleur</div>
+    <div class="label demo">Démo — dans ton jeu, l'heure change le nombre de cuillères</div>
 
     <div class="pastilles">
       <div class="pastille"><i id="pa-jour"></i>de jour</div>
@@ -334,17 +449,18 @@
       <div class="pastille"><i id="pa-nuit"></i>de nuit</div>
     </div>
 
-    <div class="readout" id="pa-rgb">(58, 138, 68)</div>
+    <div class="readout" id="pa-rgb">(70, 151, 78)</div>
 
     <div class="slider-row">
-      <span>part de nuit</span>
+      <span>heure</span>
       <input type="range" id="pa-slider" min="0" max="100" value="0" oninput="pastilleDraw()">
       <span id="pa-val">0.00</span>
     </div>
+    <div class="readout" style="color:var(--muted); font-size:.85em;">0.00 = midi &nbsp;·&nbsp; 0.50 = moitié-moitié &nbsp;·&nbsp; 1.00 = nuit noire</div>
   </div>
 
   <div class="quiz-block">
-    <h4>Question 1 — <code>melanger((100, 0, 0), (0, 0, 200), 0.5)</code> donne quoi ?</h4>
+    <h4>Question 1 — Moitié-moitié : <code>melanger((100, 0, 0), (0, 0, 200), 0.5)</code> donne quoi ?</h4>
     <div class="quiz-options" id="q1-opts">
       <div class="quiz-option">(100, 0, 200)</div>
       <div class="quiz-option">(50, 0, 100)</div>
@@ -352,6 +468,34 @@
       <div class="quiz-option">(150, 0, 300)</div>
     </div>
     <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 3</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># avant : il fait toujours midi</span>
+<span class="var">couleur_ciel</span>  <span class="op">=</span> <span class="var">THEME</span>[<span class="str">"ciel"</span>]
+
+<span class="cm"># après : la nuit tombe</span>
+<span class="var">couleur_ciel</span>  <span class="op">=</span> <span class="fn">melanger</span>(<span class="var">THEME</span>[<span class="str">"ciel"</span>], <span class="var">THEME</span>[<span class="str">"ciel_nuit"</span>], <span class="var">heure</span>)</div>
+    <table class="summary-table">
+      <thead><tr><th>La ligne</th><th>Couleur de jour</th><th>Couleur de nuit</th></tr></thead>
+      <tbody>
+        <tr><td>couleur_ciel</td><td><code>"ciel"</code></td><td><code>"ciel_nuit"</code></td></tr>
+        <tr><td>couleur_sol</td><td><code>"collines"</code> ⚠</td><td><code>"collines_nuit"</code></td></tr>
+        <tr><td>couleur_ombre</td><td><code>"ombre"</code></td><td><code>"ombre_nuit"</code></td></tr>
+        <tr><td>couleur_eau</td><td><code>"eau"</code></td><td><code>"eau_nuit"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>Pourquoi le ciel ne devient pas noir d'un seul coup ?</li>
+      <li>2 cuillères de nuit sur 4 : la couleur ressemble à quoi ?</li>
+      <li>Qu'est-ce que <code>heure</code> a à voir avec les cuillères ?</li>
+    </ul>
   </div>
 </div>
 
@@ -384,7 +528,43 @@
 
   <div class="card warning">
     <div class="label" style="background:rgba(249,226,175,.2); color:var(--warning)">⚠ L'océan ne peut pas te tuer — mais il se mérite</div>
-    <p style="font-size:.92em; color:var(--muted); margin-top:6px;">La longue descente te donne de la vitesse, la petite remontée te lance. Mesuré : en plongeant dans les descentes, le saut dure <strong>2 secondes</strong> et tu franchis la mer d'un trait, <strong>à chaque fois</strong>. En jouant mollement, tu n'as pas assez de vitesse : tu tombes à l'eau et tu rames jusqu'à la plage d'en face. Tu ne perds pas la partie — tu perds du temps, et le temps, c'est de la nuit.</p>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Tu plonges dans la longue descente</strong> &nbsp;→ un saut de 2 secondes, tu passes d'un coup</li>
+      <li><strong>Tu joues mollement</strong> &nbsp;→ tu tombes à l'eau et tu rames jusqu'à la plage</li>
+      <li><strong>Tu ne perds pas la partie</strong> &nbsp;→ tu perds du temps, donc du jour</li>
+    </ul>
+  </div>
+
+  <div class="card info">
+    <div class="label code">La nuit va plus vite d'île en île</div>
+    <table class="summary-table" style="margin-top:6px;">
+      <thead><tr><th>Île</th><th>fois_plus_vite</th><th>La nuit…</th></tr></thead>
+      <tbody>
+        <tr><td>1re</td><td>1.00</td><td>vitesse normale</td></tr>
+        <tr><td>2e</td><td>1.35</td><td>un peu plus vite</td></tr>
+        <tr><td>3e</td><td>1.70</td><td>encore plus vite</td></tr>
+        <tr><td>4e</td><td>2.05</td><td>deux fois plus vite</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted); font-size:.88em; margin-top:8px;"><code>fois_plus_vite</code> est déjà calculé pour toi dans <code>jeu.py</code>.</p>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 4</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># avant (ta ligne du TODO 1)</span>
+<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span>
+
+<span class="cm"># après : la même ligne, multipliée</span>
+<span class="var">heure</span> <span class="op">+=</span> <span class="var">VITESSE_NUIT</span> <span class="op">*</span> <span class="var">fois_plus_vite</span></div>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>Pourquoi la nuit va plus vite sur les dernières îles ?</li>
+      <li>Qu'est-ce qui arrive si tu tombes à l'eau ?</li>
+    </ul>
   </div>
 </div>
 
@@ -395,10 +575,6 @@
     <h2>Repousser la nuit</h2>
   </div>
 
-  <div class="code-block">
-<span class="kw">if</span> <span class="var">vx</span> <span class="op">&gt;</span> <span class="var">avant</span>:                     <span class="cm"># l'atterrissage lui a RENDU de la vitesse</span>
-    <span class="var">heure</span> <span class="op">=</span> <span class="fn">max</span>(<span class="num">0.0</span>, <span class="var">heure</span> <span class="op">-</span> <span class="var">BONUS_ATTERRISSAGE</span> <span class="op">*</span> (<span class="var">vx</span> <span class="op">-</span> <span class="var">avant</span>))</div>
-
   <div class="card info">
     <div class="label code">Deux façons de gagner du jour</div>
     <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
@@ -406,6 +582,19 @@
       <li><strong>Bien viser</strong> &nbsp;— chaque atterrissage gagnant rend un peu de jour</li>
       <li><strong>Le gros morceau</strong> &nbsp;— c'est la vitesse. Le bonus est une prime.</li>
     </ul>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Le gain, avec des nombres</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="var">gain</span> <span class="op">=</span> <span class="var">vx</span> <span class="op">-</span> <span class="var">avant</span>     <span class="cm"># déjà écrit pour toi</span></div>
+    <table class="summary-table">
+      <thead><tr><th>Vitesse avant le choc</th><th>Après le choc</th><th>gain</th><th>La nuit…</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td>6</td><td>2</td><td>recule un peu ☀️</td></tr>
+        <tr><td>5</td><td>3</td><td>-2</td><td>ne bouge pas</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="demo-box">
@@ -445,6 +634,37 @@
       <div class="quiz-option">parce qu'on voit mieux</div>
     </div>
     <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le plancher</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏠 <strong>Un plancher</strong> &nbsp;→&nbsp; on ne passe pas à travers</span>
+      <span>🕛 <strong>heure = 0.0</strong> &nbsp;→&nbsp; c'est midi. Plus clair que midi, ça n'existe pas</span>
+      <span>🦺 <strong>Une ceinture de sécurité</strong> &nbsp;→&nbsp; presque toujours inutile… sauf le jour où elle sert</span>
+    </div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 5</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># TODO 5a — écris-la telle quelle</span>
+<span class="kw">if</span> <span class="var">gain</span> <span class="op">&gt;</span> <span class="num">0</span>:
+    <span class="var">heure</span> <span class="op">-=</span> <span class="var">gain</span> <span class="op">*</span> <span class="var">BONUS_ATTERRISSAGE</span>
+
+<span class="cm"># TODO 5b — un AUTRE plancher : la vie ne descend jamais sous 0</span>
+<span class="kw">if</span> <span class="var">vie</span> <span class="op">&lt;</span> <span class="num">0</span>:
+    <span class="var">vie</span> <span class="op">=</span> <span class="num">0</span>
+
+<span class="cm"># toi : heure ne descend jamais sous 0.0</span></div>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>C'est quoi, un « gain » de vitesse ? Donne un exemple avec des nombres.</li>
+      <li>Pourquoi l'heure a besoin d'un plancher ?</li>
+    </ul>
   </div>
 </div>
 
@@ -489,39 +709,39 @@
     </thead>
     <tbody>
       <tr>
-        <td>heure += VITESSE * (1 + f * ile)</td>
-        <td>La nuit avance, et accélère par palier</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">+35 % par île</td>
+        <td>heure += VITESSE_NUIT</td>
+        <td>TODO 1 — La nuit avance un peu à chaque image</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">60 fois par seconde</td>
       </tr>
       <tr>
-        <td>numero_ile(x)</td>
-        <td>Sur quelle île on est — un <code>//</code> déguisé</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">4 000 px par île</td>
-      </tr>
-      <tr>
-        <td>max(0.0, heure - bonus)</td>
-        <td>Rendre du jour sans jamais passer sous zéro</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">bel atterrissage</td>
+        <td>if heure &gt;= 1.0:</td>
+        <td>TODO 2 — La fin : on met l'interrupteur à True</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">jeu["finie"] = True</td>
       </tr>
       <tr>
         <td>melanger(jour, nuit, heure)</td>
-        <td>Le fondu entre deux couleurs</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.0 → jour, 1.0 → nuit</td>
+        <td>TODO 3 — Le mélange de peinture entre deux couleurs</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.25 → 3 cuillères de jour, 1 de nuit</td>
       </tr>
       <tr>
-        <td>zip(a, b)</td>
-        <td>Parcourir deux listes en même temps</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">rouge avec rouge…</td>
+        <td>VITESSE_NUIT * fois_plus_vite</td>
+        <td>TODO 4 — La nuit va plus vite sur les îles lointaines</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">2e île : 1.35 fois</td>
+      </tr>
+      <tr>
+        <td>if gain &gt; 0:</td>
+        <td>TODO 5a — Un bel atterrissage rend un peu de jour</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">« + jour ! »</td>
+      </tr>
+      <tr>
+        <td>if heure &lt; 0.0:</td>
+        <td>TODO 5b — Le plancher : jamais sous 0.0</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">la ceinture de sécurité</td>
       </tr>
       <tr>
         <td>THEME["ciel"]</td>
         <td>Un thème, c'est un dictionnaire — leçon 05</td>
         <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">themes.py</td>
-      </tr>
-      <tr>
-        <td>jeu["finie"] = True</td>
-        <td>Un état qu'on retient, et qui change tout</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">plus rien ne bouge</td>
       </tr>
     </tbody>
   </table>
@@ -530,8 +750,9 @@
     <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
     <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
       <li>Un seul nombre, <code style="color:var(--accent2)">heure</code>, suffit à raconter toute une partie</li>
-      <li>Un fondu, c'est <strong>départ + (arrivée − départ) × part</strong></li>
+      <li>Un fondu, c'est un <strong>mélange de peinture</strong> : un peu de jour, un peu de nuit, et la part change doucement</li>
       <li>La difficulté peut monter <strong>toute seule</strong>, sans écrire de niveaux</li>
+      <li>Un plancher, c'est une <strong>ceinture de sécurité</strong> : on le met même si on pense ne pas en avoir besoin</li>
       <li>Une bonne fin se <strong>voit venir</strong> et se <strong>repousse</strong></li>
     </ul>
   </div>
@@ -550,7 +771,7 @@
     <li><span class="box"></span><span>Les collines sont plus serrées sur la 2<sup>e</sup> île que sur la 1<sup>re</sup></span></li>
     <li><span class="box"></span><span>Quand il fait nuit noire : « LA NUIT T'A RATTRAPÉ », et tout s'arrête</span></li>
     <li><span class="box"></span><span>R relance une partie toute neuve</span></li>
-    <li><span class="box"></span><span>Un bel atterrissage éclaircit très légèrement le ciel</span></li>
+    <li><span class="box"></span><span>Après un bel atterrissage, « + jour ! » s'affiche en haut à gauche</span></li>
   </ul>
 
   <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
@@ -619,7 +840,7 @@ const THEME = {
 const COULEUR_PLAQUE = [14, 14, 24];
 
 function melanger(jour, nuit, part) {
-  return jour.map((v, i) => Math.round(v + (nuit[i] - v) * part));
+  return jour.map((v, i) => Math.round(v * (1 - part) + nuit[i] * part));
 }
 function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
 
@@ -881,6 +1102,48 @@ function pastilleDraw() {
 }
 
 // ════════════════════════════════════════════════════════════
+// Section 2 — les cuillères : un seul calcul, avec des nombres ronds
+// ════════════════════════════════════════════════════════════
+const CU_JOUR = [200, 160, 240], CU_NUIT = [40, 40, 80];
+const CU_FRACTION = ['tout', '¾', '½', '¼', 'rien'];   // part de jour, selon k
+const CU_FRACTION_NUIT = ['rien', '¼', '½', '¾', 'tout'];
+const CU_CUILLERES = n => n + (n > 1 ? ' cuillères' : ' cuillère');
+
+function cuilleresDraw(k) {
+  const part = k / 4;
+  const pot = melanger(CU_JOUR, CU_NUIT, part);
+
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    const c = i < 4 - k ? CU_JOUR : CU_NUIT;
+    html += '<i class="cuillere" style="background:' + css(c) + '"></i>';
+  }
+  document.getElementById('cu-cuilleres').innerHTML = html;
+
+  document.querySelectorAll('#cu-choix .demo-btn').forEach(
+    (b, i) => b.classList.toggle('actif', i === k));
+  document.getElementById('cu-jour').style.background = css(CU_JOUR);
+  document.getElementById('cu-nuit').style.background = css(CU_NUIT);
+  document.getElementById('cu-mix').style.background  = css(pot);
+
+  const noms = ['rouge', 'vert', 'bleu'];
+  let lignes = '<tr><th></th><th>' + CU_CUILLERES(4 - k) + ' de jour</th><th></th><th>'
+             + CU_CUILLERES(k) + ' de nuit</th><th></th></tr>';
+  for (let i = 0; i < 3; i++) {
+    const dj = CU_JOUR[i] * (1 - part), dn = CU_NUIT[i] * part;
+    lignes += '<tr><td>' + noms[i] + '</td>'
+            + '<td>' + CU_FRACTION[k] + ' de ' + CU_JOUR[i] + ' = ' + dj + '</td>'
+            + '<td>+</td>'
+            + '<td>' + CU_FRACTION_NUIT[k] + ' de ' + CU_NUIT[i] + ' = ' + dn + '</td>'
+            + '<td>→ <b>' + pot[i] + '</b></td></tr>';
+  }
+  document.getElementById('cu-code').innerHTML =
+      '<span style="color:var(--muted)">melanger(jour, nuit, ' + part.toFixed(2)
+      + ')</span> &nbsp;→&nbsp; <b>(' + pot.join(', ') + ')</b>';
+  document.getElementById('cu-calcul').innerHTML = lignes;
+}
+
+// ════════════════════════════════════════════════════════════
 // Section 3 — trois îles vues de loin
 // ════════════════════════════════════════════════════════════
 const cvI = document.getElementById('cv-iles'), ctxI = cvI.getContext('2d');
@@ -1013,8 +1276,8 @@ function makeQuiz(optsSelector, fbId, correctIdx, hints) {
 }
 
 makeQuiz('#q1-opts', 'q1-feedback', 1, [
-  'On mélange chaque nombre séparément : le rouge avec le rouge, etc.',
-  'Rouge : 100 + (0 - 100) × 0.5 = 50. Bleu : 0 + (200 - 0) × 0.5 = 100.'
+  'Moitié-moitié : la moitié du nombre de jour, plus la moitié du nombre de nuit. Une couleur à la fois.',
+  'Rouge : la moitié de 100 = 50, plus la moitié de 0 = 0. Bleu : la moitié de 0 = 0, plus la moitié de 200 = 100.'
 ]);
 
 makeQuiz('#q2-opts', 'q2-feedback', 1, [
@@ -1026,6 +1289,7 @@ makeQuiz('#q2-opts', 'q2-feedback', 1, [
 // État de départ
 // ════════════════════════════════════════════════════════════
 nuitDraw();
+cuilleresDraw(1);
 pastilleDraw();
 ilesDraw();
 jeuReset();

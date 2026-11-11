@@ -42,13 +42,20 @@ DRAGONNEAU = {
 
 
 def melanger(couleur_jour, couleur_nuit, part_de_nuit):
-    """Fabrique la couleur du moment.
+    """Fabrique la couleur du moment, comme on mélange de la peinture.
 
-    part_de_nuit = 0.0  → la couleur de jour
-    part_de_nuit = 1.0  → la couleur de nuit
-    part_de_nuit = 0.5  → pile entre les deux
+    part_de_nuit = 0.0   → que de la peinture de jour
+    part_de_nuit = 0.25  → 3 cuillères de jour pour 1 cuillère de nuit
+    part_de_nuit = 0.5   → moitié-moitié
+    part_de_nuit = 1.0   → que de la peinture de nuit
+
+    Une couleur, c'est trois nombres (rouge, vert, bleu) : on fait le
+    même mélange sur chacun des trois.
     """
-    melange = []
-    for jour, nuit in zip(couleur_jour, couleur_nuit):
-        melange.append(int(jour + (nuit - jour) * part_de_nuit))
-    return tuple(melange)
+    part_de_jour = 1 - part_de_nuit
+
+    rouge = couleur_jour[0] * part_de_jour + couleur_nuit[0] * part_de_nuit
+    vert  = couleur_jour[1] * part_de_jour + couleur_nuit[1] * part_de_nuit
+    bleu  = couleur_jour[2] * part_de_jour + couleur_nuit[2] * part_de_nuit
+
+    return (round(rouge), round(vert), round(bleu))

@@ -11,6 +11,14 @@
 # TROIS FICHIERS maintenant : jeu.py, terrain.py et themes.py.
 #            Ils doivent rester dans le même dossier.
 #
+# DANS QUEL ORDRE : fais les TODO dans l'ordre, 1, 2, 3, 4, 5.
+#            Ils ne sont pas rangés dans l'ordre dans le fichier :
+#            pour trouver le TODO 3, fais Ctrl+F et tape « TODO 3 ».
+#            Le jeu marche après CHAQUE TODO : teste à chaque fois.
+#
+# BESOIN D'AIDE : chaque TODO a sa carte « Boîte à outils » dans
+#            presentation.html, avec le même numéro.
+#
 # COMMENT TESTER : Clique sur ▶
 #            Puis regarde l'écran et coche la liste « Ça doit faire ça »
 #            dans presentation.html.
@@ -69,22 +77,35 @@ COULEUR_PLAQUE = (14, 14, 24)    # derrière le texte, pour qu'il reste lisible
 # ============================================================
 # --- EXEMPLE (ne pas modifier) ---
 # ============================================================
-# MÉLANGER deux nombres selon une part, c'est la recette de tous
-# les fondus — couleurs, sons, lumière.
+# MÉLANGER deux couleurs, c'est comme mélanger deux peintures.
+# On le fait d'abord sur UN seul nombre : 200 le jour, 40 la nuit.
 
-depart, arrivee = 10, 50
+jour, nuit = 200, 40
 
-part = 0.0
-# 10 + (50 - 10) * 0.0  →  10      (tout au départ)
+# 4 cuillères de jour, 0 de nuit  (part_de_nuit = 0.0)
+#     tout le 200                          →  200
+#
+# 3 cuillères de jour, 1 de nuit  (part_de_nuit = 0.25)
+#     les trois quarts de 200 = 150
+#     un quart de 40          =  10
+#     150 + 10                             →  160
+#
+# 2 cuillères de chaque           (part_de_nuit = 0.5)
+#     la moitié de 200 = 100
+#     la moitié de 40  =  20
+#     100 + 20                             →  120
+#
+# 1 cuillère de jour, 3 de nuit   (part_de_nuit = 0.75)
+#     un quart de 200          =  50
+#     les trois quarts de 40   =  30
+#     50 + 30                              →   80
+#
+# 0 cuillère de jour, 4 de nuit   (part_de_nuit = 1.0)
+#     tout le 40                           →   40
 
-part = 0.25
-# 10 + (50 - 10) * 0.25 →  20      (un quart du chemin)
-
-part = 1.0
-# 10 + (50 - 10) * 1.0  →  50      (tout à l'arrivée)
-
-# C'est exactement ce que fait melanger() dans themes.py,
-# mais sur les trois nombres d'une couleur à la fois.
+# Une couleur, c'est TROIS nombres (rouge, vert, bleu) : la fonction
+# melanger() de themes.py fait ce calcul sur les trois. Tu n'as pas à
+# l'écrire — seulement à t'en servir (TODO 3).
 
 
 # ============================================================
@@ -198,7 +219,7 @@ def nouvelle_partie():
         "camera_x": 0.0, "y": depart_y, "vy": 0.0, "vx": 2.0,
         "animation": 0.0, "au_sol_avant": True,
         "zoom": 1.0, "visee": float(VISEE_BAS), "camera_y": depart_y - VISEE_BAS,
-        "heure": 0.0, "finie": False,
+        "heure": 0.0, "finie": False, "soleil": 0,
     }
 
 
@@ -246,16 +267,47 @@ while en_marche:
                 vx = (vx + vy * pente) / (1 + pente * pente)
                 vx = max(VX_MIN, min(VX_MAX, vx))
 
+                # (déjà écrit) Ce que le choc lui a fait GAGNER en vitesse.
+                # Si le nombre est négatif, c'est qu'il en a PERDU.
+                gain = vx - avant
+                heure_avant = heure
+
                 # --- TON TOUR ---
 
-                # TODO 1 : Récompense les beaux atterrissages.
-                #          Si sa vitesse a AUGMENTÉ pendant le choc
-                #          (compare avec `avant`), rends-lui un peu de
-                #          jour : enlève BONUS_ATTERRISSAGE fois ce qu'il
-                #          vient de gagner, à `heure`.
-                #          Et jamais en dessous de 0.0.
-                #          (utilise max)
+                # TODO 5a : Un bel atterrissage rend un peu de jour.
+                #           Pourquoi ? Pour récompenser le joueur qui vise bien.
+                #
+                #           S'il a gagné de la vitesse, fais reculer l'heure.
+                #           Écris :
+                #
+                #               if gain > 0:
+                #                   heure -= gain * BONUS_ATTERRISSAGE
+                #
+                #           ▶ Teste : après un beau plongeon, « + jour ! »
+                #             s'affiche en haut à gauche.
 
+
+                # TODO 5b : Le plancher. L'heure ne descend jamais sous 0.0.
+                #           Pourquoi ? 0.0, c'est midi. Plus clair que midi,
+                #           ça n'existe pas : les couleurs deviendraient
+                #           bizarres.
+                #
+                #           Si heure est plus petite que 0.0, remets-la à 0.0.
+                #           Complète :
+                #
+                #               if heure < ___:
+                #                   heure = ___
+                #
+                #           ▶ Teste : rien de nouveau à voir, et c'est normal.
+                #             Le plancher, c'est comme une ceinture de
+                #             sécurité : presque toujours, elle ne sert à
+                #             rien. Mais le jour où elle sert…
+                #             Vérifie juste que le jeu marche encore.
+
+
+                # (déjà écrit) Si ton TODO 5 a rendu du jour, on l'affiche.
+                if heure < heure_avant:
+                    jeu["soleil"] = 45           # pendant 45 images
 
             vy = pente * vx
 
@@ -272,21 +324,46 @@ while en_marche:
 
         # --- 3. LA NUIT ------------------------------------
 
-        # TODO 2 : Trouve sur quelle île il se trouve.
-        #          terrain.py sait déjà le faire : numero_ile(x).
-        #          Appelle ta variable `ile`.
+        # (déjà écrit) Sur quelle île est-il ? 0 pour la première.
+        ile = numero_ile(camera_x)
+
+        # (déjà écrit) Plus il est loin, plus la nuit va vite :
+        #   1re île → 1.00 fois   2e île → 1.35 fois   3e île → 1.70 fois
+        fois_plus_vite = 1 + FACTEUR_ILE * ile
+
+        # TODO 1 : Fais tomber la nuit, un tout petit peu à chaque image.
+        #          Pourquoi ? Sans ça, la partie ne finit jamais.
+        #          Écris :
+        #
+        #              heure += VITESSE_NUIT
+        #
+        #          ▶ Teste : la jauge de nuit, en haut à droite, se
+        #            remplit tranquillement.
 
 
-        # TODO 3 : Fais avancer la nuit.
-        #          À chaque image, `heure` gagne VITESSE_NUIT —
-        #          mais FACTEUR_ILE de plus par île déjà franchie.
-        #          Île 0 : vitesse normale.
-        #          Île 1 : 1 + 0.35 fois plus vite. Île 2 : 1 + 0.70. …
+        # TODO 4 : Fais aller la nuit plus vite sur les îles lointaines.
+        #          Pourquoi ? Pour que le jeu devienne plus dur à mesure
+        #          qu'on avance.
+        #          Dans ta ligne du TODO 1, juste au-dessus, multiplie
+        #          VITESSE_NUIT par fois_plus_vite. Elle devient :
+        #
+        #              heure += VITESSE_NUIT * fois_plus_vite
+        #
+        #          ▶ Teste : après le premier océan, la jauge de nuit se
+        #            remplit plus vite qu'avant.
 
-
-        # TODO 4 : Termine la partie quand il fait complètement nuit.
-        #          `heure` vaut 1.0 ou plus → range True dans
-        #          jeu["finie"].
+        # TODO 2 : Termine la partie quand il fait nuit noire.
+        #          Pourquoi ? C'est la fin du jeu : la nuit t'a rattrapé.
+        #          Si heure arrive à 1.0 (ou plus), mets True dans
+        #          jeu["finie"]. Complète :
+        #
+        #              if heure >= ___:
+        #                  jeu["finie"] = ___
+        #
+        #          ▶ Teste : « LA NUIT T'A RATTRAPE » s'affiche et tout
+        #            s'arrête. C'est long à attendre (presque 2 minutes) :
+        #            pour essayer plus vite, mets VITESSE_NUIT = 0.002 en
+        #            haut du fichier… et remets 0.00015 après !
 
 
     # --- 4. LA CAMÉRA (déjà écrit — leçon 10) --------------
@@ -318,21 +395,38 @@ while en_marche:
 
     # --- 5. DESSINER ---------------------------------------
 
-    # TODO 5 : Fabrique les couleurs du moment.
-    #          Pour chacune des quatre, mélange la version de jour et la
-    #          version de nuit du THEME, selon `heure`.
-    #          Modèle : melanger(THEME["ciel"], THEME["ciel_nuit"], heure)
-    #          Appelle-les : couleur_ciel, couleur_sol, couleur_ombre,
-    #          couleur_eau.
-    #          (les clés de nuit sont : ciel_nuit, collines_nuit,
-    #           ombre_nuit, eau_nuit)
+    # TODO 3a : Fais tomber la nuit sur le CIEL.
+    #           Pourquoi ? Le ciel, c'est l'horloge du jeu : en le
+    #           regardant, le joueur sait combien de temps il lui reste.
+    #
+    #           Pour l'instant, la ligne couleur_ciel (ci-dessous) prend
+    #           toujours la couleur de jour. Change-la pour qu'elle devienne :
+    #
+    #               couleur_ciel = melanger(THEME["ciel"], THEME["ciel_nuit"], heure)
+    #
+    #           Pourquoi `heure` ? Parce que heure, c'est justement la
+    #           part de nuit : 0.0 au début de la partie, 1.0 à la fin.
+    #
+    #           ▶ Teste : le ciel fonce petit à petit… mais les collines
+    #             restent vertes comme à midi. C'est normal ! → TODO 3b
 
+    # TODO 3b : Fais pareil pour les trois autres lignes.
+    #           Même recette : seuls les noms entre guillemets changent.
+    #           Attention : couleur_sol va avec "collines" et "collines_nuit".
+    #           Boîte à outils : la carte « TODO 3 » de la présentation.
+    #
+    #           ▶ Teste : tout le paysage s'assombrit en même temps.
+
+    couleur_ciel  = THEME["ciel"]
+    couleur_sol   = THEME["collines"]
+    couleur_ombre = THEME["ombre"]
+    couleur_eau   = THEME["eau"]
 
     surf.fill(couleur_ciel)
 
     # (déjà écrit) Les étoiles, quand la nuit est bien avancée.
     if heure > DEBUT_ETOILES:
-        force = (heure - DEBUT_ETOILES) / (1.0 - DEBUT_ETOILES)
+        force = min(1.0, (heure - DEBUT_ETOILES) / (1.0 - DEBUT_ETOILES))
         for etoile_x, etoile_y, eclat in ETOILES:
             surf.set_at((etoile_x, etoile_y),
                         melanger(couleur_ciel, (255, 255, 255), force * eclat))
@@ -363,6 +457,11 @@ while en_marche:
     # --- 6. LE HUD (déjà écrit) ----------------------------
     ecrire(surf, f"{int(camera_x / 10)} m", 3, 2)
     ecrire(surf, f"ile {numero_ile(camera_x) + 1}", 3, 11)
+
+    # « + jour ! » pendant quelques images, après un atterrissage gagnant
+    if jeu["soleil"] > 0:
+        jeu["soleil"] -= 1
+        ecrire(surf, "+ jour !", 3, 20, (255, 214, 102))
 
     pygame.draw.rect(surf, COULEUR_PLAQUE, (LARGEUR - 30, 2, 28, 15))
 
