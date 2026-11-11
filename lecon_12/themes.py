@@ -94,7 +94,7 @@ DAUPHIN = {
 
 LUNE = {
     "nom": "Lune",
-    "distance": 4500,
+    "distance": 4000,
     "gravite": 0.037,            # sur la Lune, on plane plus longtemps !
 
     # --- de jour : le ciel est toujours noir dans l'espace ---

@@ -1006,7 +1006,7 @@ départ par couleur, une clarté visée à midi et à minuit. Valeurs complètes
 | 🐉 **Dragonneau** | 0 m | 0.06 | — |
 | 🎿 **Ski** | 1 000 m | 0.06 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
 | 🐬 **Dauphin** | 2 000 m | 0.06 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
-| 🚀 **Lune** | 4 500 m | **0.037** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
+| 🚀 **Lune** | 4 000 m | **0.037** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
 
 ⚠️ **Deux couleurs voisines ne doivent jamais changer d'ordre de clarté au cours de la
 journée** (le ciel plus clair que les collines à midi, mais plus sombre à minuit) : elles se
@@ -1041,14 +1041,14 @@ Les thèmes se débloquent au **record** (la meilleure distance, gardée dans `r
 justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 20 parties par joueur
 automatique, avec le réglage recalibré (§ 9.10, une île = 760 m) :
 
-| | Distance (médiane) | Ski 1 000 | Dauphin 2 000 | Lune 4 500 |
+| | Distance (médiane) | Ski 1 000 | Dauphin 2 000 | Lune 4 000 |
 |---|---|---|---|---|
-| ne jamais appuyer | 550 m | — | — | — |
-| tenir tout le temps | 918 m | — | — | — |
-| plonge, maladroit | 1 085 m | 62 % | — | — |
-| plonge, précis | 1 968 m | 100 % | 31 % | — |
-| vise son atterrissage, avec erreurs | 4 804 m | 100 % | 100 % | 75 % |
-| vise bien | 5 648 m | 100 % | 100 % | 100 % |
+| ne jamais appuyer | 577 m | — | — | — |
+| tenir tout le temps | 920 m | — | — | — |
+| plonge, maladroit | 1 017 m | 56 % | — | — |
+| plonge, précis | 1 965 m | 100 % | 44 % | — |
+| vise son atterrissage, avec erreurs | 4 209 m | 100 % | 100 % | 81 % |
+| vise bien | 5 006 m | 100 % | 100 % | 100 % |
 
 ⚠️ **Un seuil atteignable sans effort est gratuit.** Chaque seuil est placé juste au-dessus
 d'une stratégie à dépasser : Ski au-dessus de « tenir tout le temps ». Une première version
@@ -1193,10 +1193,11 @@ en trois passes : mesures de l'original, puis deux essais du père :
   6,0 (une 1re passe à 0,036 a été jugée « trop flottante ») ;
 - **îles de 7 600 px**, collines creuses de 50 (+4 par île, max 70), raccourcies de 8 px
   par île (min 150) ;
-- **forme d'île** : plateau de départ de 100 px ; chaque île **commence par une descente** ;
-  elle finit par une **grande descente de 1 700 px** (180 px de dénivelé, 22 petites bosses
-  qui s'effacent — « au moins 20 collines, 4 s à très bonne vitesse ») et une **bosse
-  arrondie** de 60 px ; la mer est bien plus bas, l'île suivante se dresse comme une falaise ;
+- **forme d'île** : plateau de départ de 80 px ; chaque île **commence par une descente** ;
+  elle finit par une **grande descente de 1 700 px** (200 px de dénivelé, raide au début et
+  longue à la fin, 22 petites bosses qui s'effacent — « au moins 20 collines, 4 s à très bonne
+  vitesse ») et une **bosse arrondie** de 70 px, large de 320 ; la mer est bien plus bas,
+  l'île suivante se dresse comme une falaise ;
 - **le grand saut réussit toujours** (comme l'original). Il part du **sommet de la bosse**,
   seulement si on a roulé dessus : arriver en l'air d'un vol précédent ne relance rien ;
 - **caméra** : en vol haut, elle garde le **fond des vallées** à l'écran (repère lissé) ; en fin
@@ -1209,10 +1210,10 @@ en trois passes : mesures de l'original, puis deux essais du père :
 
 | Joueur automatique | Îles | Durée |
 |---|---|---|
-| ne jamais appuyer | 0,72 | 1 min 16 |
+| ne jamais appuyer | 0,76 | 1 min 16 |
 | tenir tout le temps | 1,21 | 1 min 25 |
-| vise son atterrissage, avec erreurs | 6,2 | 3 min 08 |
-| vise bien | 7,5 | 3 min 21 |
+| vise son atterrissage, avec erreurs | 5,5 | 3 min 05 |
+| vise bien | 6,6 | 3 min 02 |
 
 ⚠️ **Récompenser « un atterrissage qui fait gagner de la vitesse » ne suffit pas** : plonger en
 vol puis retomber dans une pente en fait gagner, et « tenir tout le temps » le fait sans le

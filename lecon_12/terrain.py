@@ -32,17 +32,17 @@ R_DESCENTE = 0.62                # part de la colline occupée par la descente
 POINTE = 2.2                     # netteté du sommet
 
 LONGUEUR_ILE = 7600              # une île fait 7 600 px, soit 760 m
-PLATEAU = 100                    # le plat du tout début de la partie
 RIVE = 80                        # la rive qui sort de l'eau, au début d'une île
+                                 # (sur l'île 1 : le petit plateau du départ)
 OCEAN = 500                      # la mer à franchir au bout
 
 L_DESCENTE = 1700                # la grande descente de fin d'île…
-PIED = 226                       # … jusqu'où elle plonge
+PIED = 246                       # … jusqu'où elle plonge
 N_BOSSES = 22                    # ses petites bosses, qui s'effacent
 H_BOSSES = 14                    # la hauteur des premières bosses
 
-L_TREMPLIN = 200                 # la bosse de la fin d'île
-H_TREMPLIN = 60                  # de combien elle remonte
+L_TREMPLIN = 320                 # la bosse de la fin d'île
+H_TREMPLIN = 70                  # de combien elle remonte
 NIVEAU_EAU = PIED + 20           # la mer, sous le pied de la descente
 
 ZONE_COLLINES = LONGUEUR_ILE - RIVE - L_DESCENTE - L_TREMPLIN - OCEAN
@@ -120,10 +120,6 @@ def hauteur_du_sol(x):
     # ---- 2. les collines ordinaires ----
     if dans_ile < DEBUT_DESCENTE:
         dd = dans_ile - RIVE
-        if ile == 0:
-            dd -= PLATEAU - RIVE         # le plateau du départ
-            if dd < 0:
-                return CRETE
         i = int(dd // longueur)
         t = dd % longueur / longueur
         # un creux tiré au sort, toujours le même pour la même colline
@@ -131,9 +127,10 @@ def hauteur_du_sol(x):
         return CRETE + profil_colline(t, creux)
 
     # ---- 3. la grande descente : elle plonge, ses bosses s'effacent ----
+    # Elle plonge fort au début, puis s'allonge doucement jusqu'au pied.
     if dans_ile < DEBUT_TREMPLIN:
         part = (dans_ile - DEBUT_DESCENTE) / L_DESCENTE
-        base = CRETE + (PIED - CRETE) * (1 - math.cos(math.pi * part)) / 2
+        base = CRETE + (PIED - CRETE) * (1 - math.cos(math.pi * part ** 0.6)) / 2
         bosse = (part * N_BOSSES) % 1.0
         return base + profil_colline(bosse, H_BOSSES * (1 - part) ** 1.5)
 
