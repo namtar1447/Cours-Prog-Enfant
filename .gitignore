@@ -3,3 +3,6 @@ CORRECTION.md
 # Python
 __pycache__/
 *.py[cod]
+
+# Le record du jeu (leçon 12) : propre à chaque joueur
+record.txt

@@ -794,6 +794,12 @@ zoom = max(0.12, min(1.0, plafond, zoom))
 camera_y = y - visee / zoom
 ```
 
+⚠️ **Le `0.12` est devenu `0.06` à la leçon 12** (`ZOOM_PLANCHER` dans `partie.py`). Un très
+bon joueur vole jusqu'à 1 200 px sur les collines raides des îles 3–4, bien au-delà des
+190 px prévus ici : bloquée à 0,12, la caméra laissait le sol sortir de l'écran (1,8 % des
+images pour un expert, 9,8 % sur la Lune). À 0,06 : 0 % et 2,5 %. Le héros ne rapetisse
+pas plus (taille minimale de 6 px). Les leçons 10 et 11 gardent 0,12.
+
 **Le plafond rend la perte du sol impossible par construction**, quels que soient les
 réglages de confort. On peut donc régler la rampe purement à la sensation. Il est actif
 ~20 % du temps (uniquement en vol haut) et reste continu — aucun à-coup visible.
@@ -974,8 +980,13 @@ THEME_DRAGON = {
 ```
 
 Un thème peut changer des valeurs de **gameplay**, pas seulement des couleurs — le thème
-Lune baisse `gravite` à 0.08. C'est le moment où Adam comprend qu'une donnée peut piloter
+Lune baisse `gravite` à **0.05**. C'est le moment où Adam comprend qu'une donnée peut piloter
 le comportement.
+
+⚠️ Cette section disait 0.08 : c'est devenu la gravité **normale** à la leçon 09b, donc la Lune
+n'aurait rien changé. Mesuré à 0,05 (leçon 12) : vols 30 % plus hauts, distance quasi
+identique (joueur moyen 1 761 m dans les deux cas). La Lune se joue autrement sans fausser
+les records. À 0,04, les vols d'un bon joueur montent à 2 500 px : trop.
 
 ### Chaque couleur existe en deux versions : jour et nuit
 
@@ -987,14 +998,21 @@ rendu mélange les deux selon `heure`. Valeurs du thème Dragonneau, calibrées 
 | **jour** | `134,187,243` | `70,151,78` | `48,118,63` | `53,129,195` | `222,88,54` | `162,50,38` | `25,24,37` |
 | **nuit** | `42,59,76` | `15,32,16` | `5,13,7` | `16,39,60` | `169,67,41` | `121,37,29` | `7,7,11` |
 
-Les autres thèmes (Ski, Lune, Dauphin — leçon 12) se construisent de la même façon : on part
-des teintes ci-dessous et on fixe les mêmes clartés cibles.
+Les trois autres thèmes ont été calculés à la leçon 12 de la même façon : une teinte de
+départ par couleur, une clarté visée à midi et à minuit. Valeurs complètes dans
+`lecon_12/themes.py`, mesures dans `lecon_12/CORRECTION.md`.
 
-| Thème | teinte ciel | teinte collines | teinte héros | Particularité |
-|---|---|---|---|---|
-| 🎿 **Ski** | `28,44,86` → `96,140,190` | `238,244,252` / `168,190,220` | `240,80,70` | — |
-| 🚀 **Lune** | `8,8,20` → `40,36,64` | `150,148,158` / `92,90,102` | `238,238,238` | `gravite` 0.08 |
-| 🐬 **Dauphin** | `20,60,110` → `88,170,210` | `30,110,170` / `18,72,120` | `190,225,240` | — |
+| Thème | Débloqué à | `gravite` | Particularité |
+|---|---|---|---|
+| 🐉 **Dragonneau** | 0 m | 0.08 | — |
+| 🎿 **Ski** | 1 300 m | 0.08 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
+| 🐬 **Dauphin** | 1 650 m | 0.08 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
+| 🚀 **Lune** | 1 800 m | **0.05** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
+
+⚠️ **Deux couleurs voisines ne doivent jamais changer d'ordre de clarté au cours de la
+journée** (le ciel plus clair que les collines à midi, mais plus sombre à minuit) : elles se
+croiseraient forcément à une heure donnée, avec un écart de 0. Seule exception : le héros,
+qui a son contour.
 
 #### La règle de lisibilité, mesurée
 
@@ -1020,8 +1038,20 @@ Même raison pour le HUD : ombre d'un pixel sous le texte, plaque sombre derriè
 fois sur 39, donc des diagonales parfaitement régulières. `random.Random(graine)` donne la
 même reproductibilité sans la grille, et un éclat tiré par étoile évite l'effet pochoir.
 
-Les thèmes se débloquent à la distance parcourue — ça justifie le système au lieu d'en
-faire un gadget.
+Les thèmes se débloquent au **record** (la meilleure distance, gardée dans `record.txt`) — ça
+justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 30 parties par niveau
+de joueur automatique :
+
+| | Distance | Ski 1 300 | Dauphin 1 650 | Lune 1 800 |
+|---|---|---|---|---|
+| ne jamais appuyer | 1 257 m | — | — | — |
+| tenir tout le temps | 1 614 m | ✅ | — | — |
+| débutant | 1 583 m (médiane) | 100 % | 13 % | 3 % |
+| moyen | 1 761 m | 100 % | 83 % | 33 % |
+| expert | 1 946 m | 100 % | 100 % | 100 % |
+
+⚠️ **Tout seuil sous 1 257 m est gratuit** : on l'atteint sans toucher au bouton. Chaque seuil
+est placé juste au-dessus d'une stratégie à dépasser (ne rien faire, puis tenir tout le temps).
 
 ### 9.7 Fichiers d'une leçon du bloc 2
 
@@ -1058,7 +1088,13 @@ grossir un `jeu.py` de 300 lignes (illisible à 9 ans, et pénible à faire déf
 | 07 → 09b | `jeu.py` seul (~120 lignes) |
 | 10 | `jeu.py` + `terrain.py` |
 | 11 | + `themes.py` |
-| 12 | + `effets.py` |
+| 12 | `jeu.py` **seul modifié** ; + `partie.py` (le jeu 07–11 en fonctions) et `ecrans.py` (menu, fin, record), fournis |
+| 13 | + `effets.py` |
+
+⚠️ **À la leçon 12, `jeu.py` a été vidé** : 489 lignes en leçon 11, 219 en leçon 12. Le jeu des
+leçons 07 à 11 est rangé dans `partie.py` (`nouvelle_partie`, `avancer`, `dessiner_partie`,
+`distance`), et `jeu.py` ne garde que les écrans et les TODO. Vérifié : même distance
+(2 362 m) et nuit noire à la même image qu'en leçon 11. Les leçons suivantes partent de cette structure.
 
 Chaque module correspond à un *namespace* MakeCode — le découpage sert le port autant que
 la lisibilité, et il réactive la leçon 06 (modules et `import`).

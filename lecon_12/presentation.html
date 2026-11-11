@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leçon 12 — Un vrai jeu : le menu, la fin, et quatre thèmes</title>
+  <style>
+    :root {
+      --bg:      #1e1e2e;
+      --surface: #2a2a3e;
+      --accent:  #7c6af7;
+      --accent2: #f7a26a;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --success: #a6e3a1;
+      --error:   #f38ba8;
+      --warning: #f9e2af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    #progress-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 20px;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .progress-item {
+      padding: 4px 12px; border-radius: 20px; font-size: 13px;
+      color: var(--muted); border: 1px solid var(--muted);
+      cursor: default; transition: all 0.3s; white-space: nowrap;
+    }
+    .progress-item.active {
+      color: var(--accent); border-color: var(--accent);
+      background: rgba(124,106,247,.15); font-weight: bold;
+    }
+    .back-btn {
+      color: var(--muted); text-decoration: none; font-size: 13px;
+      padding: 4px 12px; border: 1px solid var(--muted); border-radius: 20px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+    .section { margin-bottom: 80px; scroll-margin-top: 70px; }
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .section-number {
+      background: var(--accent); color: white;
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 18px; flex-shrink: 0;
+    }
+
+    h1 { font-size: 2.2em; color: var(--accent); margin-bottom: 16px; }
+    h2 { font-size: 1.6em; color: var(--text); }
+    h3 { font-size: 1.2em; color: var(--accent2); margin: 24px 0 10px; }
+
+    .card {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 16px 0;
+    }
+    .card.analogy { border-left: 4px solid var(--accent2); }
+    .card.info    { border-left: 4px solid var(--accent); }
+    .card.warning { border-left: 4px solid var(--warning); }
+    .card.success { border-left: 4px solid var(--success); }
+
+    .label {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .8em; font-weight: bold; margin-bottom: 8px;
+    }
+    .label.analogy { background: rgba(247,162,106,.2); color: var(--accent2); }
+    .label.code    { background: rgba(124,106,247,.2); color: var(--accent); }
+    .label.demo    { background: rgba(166,227,161,.2); color: var(--success); }
+
+    .code-block {
+      background: #13131f; border-radius: 10px; padding: 16px 20px;
+      margin: 16px 0; font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 1.9; overflow-x: auto; white-space: pre-wrap;
+      border: 1px solid rgba(124,106,247,.2);
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: var(--success); }
+    .num { color: var(--warning); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--accent2); }
+    .mod { color: #89dceb; }
+
+    .demo-btn {
+      background: var(--accent); color: white; border: none;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 15px; font-family: 'Segoe UI', sans-serif;
+      margin: 4px; transition: all .2s;
+    }
+    .demo-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .demo-btn.secondary {
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    }
+
+    .hold-btn {
+      display: block; width: 100%; max-width: 360px; margin: 0 auto;
+      padding: 16px 20px; border-radius: 14px; cursor: pointer;
+      background: rgba(247,162,106,.12); border: 2px solid var(--accent2);
+      color: var(--accent2); font-size: 1.05em; font-weight: bold;
+      user-select: none; text-align: center;
+      transition: transform .06s, background .12s;
+    }
+    .hold-btn.down { background: var(--accent2); color: #1e1e2e; transform: translateY(3px); }
+
+    .demo-box {
+      background: #13131f; border-radius: 12px; padding: 24px;
+      margin: 16px 0; border: 1px solid rgba(124,106,247,.3);
+    }
+    canvas {
+      display: block; margin: 0 auto; max-width: 100%;
+      border: 2px solid rgba(124,106,247,.4); border-radius: 6px;
+      background: #101020; image-rendering: pixelated;
+    }
+    .readout {
+      font-family: 'Courier New'; font-size: .95em; text-align: center;
+      margin-top: 12px; color: var(--text);
+    }
+    .readout b { color: var(--accent2); }
+    .slider-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 12px;
+      font-size: .85em; color: var(--muted);
+    }
+    .slider-row span:first-child { width: 120px; flex-shrink: 0; }
+    .slider-row span:last-child  { width: 60px; text-align: right;
+      color: var(--accent2); font-family: 'Courier New'; }
+    input[type=range] {
+      -webkit-appearance: none; flex: 1; height: 6px;
+      background: rgba(124,106,247,.3); border-radius: 3px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+    }
+
+    .pastilles { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .pastille { text-align: center; font-family: 'Courier New'; font-size: .75em; color: var(--muted); }
+    .pastille i {
+      display: block; width: 54px; height: 32px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.15); margin-bottom: 4px;
+    }
+
+    .card.outils { border-left: 4px solid #89dceb; }
+    .label.outils { background: rgba(137,220,235,.2); color: #89dceb; }
+    .card.papa   { border-left: 4px solid #f5c2e7; }
+    .label.papa  { background: rgba(245,194,231,.2); color: #f5c2e7; }
+
+    .cuilleres { display: flex; gap: 12px; justify-content: center; margin: 14px 0 6px; }
+    .cuillere {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.25);
+    }
+    .choix { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .choix .demo-btn.secondary.actif { background: var(--accent); color: white; }
+    .calcul {
+      font-family: 'Courier New', monospace; font-size: .95em;
+      margin: 16px auto 0; border-collapse: collapse;
+    }
+    .calcul th { color: var(--muted); font-weight: normal; font-size: .85em; padding: 0 10px 6px; }
+    .calcul td { padding: 4px 10px; text-align: right; white-space: nowrap; }
+    .calcul td:first-child { text-align: left; color: var(--muted); }
+    .calcul b { color: var(--accent2); }
+    .machine {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      flex-wrap: wrap; font-size: .92em; margin-top: 6px;
+    }
+    .machine .entree {
+      background: #13131f; border: 1px solid rgba(124,106,247,.3);
+      border-radius: 8px; padding: 6px 10px;
+    }
+    .machine .rouage {
+      background: var(--accent); color: white; border-radius: 8px;
+      padding: 8px 14px; font-family: 'Courier New'; font-weight: bold;
+    }
+
+    .quiz-block {
+      background: var(--surface); border-radius: 12px;
+      padding: 20px 24px; margin: 24px 0;
+      border: 1px solid rgba(124,106,247,.3);
+    }
+    .quiz-block h4 { color: var(--accent); margin-bottom: 14px; font-size: 1em; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .quiz-option {
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(124,106,247,.2); background: rgba(124,106,247,.05);
+      transition: all .2s; font-family: 'Courier New'; font-size: .95em;
+    }
+    .quiz-option:hover  { border-color: var(--accent); background: rgba(124,106,247,.12); }
+    .quiz-option.correct { border-color: var(--success); background: rgba(166,227,161,.15); color: var(--success); }
+    .quiz-option.wrong   { border-color: var(--error);   background: rgba(243,139,168,.1);  color: var(--error); }
+    .quiz-feedback { margin-top: 10px; font-size: .9em; min-height: 24px; }
+    .quiz-feedback.ok  { color: var(--success); }
+    .quiz-feedback.err { color: var(--error); }
+
+    .summary-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .95em; }
+    .summary-table th {
+      background: rgba(124,106,247,.2); color: var(--accent);
+      padding: 10px 14px; text-align: left; font-size: .85em;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .summary-table td {
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top;
+    }
+    .summary-table td:first-child { font-family: 'Courier New'; color: var(--accent2); font-weight: bold; }
+    .summary-table tr:last-child td { border-bottom: none; }
+
+    .checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: rgba(166,227,161,.06); border: 1px solid rgba(166,227,161,.2);
+      cursor: pointer; transition: all .2s;
+    }
+    .checklist li:hover { border-color: var(--success); }
+    .checklist li .box {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--muted); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; color: var(--bg); transition: all .2s;
+    }
+    .checklist li.done .box { background: var(--success); border-color: var(--success); }
+    .checklist li.done .box::after { content: '✓'; font-weight: bold; }
+    .checklist li.done { background: rgba(166,227,161,.14); border-color: var(--success); }
+
+    .scroll-hint {
+      text-align: center; color: var(--muted); font-size: .85em;
+      padding: 20px 0; animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+    /* --- leçon 12 --- */
+    .etats { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .etat {
+      width: 92px; padding: 12px 6px; border-radius: 12px; text-align: center;
+      background: var(--surface); border: 2px solid rgba(124,106,247,.3);
+      font-family: 'Courier New'; font-size: 1em; line-height: 1.6; transition: all .25s;
+    }
+    .etat.actif { border-color: var(--accent2); background: rgba(247,162,106,.15); transform: scale(1.08); }
+    .fleche, .fleche-retour {
+      text-align: center; font-size: .78em; color: var(--muted); line-height: 1.4; transition: color .25s;
+    }
+    .fleche small, .fleche-retour small { color: #89dceb; }
+    .fleche.actif, .fleche-retour.actif { color: var(--accent2); font-weight: bold; }
+    .fleche-retour { margin-top: 10px; }
+
+    .cadenas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+    .cadenas span {
+      padding: 6px 12px; border-radius: 8px; font-size: .9em;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .cadenas span small { color: var(--muted); }
+    .cadenas .ouvert { background: rgba(166,227,161,.12); border-color: var(--success); }
+    .cadenas .ferme  { background: rgba(243,139,168,.08); color: var(--muted); }
+
+    .calcul-theme {
+      font-family: 'Courier New', monospace; font-size: .92em; line-height: 1.9;
+      margin: 14px auto 0; max-width: 640px;
+    }
+    .calcul-theme b { color: var(--accent2); }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar">
+  <a href="../index.html" class="back-btn">← Plan</a>
+  <span class="progress-item active" id="prog-0">0. Intro</span>
+  <span class="progress-item" id="prog-1">1. Les écrans</span>
+  <span class="progress-item" id="prog-2">2. Le record</span>
+  <span class="progress-item" id="prog-3">3. Les thèmes</span>
+  <span class="progress-item" id="prog-4">4. Design</span>
+  <span class="progress-item" id="prog-5">5. Résumé</span>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-0">
+  <h1>🐉 Leçon 12 — Un vrai jeu</h1>
+
+  <div class="card info">
+    <div class="label code">Objectifs</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+      <li>Découper ton jeu en <strong>écrans</strong> : le menu, la partie, la fin</li>
+      <li>Changer d'écran en changeant <strong>une seule variable</strong></li>
+      <li>Garder ton <strong>record</strong>, même quand tu fermes le jeu</li>
+      <li>Quatre <strong>thèmes</strong> à débloquer — et un qui change la façon de jouer</li>
+    </ul>
+  </div>
+
+  <p style="color:var(--muted); margin-top: 12px;">⏱ Durée estimée : 20 min de présentation · 45–60 min d'atelier</p>
+
+  <div class="card analogy" style="margin-top: 22px;">
+    <div class="label analogy">Ton jeu a déménagé</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📦 <code style="color:var(--accent2)">partie.py</code> &nbsp;→&nbsp; ton code des leçons 07 à 11, rangé dans des fonctions</span>
+      <span>🖼️ <code style="color:var(--accent2)">ecrans.py</code> &nbsp;&nbsp;→&nbsp; le dessin du menu et de l'écran de fin</span>
+      <span>🐉 <code style="color:var(--accent2)">jeu.py</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; le tien : court, et seulement ce qui est nouveau</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="cm"># tout ton jeu des leçons 07 à 11, en trois appels :</span>
+<span class="var">jeu</span> <span class="op">=</span> <span class="fn">nouvelle_partie</span>()                 <span class="cm"># une partie toute neuve</span>
+<span class="fn">avancer</span>(<span class="var">jeu</span>, <span class="var">bouton</span>, <span class="var">GRAVITE</span>)          <span class="cm"># une image de jeu</span>
+<span class="fn">dessiner_partie</span>(<span class="var">surf</span>, <span class="var">jeu</span>, <span class="var">theme</span>)      <span class="cm"># le dessin</span></div>
+
+  <p style="color:var(--muted); font-size:.92em;">Des fonctions, comme à la leçon 04. On n'a plus besoin de voir ce qu'il y a dedans pour s'en servir.</p>
+
+  <div class="scroll-hint">▼</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2>Les écrans</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le feu de circulation</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🚦 <strong>Un feu</strong> &nbsp;→&nbsp; rouge, jaune ou vert : une seule couleur à la fois</span>
+      <span>🎮 <strong>Ton jeu</strong> &nbsp;→&nbsp; <code style="color:var(--accent2)">"menu"</code>, <code style="color:var(--accent2)">"partie"</code> ou <code style="color:var(--accent2)">"fin"</code> : un seul écran à la fois</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="var">ecran</span> <span class="op">=</span> <span class="str">"menu"</span>              <span class="cm"># on commence par le menu</span>
+
+<span class="kw">if</span> <span class="var">ecran</span> <span class="op">==</span> <span class="str">"menu"</span>:
+    <span class="fn">dessiner_menu</span>(<span class="var">surf</span>, <span class="var">choix</span>, <span class="var">record</span>)
+<span class="kw">elif</span> <span class="var">ecran</span> <span class="op">==</span> <span class="str">"partie"</span>:
+    <span class="fn">dessiner_partie</span>(<span class="var">surf</span>, <span class="var">jeu</span>, <span class="var">theme</span>)</div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — appuie sur les boutons, regarde la variable</div>
+
+    <div class="etats">
+      <div class="etat" id="et-menu">📋<br>menu</div>
+      <div class="fleche" id="fl-1">ESPACE<br>→<br><small>TODO 1</small></div>
+      <div class="etat" id="et-partie">🐉<br>partie</div>
+      <div class="fleche" id="fl-2">nuit noire<br>→<br><small>TODO 2</small></div>
+      <div class="etat" id="et-fin">🌙<br>fin</div>
+    </div>
+    <div class="fleche-retour" id="fl-3">← ESPACE, retour au menu &nbsp;<small>TODO 3</small></div>
+
+    <div class="readout" style="font-size:1.15em; margin-top:14px;"><span style="color:var(--muted)">ecran =</span> <b id="et-valeur">"menu"</b></div>
+    <div class="readout" id="et-message" style="color:var(--muted);">On choisit un thème avec ← et →.</div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="etatTouche('espace')">ESPACE</button>
+      <button class="demo-btn" onclick="etatTouche('nuit')">🌙 La nuit tombe</button>
+      <button class="demo-btn secondary" onclick="etatTouche('reset')">↺ Relancer le jeu</button>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Changer d'écran</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Une seule ligne</strong> &nbsp;— <code>ecran = "fin"</code></li>
+      <li><strong>À l'image suivante</strong> &nbsp;— le jeu dessine l'écran de fin</li>
+      <li><strong>Le reste</strong> &nbsp;— déjà écrit pour toi</li>
+    </ul>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 1</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># le feu : quand on appuie sur le bouton, il passe au vert</span>
+<span class="kw">if</span> <span class="var">bouton_appuye</span>:
+    <span class="var">feu</span> <span class="op">=</span> <span class="str">"vert"</span>
+
+<span class="cm"># toi : quand on appuie sur ESPACE au menu…</span>
+<span class="kw">if</span> <span class="var">evenement</span>.<span class="var">key</span> <span class="op">==</span> <span class="var">pygame</span>.<span class="var">K_SPACE</span>:
+    <span class="var">theme</span> <span class="op">=</span> <span class="var">THEMES</span>[<span class="var">choix</span>]
+    <span class="var">jeu</span> <span class="op">=</span> <span class="fn">nouvelle_partie</span>()
+    <span class="var">ecran</span> <span class="op">=</span> <span class="cm">___   ← "menu", "partie" ou "fin" ?</span></div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 2</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># un AUTRE jeu : plus de vies, on montre l'écran « perdu »</span>
+<span class="kw">if</span> <span class="var">vies</span> <span class="op">&lt;=</span> <span class="num">0</span>:
+    <span class="var">ecran</span> <span class="op">=</span> <span class="str">"perdu"</span>
+
+<span class="cm"># toi : la nuit noire, c'est quand jeu["heure"] arrive à 1.0</span></div>
+    <p style="color:var(--muted); font-size:.88em;">Pour tester sans attendre 2 minutes : la touche <strong>N</strong>, pendant la partie, fait tomber la nuit d'un coup.</p>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 3</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># un AUTRE jeu : la touche P met le jeu en pause</span>
+<span class="kw">if</span> <span class="var">evenement</span>.<span class="var">key</span> <span class="op">==</span> <span class="var">pygame</span>.<span class="var">K_p</span>:
+    <span class="var">ecran</span> <span class="op">=</span> <span class="str">"pause"</span>
+
+<span class="cm"># toi : la touche ESPACE, et on retourne au menu</span></div>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>À quoi sert la variable <code>ecran</code> ?</li>
+      <li>Qu'est-ce qui fait passer le jeu de <code>"partie"</code> à <code>"fin"</code> ?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2>Le record</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — le tableau des records</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🏆 <strong>Plus loin que le record</strong> &nbsp;→&nbsp; on efface, on écrit le nouveau</span>
+      <span>😐 <strong>Moins loin</strong> &nbsp;→&nbsp; on ne touche à rien</span>
+      <span>💾 <strong>record.txt</strong> &nbsp;→&nbsp; le tableau reste là quand tu fermes le jeu</span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — finis une partie, regarde le record</div>
+
+    <div class="slider-row">
+      <span>ta partie</span>
+      <input type="range" id="re-slider" min="0" max="2400" step="10" value="1400" oninput="recordDraw()">
+      <span id="re-val">1400 m</span>
+    </div>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button class="demo-btn" onclick="recordFin()">🌙 Fin de la partie</button>
+      <button class="demo-btn secondary" onclick="recordReset()">↺ Record à 0</button>
+    </div>
+
+    <div class="readout" style="font-size:1.1em; margin-top:14px;">record = <b id="re-record">0</b> m</div>
+    <div class="readout" id="re-message" style="color:var(--muted);">Choisis une distance, puis termine la partie.</div>
+
+    <div class="cadenas" id="re-themes"></div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 4</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># écris-la telle quelle, dans la partie « fin »</span>
+<span class="kw">if</span> <span class="fn">distance</span>(<span class="var">jeu</span>) <span class="op">&gt;</span> <span class="var">record</span>:
+    <span class="var">record</span> <span class="op">=</span> <span class="fn">distance</span>(<span class="var">jeu</span>)</div>
+    <table class="summary-table">
+      <thead><tr><th>Ta partie</th><th>Record avant</th><th>Record après</th></tr></thead>
+      <tbody>
+        <tr><td>1500</td><td>1200</td><td>1500 🏆</td></tr>
+        <tr><td>900</td><td>1200</td><td>1200</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>Ton record est 1600 m, tu fais 1400 m. Qu'est-ce qui se passe ?</li>
+      <li>Pourquoi garder le record dans un fichier ?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2>Les thèmes</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Analogie — les cartes de collection</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>📚 <code style="color:var(--accent2)">THEMES</code> &nbsp;→&nbsp; une liste : le paquet de cartes (leçon 05)</span>
+      <span>🃏 <code style="color:var(--accent2)">THEMES[3]</code> &nbsp;→&nbsp; une carte : un dictionnaire</span>
+      <span>🔎 <code style="color:var(--accent2)">THEMES[3]["gravite"]</code> &nbsp;→&nbsp; une info écrite sur la carte</span>
+    </div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — les quatre thèmes</div>
+
+    <div class="choix" id="th-choix">
+      <button class="demo-btn secondary" onclick="themeDraw(0)">Dragonneau</button>
+      <button class="demo-btn secondary" onclick="themeDraw(1)">Ski</button>
+      <button class="demo-btn secondary" onclick="themeDraw(2)">Dauphin</button>
+      <button class="demo-btn secondary" onclick="themeDraw(3)">Lune</button>
+    </div>
+
+    <canvas id="cv-theme" width="160" height="120" style="width:480px; margin-top:14px;"></canvas>
+
+    <div class="slider-row">
+      <span>heure</span>
+      <input type="range" id="th-slider" min="0" max="100" value="0" oninput="themeDraw()">
+      <span id="th-val">0.00</span>
+    </div>
+
+    <div class="calcul-theme" id="th-fiche"></div>
+  </div>
+
+  <div class="demo-box">
+    <div class="label demo">Démo — le même saut, deux gravités</div>
+    <canvas id="cv-saut" width="480" height="200"></canvas>
+    <div class="readout">
+      <span style="color:#82aaff">■</span> gravité 0.08 (les autres thèmes) &nbsp;&nbsp;
+      <span style="color:#f5c2e7">■</span> gravité 0.05 (Lune)
+    </div>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 1 — <code>THEMES[1]["nom"]</code> donne quoi ?</h4>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option">"Dragonneau"</div>
+      <div class="quiz-option">"Ski"</div>
+      <div class="quiz-option">"Dauphin"</div>
+      <div class="quiz-option">une erreur</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+
+  <div class="card outils">
+    <div class="label outils">🧰 Boîte à outils — TODO 5</div>
+    <div class="code-block" style="margin-top:10px;">
+<span class="cm"># TODO 5a — avant : la même gravité pour tout le monde</span>
+<span class="fn">avancer</span>(<span class="var">jeu</span>, <span class="var">bouton</span>, <span class="var">GRAVITE</span>)
+<span class="cm"># après : la gravité du thème</span>
+<span class="fn">avancer</span>(<span class="var">jeu</span>, <span class="var">bouton</span>, <span class="var">theme</span>[<span class="str">"gravite"</span>])
+
+<span class="cm"># TODO 5b — avant : ESPACE lance n'importe quel thème</span>
+<span class="kw">if</span> <span class="var">evenement</span>.<span class="var">key</span> <span class="op">==</span> <span class="var">pygame</span>.<span class="var">K_SPACE</span>:
+<span class="cm"># après : seulement si ton record est assez grand</span>
+<span class="kw">if</span> <span class="var">evenement</span>.<span class="var">key</span> <span class="op">==</span> <span class="var">pygame</span>.<span class="var">K_SPACE</span> <span class="kw">and</span> <span class="var">record</span> <span class="op">&gt;=</span> <span class="var">prix</span>:</div>
+    <p style="color:var(--muted); font-size:.88em;"><code>prix</code> est déjà calculé pour toi : c'est <code>THEMES[choix]["distance"]</code>, le record qu'il faut pour ce thème. Le <code>and</code>, c'est la leçon 02 : les deux doivent être vrais.</p>
+  </div>
+
+  <div class="card papa">
+    <div class="label papa">🗣️ Explique à papa</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li>Qu'est-ce qui change dans le thème Lune, à part les couleurs ?</li>
+      <li>Comment le jeu sait-il qu'un thème est verrouillé ?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2>🎮 Design de jeu — un but à atteindre</h2>
+  </div>
+
+  <div class="card analogy">
+    <div class="label analogy">Débloquer, ça sert à quoi ?</div>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
+      <span>🎯 <strong>Un but</strong> &nbsp;→&nbsp; une raison de faire « encore une partie »</span>
+      <span>📈 <strong>Une preuve</strong> &nbsp;→&nbsp; tu vois que tu t'améliores</span>
+      <span>🎁 <strong>Une surprise</strong> &nbsp;→&nbsp; la Lune ne se joue pas pareil</span>
+    </div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Mesuré — qui débloque quoi ?</div>
+    <table class="summary-table" style="margin-top:6px;">
+      <thead><tr><th>Façon de jouer</th><th>Distance</th><th>Débloque</th></tr></thead>
+      <tbody>
+        <tr><td>ne jamais appuyer</td><td>1 257 m</td><td>rien</td></tr>
+        <tr><td>tenir tout le temps</td><td>1 614 m</td><td>Ski</td></tr>
+        <tr><td>tenir en descente, en apprenant</td><td>~1 550 à 1 800 m</td><td>Ski, puis Dauphin</td></tr>
+        <tr><td>tenir en descente, bien maîtrisé</td><td>~1 950 m</td><td>les quatre</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted); font-size:.88em; margin-top:8px;">Ski 1 300 m · Dauphin 1 650 m · Lune 1 800 m</p>
+  </div>
+
+  <div class="quiz-block">
+    <h4>Question 2 — Pourquoi Ski demande 1 300 m, et pas 500 m ?</h4>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option">parce que 500, c'est un nombre trop petit</div>
+      <div class="quiz-option">parce qu'en ne touchant à rien, on fait déjà 1 257 m</div>
+      <div class="quiz-option">parce que la neige ralentit le dragonneau</div>
+      <div class="quiz-option">au hasard</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+
+  <div class="card info">
+    <div class="label code">Un bon déblocage</div>
+    <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <li><strong>Pas gratuit</strong> &nbsp;— sinon, ce n'est pas un but</li>
+      <li><strong>Pas impossible</strong> &nbsp;— sinon, on abandonne</li>
+      <li><strong>Mesuré</strong> &nbsp;— on joue, on note, on ajuste</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2>Résumé</h2>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Syntaxe</th><th>Ce que ça fait</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ecran = "menu"</td>
+        <td>L'état : quel écran on montre</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">"menu", "partie", "fin"</td>
+      </tr>
+      <tr>
+        <td>if ecran == "partie":</td>
+        <td>Chaque écran fait ses propres choses</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">leçon 02</td>
+      </tr>
+      <tr>
+        <td>ecran = ___</td>
+        <td>TODO 1, 2, 3 — Changer d'écran</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">ESPACE, nuit noire, ESPACE</td>
+      </tr>
+      <tr>
+        <td>if distance(jeu) &gt; record:</td>
+        <td>TODO 4 — Garder le meilleur</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">record.txt</td>
+      </tr>
+      <tr>
+        <td>THEMES[3]["gravite"]</td>
+        <td>Une liste de dictionnaires</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.05</td>
+      </tr>
+      <tr>
+        <td>theme["gravite"]</td>
+        <td>TODO 5a — Une donnée qui change le jeu</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">la Lune</td>
+      </tr>
+      <tr>
+        <td>and record &gt;= prix</td>
+        <td>TODO 5b — Le cadenas</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">VERROUILLE</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card success" style="margin-top: 24px;">
+    <div class="label" style="background:rgba(166,227,161,.2); color:var(--success)">À retenir</div>
+    <ul style="padding-left: 20px; display:flex; flex-direction:column; gap:8px;">
+      <li>Un jeu, c'est une suite d'<strong>écrans</strong>. Une seule variable dit lequel on montre</li>
+      <li>Changer d'écran, c'est <strong>changer la variable</strong> — le reste suit tout seul</li>
+      <li>Une <strong>donnée</strong> dans un dictionnaire peut changer la façon de jouer</li>
+      <li>Un bon déblocage n'est <strong>ni gratuit, ni impossible</strong></li>
+    </ul>
+  </div>
+
+  <h3 style="margin-top: 32px;">✅ Ça doit faire ça</h3>
+  <p style="color:var(--muted); font-size:.92em; margin-bottom:14px;">On regarde l'écran, pas un rapport de tests. Coche quand ça marche.</p>
+
+  <ul class="checklist" id="checklist-12">
+    <li><span class="box"></span><span>Le jeu commence sur le menu, avec un dragonneau qui glisse derrière</span></li>
+    <li><span class="box"></span><span>← et → changent de thème, et les couleurs changent</span></li>
+    <li><span class="box"></span><span>ESPACE lance la partie</span></li>
+    <li><span class="box"></span><span>N fait tomber la nuit, et l'écran de fin s'affiche</span></li>
+    <li><span class="box"></span><span>ESPACE, à la fin, ramène au menu (après une petite pause)</span></li>
+    <li><span class="box"></span><span>« NOUVEAU RECORD ! » après une meilleure partie, et le record est écrit en bas du menu</span></li>
+    <li><span class="box"></span><span>Le record est encore là quand on ferme et qu'on relance le jeu</span></li>
+    <li><span class="box"></span><span>Sur la Lune, le dragonneau retombe plus lentement</span></li>
+    <li><span class="box"></span><span>Un thème VERROUILLE ne se lance pas</span></li>
+    <li><span class="box"></span><span>Passer 1 300 m affiche « Debloque : Ski ! » à la fin</span></li>
+  </ul>
+
+  <h3 style="margin-top: 28px;">🔭 Prochaine leçon</h3>
+  <div class="card" style="border-left: 4px solid var(--muted);">
+    <p><strong>Leçon 13 — Sons, particules et effets</strong></p>
+    <p style="color:var(--muted); margin-top:6px;">Des sons, des étincelles quand tu atterris, l'écran qui tremble… et le dragonneau qui replie ses ailes quand il plonge. Ton jeu devient satisfaisant à jouer.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-top: 20px;">
+    <div style="font-size:.85em; color:var(--accent2); font-weight:bold; margin-bottom:8px;">🐉 Atelier</div>
+    <p style="color:var(--muted); font-size:.9em;">Ouvre <code style="color:var(--text)">jeu.py</code> dans Thonny. C'est le seul fichier que tu modifies. Les cinq fichiers restent ensemble dans le même dossier.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Progress bar
+// ════════════════════════════════════════════════════════════
+const sections  = ['sec-0','sec-1','sec-2','sec-3','sec-4','sec-5'];
+const progItems = ['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5'];
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      progItems.forEach((id, i) =>
+        document.getElementById(id).classList.toggle('active', i === idx));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+
+// ════════════════════════════════════════════════════════════
+// Les thèmes (mêmes valeurs que themes.py)
+// ════════════════════════════════════════════════════════════
+const THEMES = [
+  { nom: 'Dragonneau', distance: 0, gravite: 0.08,
+    ciel: [134,187,243], collines: [70,151,78], ombre: [48,118,63], eau: [53,129,195],
+    heros: [222,88,54], aile: [162,50,38], contour: [25,24,37],
+    ciel_nuit: [42,59,76], collines_nuit: [15,32,16], ombre_nuit: [5,13,7], eau_nuit: [16,39,60],
+    heros_nuit: [169,67,41], aile_nuit: [121,37,29], contour_nuit: [7,7,11] },
+  { nom: 'Ski', distance: 1300, gravite: 0.08,
+    ciel: [106,154,208], collines: [236,242,249], ombre: [177,200,232], eau: [147,200,225],
+    heros: [233,77,68], aile: [169,40,40], contour: [24,24,38],
+    ciel_nuit: [19,32,48], collines_nuit: [92,95,98], ombre_nuit: [58,67,78], eau_nuit: [41,60,68],
+    heros_nuit: [177,57,49], aile_nuit: [127,28,28], contour_nuit: [6,6,13] },
+  { nom: 'Dauphin', distance: 1650, gravite: 0.08,
+    ciel: [97,186,230], collines: [30,111,171], ombre: [21,80,132], eau: [19,60,119],
+    heros: [191,226,242], aile: [109,149,183], contour: [17,26,43],
+    ciel_nuit: [30,65,83], collines_nuit: [5,36,59], ombre_nuit: [1,15,30], eau_nuit: [1,11,30],
+    heros_nuit: [125,149,159], aile_nuit: [70,97,121], contour_nuit: [4,7,17] },
+  { nom: 'Lune', distance: 1800, gravite: 0.05,
+    ciel: [40,36,65], collines: [151,148,159], ombre: [107,105,119], eau: [74,74,90],
+    heros: [233,233,233], aile: [155,166,196], contour: [24,24,38],
+    ciel_nuit: [15,12,27], collines_nuit: [53,53,57], ombre_nuit: [32,31,36], eau_nuit: [35,35,43],
+    heros_nuit: [149,149,149], aile_nuit: [99,106,127], contour_nuit: [6,6,13] },
+];
+
+function melanger(jour, nuit, part) {
+  return jour.map((v, i) => Math.round(v * (1 - part) + nuit[i] * part));
+}
+function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
+
+// ════════════════════════════════════════════════════════════
+// Section 1 — les écrans
+// ════════════════════════════════════════════════════════════
+let etat = 'menu';
+const MESSAGES = {
+  menu:   'On choisit un thème avec ← et →.',
+  partie: 'On joue ! ESPACE fait plonger le dragonneau.',
+  fin:    'La nuit t\'a rattrapé. Ton score s\'affiche.',
+};
+
+function etatDraw(transition) {
+  ['menu', 'partie', 'fin'].forEach(e =>
+    document.getElementById('et-' + e).classList.toggle('actif', e === etat));
+  ['fl-1', 'fl-2', 'fl-3'].forEach(f =>
+    document.getElementById(f).classList.toggle('actif', f === transition));
+  document.getElementById('et-valeur').textContent = '"' + etat + '"';
+}
+
+function etatTouche(touche) {
+  let msg = '', transition = null;
+  if (touche === 'reset') {
+    etat = 'menu'; msg = MESSAGES.menu;
+  } else if (touche === 'espace') {
+    if (etat === 'menu')        { etat = 'partie'; transition = 'fl-1'; msg = MESSAGES.partie; }
+    else if (etat === 'partie') { msg = 'ESPACE fait plonger… mais on reste dans la partie.'; }
+    else                        { etat = 'menu';   transition = 'fl-3'; msg = MESSAGES.menu; }
+  } else if (touche === 'nuit') {
+    if (etat === 'partie') { etat = 'fin'; transition = 'fl-2'; msg = MESSAGES.fin; }
+    else msg = 'Il n\'y a pas de nuit au ' + (etat === 'menu' ? 'menu' : 'écran de fin') + ' : rien ne change.';
+  }
+  document.getElementById('et-message').textContent = msg;
+  etatDraw(transition);
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 2 — le record
+// ════════════════════════════════════════════════════════════
+let recordDemo = 0;
+
+function recordDraw() {
+  const d = +document.getElementById('re-slider').value;
+  document.getElementById('re-val').textContent = d + ' m';
+  document.getElementById('re-record').textContent = recordDemo;
+  document.getElementById('re-themes').innerHTML = THEMES.map(t => {
+    const ouvert = recordDemo >= t.distance;
+    return '<span class="' + (ouvert ? 'ouvert' : 'ferme') + '">'
+         + (ouvert ? '🔓 ' : '🔒 ') + t.nom
+         + (t.distance ? ' <small>' + t.distance + ' m</small>' : '') + '</span>';
+  }).join('');
+}
+
+function recordFin() {
+  const d = +document.getElementById('re-slider').value;
+  const avant = recordDemo;
+  let msg;
+  if (d > recordDemo) {
+    recordDemo = d;
+    const debloques = THEMES.filter(t => avant < t.distance && t.distance <= d).map(t => t.nom);
+    msg = '🏆 ' + d + ' > ' + avant + ' : nouveau record !'
+        + (debloques.length ? ' Débloqué : ' + debloques.join(', ') + ' !' : '');
+  } else {
+    msg = d + ' n\'est pas plus grand que ' + avant + ' : le record ne change pas.';
+  }
+  document.getElementById('re-message').textContent = msg;
+  recordDraw();
+}
+
+function recordReset() {
+  recordDemo = 0;
+  document.getElementById('re-message').textContent = 'Record remis à 0 : comme si on effaçait record.txt.';
+  recordDraw();
+}
+
+// ════════════════════════════════════════════════════════════
+// Section 3 — la galerie des thèmes
+// ════════════════════════════════════════════════════════════
+const MOTIF = [
+  "......AAAA......",
+  ".....AAAAAA.....",
+  "....AAAAAAA.....",
+  "....AAAAAA.D.D..",
+  "......CCCCCCCC..",
+  "D....CCCCCCCCC..",
+  "DD..CCCCCCCOCCC.",
+  ".DDCCCCCCCCCCCCC",
+  "..DCCCCCCCCCCC..",
+  "...DCCCCCCCC....",
+  "....DDDDDD......",
+  "................",
+];
+
+const cvT = document.getElementById('cv-theme'), ctxT = cvT.getContext('2d');
+let themeChoisi = 0;
+
+function collinesDecor(x) {
+  return 66 + 14 * Math.sin(x / 17) + 7 * Math.sin(x / 7 + 1);
+}
+function solDecor(x) {
+  // des collines de décor, pour la démo seulement : à droite, une plage
+  // descend en douceur jusqu'à la mer (pas de falaise !)
+  if (x > 118) return 104;
+  if (x > 96) {
+    const u = (x - 96) / 22;
+    return collinesDecor(96) + (104 - collinesDecor(96)) * (1 - Math.cos(Math.PI * u)) / 2;
+  }
+  return collinesDecor(x);
+}
+
+function themeDraw(i) {
+  if (i !== undefined) themeChoisi = i;
+  const t = THEMES[themeChoisi];
+  const h = +document.getElementById('th-slider').value / 100;
+  document.getElementById('th-val').textContent = h.toFixed(2);
+  document.querySelectorAll('#th-choix .demo-btn').forEach(
+    (b, k) => b.classList.toggle('actif', k === themeChoisi));
+
+  const ciel = melanger(t.ciel, t.ciel_nuit, h);
+  ctxT.fillStyle = css(ciel);
+  ctxT.fillRect(0, 0, 160, 120);
+
+  if (h > 0.6) {
+    const force = (h - 0.6) / 0.4;
+    let graine = 7;
+    for (let k = 0; k < 30; k++) {
+      graine = (graine * 16807) % 2147483647;
+      const x = graine % 160;
+      graine = (graine * 16807) % 2147483647;
+      const y = graine % 60;
+      ctxT.fillStyle = css(melanger(ciel, [255, 255, 255], force * 0.8));
+      ctxT.fillRect(x, y, 1, 1);
+    }
+  }
+
+  const sol = melanger(t.collines, t.collines_nuit, h);
+  const ombre = melanger(t.ombre, t.ombre_nuit, h);
+  const eau = melanger(t.eau, t.eau_nuit, h);
+  for (let x = 0; x < 160; x++) {
+    const y = Math.round(solDecor(x));
+    if (x > 118) {
+      ctxT.fillStyle = css(eau); ctxT.fillRect(x, y, 1, 120 - y);
+    } else {
+      ctxT.fillStyle = css(sol); ctxT.fillRect(x, y, 1, 120 - y);
+      ctxT.fillStyle = css(ombre); ctxT.fillRect(x, y, 1, 3);
+    }
+  }
+
+  // le héros, avec son contour
+  const couleurs = {
+    C: css(melanger(t.heros, t.heros_nuit, h)),
+    D: css(melanger(t.aile, t.aile_nuit, h)),
+    A: css(melanger(t.aile, t.aile_nuit, h)),
+    O: css(melanger(t.contour, t.contour_nuit, h)),
+  };
+  const contour = css(melanger(t.contour, t.contour_nuit, h));
+  const ox = 34, oy = 36;
+  ctxT.fillStyle = contour;
+  MOTIF.forEach((ligne, y) => [...ligne].forEach((l, x) => {
+    if (couleurs[l]) ctxT.fillRect(ox + x - 1, oy + y - 1, 3, 3);
+  }));
+  MOTIF.forEach((ligne, y) => [...ligne].forEach((l, x) => {
+    if (couleurs[l]) { ctxT.fillStyle = couleurs[l]; ctxT.fillRect(ox + x, oy + y, 1, 1); }
+  }));
+
+  document.getElementById('th-fiche').innerHTML =
+      'THEMES[' + themeChoisi + ']["nom"] &nbsp;→&nbsp; <b>"' + t.nom + '"</b><br>'
+    + 'THEMES[' + themeChoisi + ']["distance"] &nbsp;→&nbsp; <b>' + t.distance + '</b>'
+    + ' <span style="color:var(--muted)">(le record qu\'il faut)</span><br>'
+    + 'THEMES[' + themeChoisi + ']["gravite"] &nbsp;→&nbsp; <b>' + t.gravite + '</b>'
+    + (t.gravite !== 0.08 ? ' <span style="color:var(--accent2)">← pas comme les autres !</span>' : '');
+}
+
+// Le même saut, deux gravités
+function sautDraw() {
+  const cv = document.getElementById('cv-saut'), ctx = cv.getContext('2d');
+  ctx.fillStyle = '#101020'; ctx.fillRect(0, 0, cv.width, cv.height);
+  const sol = 185;
+  ctx.strokeStyle = '#6c7086'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, sol); ctx.lineTo(cv.width, sol); ctx.stroke();
+
+  [[0.08, '#82aaff'], [0.05, '#f5c2e7']].forEach(([g, couleur]) => {
+    let x = 20, y = sol, vx = 2.6, vy = -3.5;
+    ctx.fillStyle = couleur;
+    while (y <= sol) {
+      ctx.fillRect(x, y, 3, 3);
+      for (let k = 0; k < 3; k++) { vy += g; y += vy; x += vx; }
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// Checklist
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('#checklist-12 li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+
+// ════════════════════════════════════════════════════════════
+// Quiz
+// ════════════════════════════════════════════════════════════
+function makeQuiz(optsSelector, fbId, correctIdx, hints) {
+  const opts = [...document.querySelectorAll(optsSelector + ' .quiz-option')];
+  const fb   = document.getElementById(fbId);
+  let attempts = 0;
+
+  opts.forEach((opt, idx) => {
+    opt.addEventListener('click', function () {
+      if (opts.some(o => o.classList.contains('correct'))) return;
+      attempts++;
+      if (idx === correctIdx) {
+        this.classList.add('correct');
+        fb.className = 'quiz-feedback ok';
+        fb.textContent = '✅ Exact !';
+        opts.forEach(o => o.style.pointerEvents = 'none');
+      } else {
+        this.classList.add('wrong');
+        setTimeout(() => this.classList.remove('wrong'), 800);
+        fb.className = 'quiz-feedback err';
+        if (attempts === 1)      fb.textContent = '❌ ' + hints[0];
+        else if (attempts === 2) fb.textContent = '❌ ' + hints[1];
+        else {
+          opts[correctIdx].classList.add('correct');
+          fb.textContent = '💡 La bonne réponse est surlignée.';
+          opts.forEach(o => o.style.pointerEvents = 'none');
+        }
+      }
+    });
+  });
+}
+
+makeQuiz('#q1-opts', 'q1-feedback', 1, [
+  'Dans une liste, le premier élément porte le numéro 0.',
+  'THEMES[0] est Dragonneau. Alors THEMES[1], c\'est le suivant dans la liste.'
+]);
+
+makeQuiz('#q2-opts', 'q2-feedback', 1, [
+  'Regarde la première ligne du tableau « Mesuré ».',
+  'Un déblocage qu\'on obtient sans rien faire, est-ce que c\'est encore un but ?'
+]);
+
+// ════════════════════════════════════════════════════════════
+// État de départ
+// ════════════════════════════════════════════════════════════
+etatDraw(null);
+recordDraw();
+themeDraw(0);
+sautDraw();
+</script>
+
+</body>
+</html>
