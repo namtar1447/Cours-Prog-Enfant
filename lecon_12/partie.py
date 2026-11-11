@@ -18,11 +18,14 @@
 # Tu n'as rien à modifier ici.
 # ============================================================
 
+import math
 import random
 
 import pygame
 
-from terrain import hauteur_du_sol, numero_ile, est_eau, CRETE, NIVEAU_EAU
+from terrain import (hauteur_du_sol, numero_ile, est_eau, dans_le_tremplin,
+                     apres_le_sommet, fond_des_vallees, reglages_ile,
+                     CRETE, NIVEAU_EAU, LONGUEUR_ILE, RIVE, PIED)
 from themes import melanger
 
 # --- L'écran ---
@@ -34,11 +37,11 @@ MI_HAUTEUR = 6
 # La gravité quand on plane n'est plus ici : c'est le THÈME qui la donne.
 #
 # RÉGLÉ À LA LEÇON 12, après comparaison avec Tiny Wings : le jeu tourne
-# 1,5 fois plus lentement (mêmes trajectoires, jouées plus calmement), et
-# le dragonneau peut presque s'arrêter dans une montée s'il ne fait rien.
+# plus calmement, et le dragonneau peut presque s'arrêter dans une montée
+# s'il ne fait rien.
 # Avant : GRAVITE_PLONGEON 0.30, ACCEL 0.22, FREIN 0.28, FRICTION 0.997,
 #         VX_MIN 1.2, VX_MAX 9.0.
-GRAVITE_PLONGEON = 0.133
+GRAVITE_PLONGEON = 0.16
 ACCEL_DESCENTE = 0.098
 FREIN_MONTEE = 0.124             # toujours plus grand qu'ACCEL_DESCENTE
 BONUS_PLONGEON = 2.6
@@ -47,6 +50,12 @@ FRICTION = 0.998
 VX_MIN, VX_MAX = 0.4, 6.0
 VITESSE_DEPART = 1.3
 VITESSE_AILES = 0.15
+
+# --- Le grand saut de fin d'île (leçon 12) ---
+# Comme dans Tiny Wings, il réussit TOUJOURS : en quittant le tremplin, le
+# dragonneau est lancé juste ce qu'il faut pour retomber dans la première
+# descente de l'île suivante. Celui qui arrive vite saute plus vite.
+VITESSE_SAUT = 4.0               # au moins cette vitesse pour sauter
 
 # --- La caméra (leçon 10) ---
 ZOOM_MIN = 0.30
@@ -59,6 +68,7 @@ MARGE_SOL = 8
 VISEE_BAS = 60
 VISEE_HAUT = 26
 SUIVI_CAMERA = 0.10
+SUIVI_REFERENCE = 0.05           # vitesse à laquelle le repère du sol change
 
 # --- La nuit (leçon 11, réglée à la leçon 12) ---
 # Comme dans Tiny Wings : la journée est courte (une minute si on ne fait
@@ -66,10 +76,10 @@ SUIVI_CAMERA = 0.10
 VITESSE_NUIT = 0.000278          # nuit noire en 60 s, sur la 1re île
 FACTEUR_ILE = 0.20               # la nuit va 20 % plus vite à chaque île
 BONUS_ATTERRISSAGE = 0.004       # le petit bonus de la leçon 11
-BONUS_ILE = 0.20                 # une nouvelle île rend 20 % de jour…
+BONUS_ILE = 0.15                 # une nouvelle île rend 15 % de jour…
 BONUS_ILE_PAS = 0.03             # … et 3 % de plus à chaque île
-BONUS_BEAU_COUP = 0.03           # un beau coup rend 3 % de jour…
-SERIE_MAX = 3                    # … 6 % au 2e d'affilée, 9 % au 3e et plus
+BONUS_BEAU_COUP = 0.02           # un beau coup rend 2 % de jour…
+SERIE_MAX = 3                    # … 4 % au 2e d'affilée, 6 % au 3e et plus
 VOL_BEAU_COUP = 18               # un beau coup, c'est un vrai vol (0,3 s)
 DEBUT_ETOILES = 0.6
 
@@ -203,6 +213,7 @@ def nouvelle_partie():
         "heure": 0.0, "soleil": 0, "message": "", "attente": 0,
         # pour reconnaître un beau coup
         "vol": 0, "relache": False, "plonge": False, "serie": 0, "ile": 0,
+        "saut": False, "reference": float(CRETE),
     }
 
 
@@ -216,8 +227,23 @@ def avancer(jeu, bouton, gravite):
     camera_x, y, vy, vx = jeu["camera_x"], jeu["y"], jeu["vy"], jeu["vx"]
     zoom, visee, heure = jeu["zoom"], jeu["visee"], jeu["heure"]
 
+    # --- Le grand saut (leçon 12) : il part du tremplin, et rien ne l'arrête ---
+    au_sol = y >= hauteur_du_sol(camera_x) - MI_HAUTEUR - 0.001
+    if (not jeu["saut"] and dans_le_tremplin(camera_x)
+            and (not au_sol or apres_le_sommet(camera_x))):
+        jeu["saut"] = True
+        ile_suivante = numero_ile(camera_x) + 1
+        cible = (ile_suivante * LONGUEUR_ILE + RIVE
+                 + 0.3 * reglages_ile(ile_suivante)[0])    # dans la 1re descente
+        vx = max(vx, VITESSE_SAUT)
+        duree = (cible - camera_x) / vx
+        arrivee = hauteur_du_sol(cible) - MI_HAUTEUR
+        vy = (arrivee - y - gravite * duree * duree / 2) / duree
+
     # --- La chute (leçon 07 et 08) ---
-    if bouton:
+    if jeu["saut"]:
+        vy += gravite                    # pendant le grand saut, on plane
+    elif bouton:
         vy += GRAVITE_PLONGEON
     else:
         vy += gravite
@@ -228,7 +254,7 @@ def avancer(jeu, bouton, gravite):
     hauteur_ici = hauteur_du_sol(camera_x)
     sol = hauteur_ici - MI_HAUTEUR
 
-    if y >= sol:
+    if y >= sol and not (jeu["saut"] and est_eau(camera_x)):
         y = sol
         pente = hauteur_du_sol(camera_x + 1) - hauteur_ici
 
@@ -246,7 +272,9 @@ def avancer(jeu, bouton, gravite):
             # Relâché au décollage, plongé pendant le vol, et retombé dans une
             # descente. Ne rien faire ou tenir tout le temps ne le réussit
             # jamais. Enchaînés, les beaux coups rendent de plus en plus de jour.
-            if (jeu["relache"] and jeu["plonge"] and pente > 0
+            if jeu["saut"]:
+                jeu["saut"] = False          # fin du grand saut : on est arrivé
+            elif (jeu["relache"] and jeu["plonge"] and pente > 0
                     and jeu["vol"] >= VOL_BEAU_COUP):
                 jeu["serie"] += 1
                 fois = min(jeu["serie"], SERIE_MAX)
@@ -312,8 +340,19 @@ def avancer(jeu, bouton, gravite):
 
     visee += (VISEE_BAS + (VISEE_HAUT - VISEE_BAS) * part - visee) * SUIVI_CAMERA
 
-    reference = NIVEAU_EAU if est_eau(camera_x) else CRETE
-    plafond = (HAUTEUR - MARGE_SOL - visee) / max(1.0, reference - y)
+    # Le garde-fou : quand on vole haut, la caméra recule assez pour montrer
+    # le FOND des vallées, pas seulement le haut des collines (leçon 12).
+    # Au-dessus de la mer et dans la fin d'île, on garde TOUT le fond à
+    # l'écran. Le repère glisse doucement d'une zone à l'autre, sinon le
+    # zoom sauterait d'un coup.
+    if est_eau(camera_x):
+        cible = NIVEAU_EAU
+    elif fond_des_vallees(camera_x) == PIED:
+        cible = PIED
+    else:
+        cible = CRETE + (fond_des_vallees(camera_x) - CRETE) * part
+    jeu["reference"] += (cible - jeu["reference"]) * SUIVI_REFERENCE
+    plafond = (HAUTEUR - MARGE_SOL - visee) / max(1.0, jeu["reference"] - y)
     zoom = max(ZOOM_PLANCHER, min(1.0, plafond, zoom))
     camera_y = y - visee / zoom
 
@@ -334,6 +373,7 @@ def dessiner_partie(surf, jeu, theme, hud=True):
     couleur_sol   = melanger(theme["collines"], theme["collines_nuit"], nuit)
     couleur_ombre = melanger(theme["ombre"], theme["ombre_nuit"], nuit)
     couleur_eau   = melanger(theme["eau"], theme["eau_nuit"], nuit)
+    couleur_ecume = melanger(couleur_eau, (255, 255, 255), 0.45)
 
     surf.fill(couleur_ciel)
 
@@ -349,7 +389,12 @@ def dessiner_partie(surf, jeu, theme, hud=True):
         if sy >= HAUTEUR:
             continue
         if est_eau(monde_x):
+            # des petites vagues qui bougent, et une ligne d'écume
+            vague = 1.5 * math.sin(monde_x * 0.06 + jeu["animation"] * 0.8)
+            sy = int((NIVEAU_EAU + vague - camera_y) * zoom)
             pygame.draw.line(surf, couleur_eau, (colonne, sy), (colonne, HAUTEUR))
+            pygame.draw.line(surf, couleur_ecume, (colonne, sy),
+                             (colonne, sy + max(0, int(1.5 * zoom))))
         else:
             pygame.draw.line(surf, couleur_sol, (colonne, sy), (colonne, HAUTEUR))
             pygame.draw.line(surf, couleur_ombre, (colonne, sy),

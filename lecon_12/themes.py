@@ -11,7 +11,7 @@
 #   les couleurs, de jour et de nuit, comme à la leçon 11
 #
 # Pour lire une valeur :   THEMES[0]["nom"]       → "Dragonneau"
-#                          THEMES[3]["gravite"]   → 0.022
+#                          THEMES[3]["gravite"]   → 0.037
 #
 # Tu n'as rien à modifier ici.
 # ============================================================
@@ -23,7 +23,7 @@
 DRAGONNEAU = {
     "nom": "Dragonneau",
     "distance": 0,               # débloqué dès le début
-    "gravite": 0.036,
+    "gravite": 0.06,
 
     # --- de jour ---
     "ciel":     (134, 187, 243),
@@ -46,8 +46,8 @@ DRAGONNEAU = {
 
 SKI = {
     "nom": "Ski",
-    "distance": 800,
-    "gravite": 0.036,
+    "distance": 900,
+    "gravite": 0.06,
 
     # --- de jour : neige, ciel bleu, lac gelé ---
     "ciel":     (106, 154, 208),
@@ -71,7 +71,7 @@ SKI = {
 DAUPHIN = {
     "nom": "Dauphin",
     "distance": 1500,
-    "gravite": 0.036,
+    "gravite": 0.06,
 
     # --- de jour : des vagues, et un dauphin gris-bleu ---
     "ciel":     (97, 186, 230),
@@ -94,8 +94,8 @@ DAUPHIN = {
 
 LUNE = {
     "nom": "Lune",
-    "distance": 2500,
-    "gravite": 0.022,            # sur la Lune, on plane plus longtemps !
+    "distance": 3000,
+    "gravite": 0.037,            # sur la Lune, on plane plus longtemps !
 
     # --- de jour : le ciel est toujours noir dans l'espace ---
     "ciel":     (40, 36, 65),

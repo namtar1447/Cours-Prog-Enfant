@@ -448,8 +448,8 @@
 
     <div class="slider-row">
       <span>ta partie</span>
-      <input type="range" id="re-slider" min="0" max="4200" step="10" value="900" oninput="recordDraw()">
-      <span id="re-val">900 m</span>
+      <input type="range" id="re-slider" min="0" max="4000" step="10" value="1000" oninput="recordDraw()">
+      <span id="re-val">1000 m</span>
     </div>
 
     <div style="text-align:center; margin-top:14px;">
@@ -528,8 +528,8 @@
     <div class="label demo">Démo — le même saut, deux gravités</div>
     <canvas id="cv-saut" width="480" height="200"></canvas>
     <div class="readout">
-      <span style="color:#82aaff">■</span> gravité 0.036 (les autres thèmes) &nbsp;&nbsp;
-      <span style="color:#f5c2e7">■</span> gravité 0.022 (Lune)
+      <span style="color:#82aaff">■</span> gravité 0.06 (les autres thèmes) &nbsp;&nbsp;
+      <span style="color:#f5c2e7">■</span> gravité 0.037 (Lune)
     </div>
   </div>
 
@@ -587,7 +587,7 @@
   <div class="card analogy">
     <div class="label analogy">Regagner du jour — comme dans Tiny Wings</div>
     <div style="display:flex; flex-direction:column; gap:10px; font-size:.95em;">
-      <span>🏝️ <strong>Une nouvelle île</strong> &nbsp;→&nbsp; « ile 2 ! + jour » : 20 % de jour en plus</span>
+      <span>🏝️ <strong>Une nouvelle île</strong> &nbsp;→&nbsp; « ile 2 ! + jour » : du jour en plus</span>
       <span>🎯 <strong>Un beau coup</strong> &nbsp;→&nbsp; relâcher pour décoller, plonger, atterrir dans une descente</span>
       <span>🔥 <strong>Enchaîner</strong> &nbsp;→&nbsp; « + jour x2 ! », « x3 ! » : de plus en plus de jour</span>
     </div>
@@ -599,21 +599,21 @@
     <table class="summary-table" style="margin-top:6px;">
       <thead><tr><th>Façon de jouer</th><th>Distance</th><th>Débloque</th></tr></thead>
       <tbody>
-        <tr><td>ne jamais appuyer</td><td>~430 m, 1 minute</td><td>rien</td></tr>
-        <tr><td>tenir tout le temps</td><td>~640 m</td><td>rien</td></tr>
-        <tr><td>plonger dans les descentes, en apprenant</td><td>700 à 1 400 m</td><td>Ski</td></tr>
-        <tr><td>viser ses atterrissages</td><td>~2 700 m, 2 min 30</td><td>Ski, Dauphin, souvent la Lune</td></tr>
-        <tr><td>viser, bien maîtrisé</td><td>~4 000 m, 3 minutes</td><td>les quatre</td></tr>
+        <tr><td>ne jamais appuyer</td><td>~450 m, 1 minute</td><td>rien</td></tr>
+        <tr><td>tenir tout le temps</td><td>~700 m</td><td>rien</td></tr>
+        <tr><td>plonger dans les descentes, en apprenant</td><td>800 à 1 600 m</td><td>Ski, parfois Dauphin</td></tr>
+        <tr><td>viser ses atterrissages</td><td>~3 200 m, 2 min 15</td><td>Ski, Dauphin, souvent la Lune</td></tr>
+        <tr><td>viser, bien maîtrisé</td><td>~3 800 m</td><td>les quatre</td></tr>
       </tbody>
     </table>
-    <p style="color:var(--muted); font-size:.88em; margin-top:8px;">Ski 800 m · Dauphin 1 500 m · Lune 2 500 m · une île = 560 m</p>
+    <p style="color:var(--muted); font-size:.88em; margin-top:8px;">Ski 900 m · Dauphin 1 500 m · Lune 3 000 m · une île = 560 m</p>
   </div>
 
   <div class="quiz-block">
-    <h4>Question 2 — Pourquoi Ski demande 800 m, et pas 500 m ?</h4>
+    <h4>Question 2 — Pourquoi Ski demande 900 m, et pas 500 m ?</h4>
     <div class="quiz-options" id="q2-opts">
       <div class="quiz-option">parce que 500, c'est un nombre trop petit</div>
-      <div class="quiz-option">parce qu'en tenant le bouton tout le temps, on fait déjà 640 m</div>
+      <div class="quiz-option">parce qu'en tenant le bouton tout le temps, on fait déjà 700 m</div>
       <div class="quiz-option">parce que la neige ralentit le dragonneau</div>
       <div class="quiz-option">au hasard</div>
     </div>
@@ -665,7 +665,7 @@
       <tr>
         <td>THEMES[3]["gravite"]</td>
         <td>Une liste de dictionnaires</td>
-        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.022</td>
+        <td style="color:var(--muted); font-family:'Courier New'; font-size:.85em;">0.037</td>
       </tr>
       <tr>
         <td>theme["gravite"]</td>
@@ -703,7 +703,8 @@
     <li><span class="box"></span><span>Le record est encore là quand on ferme et qu'on relance le jeu</span></li>
     <li><span class="box"></span><span>Sur la Lune, le dragonneau retombe plus lentement</span></li>
     <li><span class="box"></span><span>Un thème VERROUILLE ne se lance pas</span></li>
-    <li><span class="box"></span><span>Passer 800 m affiche « Debloque : Ski ! » à la fin</span></li>
+    <li><span class="box"></span><span>Passer 900 m affiche « Debloque : Ski ! » à la fin</span></li>
+    <li><span class="box"></span><span>Au bout de l'île : une grande descente, une bosse, et le saut par-dessus la mer réussit toujours</span></li>
     <li><span class="box"></span><span>« ile 2 ! + jour » à chaque nouvelle île, et la jauge de nuit recule</span></li>
     <li><span class="box"></span><span>Relâcher, plonger, atterrir dans une descente : « + jour ! », puis « x2 », « x3 » si on enchaîne</span></li>
     <li><span class="box"></span><span>Sans rien toucher, la nuit tombe avant la fin de la première île</span></li>
@@ -745,22 +746,22 @@ sections.forEach(id => { const el = document.getElementById(id); if (el) observe
 // Les thèmes (mêmes valeurs que themes.py)
 // ════════════════════════════════════════════════════════════
 const THEMES = [
-  { nom: 'Dragonneau', distance: 0, gravite: 0.036,
+  { nom: 'Dragonneau', distance: 0, gravite: 0.06,
     ciel: [134,187,243], collines: [70,151,78], ombre: [48,118,63], eau: [53,129,195],
     heros: [222,88,54], aile: [162,50,38], contour: [25,24,37],
     ciel_nuit: [42,59,76], collines_nuit: [15,32,16], ombre_nuit: [5,13,7], eau_nuit: [16,39,60],
     heros_nuit: [169,67,41], aile_nuit: [121,37,29], contour_nuit: [7,7,11] },
-  { nom: 'Ski', distance: 800, gravite: 0.036,
+  { nom: 'Ski', distance: 900, gravite: 0.06,
     ciel: [106,154,208], collines: [236,242,249], ombre: [177,200,232], eau: [147,200,225],
     heros: [233,77,68], aile: [169,40,40], contour: [24,24,38],
     ciel_nuit: [19,32,48], collines_nuit: [92,95,98], ombre_nuit: [58,67,78], eau_nuit: [41,60,68],
     heros_nuit: [177,57,49], aile_nuit: [127,28,28], contour_nuit: [6,6,13] },
-  { nom: 'Dauphin', distance: 1500, gravite: 0.036,
+  { nom: 'Dauphin', distance: 1500, gravite: 0.06,
     ciel: [97,186,230], collines: [30,111,171], ombre: [21,80,132], eau: [19,60,119],
     heros: [191,226,242], aile: [109,149,183], contour: [17,26,43],
     ciel_nuit: [30,65,83], collines_nuit: [5,36,59], ombre_nuit: [1,15,30], eau_nuit: [1,11,30],
     heros_nuit: [125,149,159], aile_nuit: [70,97,121], contour_nuit: [4,7,17] },
-  { nom: 'Lune', distance: 2500, gravite: 0.022,
+  { nom: 'Lune', distance: 3000, gravite: 0.037,
     ciel: [40,36,65], collines: [151,148,159], ombre: [107,105,119], eau: [74,74,90],
     heros: [233,233,233], aile: [155,166,196], contour: [24,24,38],
     ciel_nuit: [15,12,27], collines_nuit: [53,53,57], ombre_nuit: [32,31,36], eau_nuit: [35,35,43],
@@ -940,7 +941,7 @@ function themeDraw(i) {
     + 'THEMES[' + themeChoisi + ']["distance"] &nbsp;→&nbsp; <b>' + t.distance + '</b>'
     + ' <span style="color:var(--muted)">(le record qu\'il faut)</span><br>'
     + 'THEMES[' + themeChoisi + ']["gravite"] &nbsp;→&nbsp; <b>' + t.gravite + '</b>'
-    + (t.gravite !== 0.036 ? ' <span style="color:var(--accent2)">← pas comme les autres !</span>' : '');
+    + (t.gravite !== 0.06 ? ' <span style="color:var(--accent2)">← pas comme les autres !</span>' : '');
 }
 
 // Le même saut, deux gravités
@@ -951,8 +952,8 @@ function sautDraw() {
   ctx.strokeStyle = '#6c7086'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, sol); ctx.lineTo(cv.width, sol); ctx.stroke();
 
-  [[0.036, '#82aaff'], [0.022, '#f5c2e7']].forEach(([g, couleur]) => {
-    let x = 20, y = sol, vx = 1.73, vy = -2.33;
+  [[0.06, '#82aaff'], [0.037, '#f5c2e7']].forEach(([g, couleur]) => {
+    let x = 20, y = sol, vx = 2.0, vy = -3.0;
     ctx.fillStyle = couleur;
     while (y <= sol) {
       ctx.fillRect(x, y, 3, 3);

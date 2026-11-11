@@ -1,22 +1,20 @@
 # ============================================================
 # Leçon 12 — terrain.py
 # ============================================================
-# Le terrain à îles de la leçon 11, RÉGLÉ après comparaison avec Tiny Wings :
-# des îles un peu plus longues, et des collines qui se creusent moins
-# d'une île à l'autre (avant, elles devenaient des ravins).
+# Le terrain à îles de la leçon 11, REFAIT après comparaison avec
+# Tiny Wings et un essai du père :
 #
-# Pour rappel, il sait deux choses de plus que celui de la leçon 10 :
-#
-#   · le monde est découpé en ÎLES
-#   · chaque île est un peu plus dure que la précédente
-#     (collines plus courtes, creux plus profonds)
+#   · le départ est un court plateau
+#   · chaque île commence par une DESCENTE (on y atterrit en douceur)
+#   · la grande descente de fin d'île plonge vraiment
+#   · le tremplin est une bosse arrondie, pas une falaise
+#   · le saut par-dessus la mer réussit toujours (voir partie.py)
 #
 # Une île se lit de gauche à droite :
 #
-#   plage      collines ordinaires      grande descente   tremplin   OCÉAN
-#   ~~~~/‾‾\__/‾‾\__/‾‾\__/‾‾\__/‾‾\__ \_/‾\_/‾\_/‾\_ ___ / ‾‾‾‾‾~~~~~~~~~~~
-#   on sort    le jeu normal            ça descend, les   petite    le grand
-#   de l'eau                            bosses s'effacent remontée  saut
+#        rive   collines ordinaires      grande descente  tremplin   MER
+#   ~~~~/‾‾\__/‾‾\__/‾‾\__/‾‾\__/‾‾\__\_/‾\_/‾\__          _/‾‾\_~~~~~~~~~~
+#                                               \________/
 #
 # Tu n'as rien à modifier ici.
 # ============================================================
@@ -30,17 +28,18 @@ POINTE = 2.2                     # netteté du sommet
 NIVEAU_EAU = 108                 # la hauteur de la mer
 
 LONGUEUR_ILE = 5600              # une île fait 5 600 px, soit 560 m
-PLAGE = 400                      # la plage par laquelle on arrive sur l'île
+PLATEAU = 100                    # le plat du tout début de la partie
+RIVE = 80                        # la rive qui sort de l'eau, au début d'une île
 OCEAN = 500                      # la mer à franchir au bout
-L_REMONTEE = 60                  # la petite remontée qui sert de tremplin
-H_REMONTEE = 26                  # de combien elle remonte
-FALAISE = 14                     # hauteur du tremplin au-dessus de l'eau
-N_DESCENTE = 4                   # collines occupées par la grande descente
+L_TREMPLIN = 200                 # la bosse de la fin d'île
+H_TREMPLIN = 60                  # de combien elle remonte
+PIED = 130                       # le fond de la grande descente
+N_DESCENTE = 3                   # collines occupées par la grande descente
 
-ZONE_COLLINES = LONGUEUR_ILE - PLAGE - L_REMONTEE - OCEAN
-DEBUT_REMONTEE = PLAGE + ZONE_COLLINES
-DEBUT_OCEAN = DEBUT_REMONTEE + L_REMONTEE
-PIED = NIVEAU_EAU - FALAISE      # le bas de la grande descente
+ZONE_COLLINES = LONGUEUR_ILE - RIVE - L_TREMPLIN - OCEAN
+DEBUT_TREMPLIN = RIVE + ZONE_COLLINES
+SOMMET_TREMPLIN = DEBUT_TREMPLIN + 0.6 * L_TREMPLIN
+DEBUT_OCEAN = DEBUT_TREMPLIN + L_TREMPLIN
 
 
 def numero_ile(x):
@@ -49,21 +48,37 @@ def numero_ile(x):
 
 
 def est_eau(x):
-    """Vrai sur la mer, entre la fin d'une île et la plage de la suivante."""
+    """Vrai sur la mer, entre la fin d'une île et la rive de la suivante."""
     return (max(0.0, x) % LONGUEUR_ILE) >= DEBUT_OCEAN
+
+
+def dans_le_tremplin(x):
+    """Vrai sur la bosse de fin d'île, d'où part le grand saut."""
+    return DEBUT_TREMPLIN <= (max(0.0, x) % LONGUEUR_ILE) < DEBUT_OCEAN
+
+
+def apres_le_sommet(x):
+    """Vrai si on a dépassé le haut du tremplin."""
+    return (max(0.0, x) % LONGUEUR_ILE) >= SOMMET_TREMPLIN
 
 
 def reglages_ile(i):
     """Les collines de cette île : leur longueur, leur creux, leur nombre.
 
-    La longueur est ajustée pour qu'il en tienne un nombre ENTIER entre la
-    plage et le tremplin — sinon la dernière est coupée en plein milieu et
-    ça fait une falaise au beau milieu du terrain.
+    La longueur est ajustée pour qu'il en tienne un nombre ENTIER — sinon la
+    dernière est coupée en plein milieu et ça fait une falaise.
     """
-    longueur_voulue = max(120, 200 - 15 * i)
+    longueur_voulue = max(150, 200 - 8 * i)
     creux_max = min(70, 50 + 4 * i)
     nombre = max(N_DESCENTE + 3, round(ZONE_COLLINES / longueur_voulue))
     return ZONE_COLLINES / nombre, creux_max, nombre
+
+
+def fond_des_vallees(x):
+    """Le plus bas que descend le terrain par ici — pour la caméra."""
+    if (max(0.0, x) % LONGUEUR_ILE) >= DEBUT_TREMPLIN - 3 * 200:
+        return PIED
+    return CRETE + reglages_ile(numero_ile(x))[1]
 
 
 def profil_colline(t, creux):
@@ -82,16 +97,20 @@ def hauteur_du_sol(x):
     dans_ile = x % LONGUEUR_ILE
     longueur, creux_max, nombre = reglages_ile(ile)
 
-    # ---- 1. la plage : on sort de la mer et on remonte sur l'île ----
-    if dans_ile < PLAGE:
+    # ---- 1. le début : un court plateau, ou la rive qui sort de l'eau ----
+    if dans_ile < RIVE:
         if ile == 0:
-            return CRETE          # la toute première île commence sur un plateau
-        u = dans_ile / PLAGE
+            return CRETE
+        u = dans_ile / RIVE
         return NIVEAU_EAU + (CRETE - NIVEAU_EAU) * (1 - math.cos(math.pi * u)) / 2
 
-    # ---- 2. les collines ----
-    if dans_ile < DEBUT_REMONTEE:
-        dd = dans_ile - PLAGE
+    # ---- 2. les collines, puis la grande descente ----
+    if dans_ile < DEBUT_TREMPLIN:
+        dd = dans_ile - RIVE
+        if ile == 0:
+            dd -= PLATEAU - RIVE         # le plateau du départ
+            if dd < 0:
+                return CRETE
         i = int(dd // longueur)
         t = dd % longueur / longueur
 
@@ -101,16 +120,20 @@ def hauteur_du_sol(x):
             creux = 30 + (creux_max - 30) * ((i * 7919 + ile * 104729) % 1000) / 1000
             return CRETE + profil_colline(t, creux)
 
-        # la GRANDE DESCENTE : la ligne de crête plonge vers la mer, et les
-        # bosses s'effacent petit à petit — on finit sur une courbe lisse.
-        part = (i - premiere_descente + t) / N_DESCENTE
+        # la GRANDE DESCENTE : la ligne de crête plonge, et les bosses
+        # s'effacent petit à petit — on finit sur une courbe lisse.
+        part = min(1.0, (i - premiere_descente + t) / N_DESCENTE)
         base = CRETE + (PIED - CRETE) * (1 - math.cos(math.pi * part)) / 2
         return base + profil_colline(t, 30 * (1 - part) ** 1.5)
 
-    # ---- 3. la petite remontée : le tremplin ----
+    # ---- 3. le tremplin : il monte, s'arrondit, et redescend dans l'eau ----
     if dans_ile < DEBUT_OCEAN:
-        u = (dans_ile - DEBUT_REMONTEE) / L_REMONTEE
-        return PIED - H_REMONTEE * math.sin(math.pi * u / 2) ** 1.6
+        u = (dans_ile - DEBUT_TREMPLIN) / L_TREMPLIN
+        haut = PIED - H_TREMPLIN
+        if u < 0.6:
+            return PIED - H_TREMPLIN * math.sin(math.pi / 2 * u / 0.6) ** 1.6
+        v = (u - 0.6) / 0.4
+        return haut + (NIVEAU_EAU - haut) * (1 - math.cos(math.pi * v)) / 2
 
     # ---- 4. la mer ----
     return NIVEAU_EAU

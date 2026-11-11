@@ -980,7 +980,7 @@ THEME_DRAGON = {
 ```
 
 Un thème peut changer des valeurs de **gameplay**, pas seulement des couleurs — le thème
-Lune baisse `gravite` (0,022 contre 0,036 depuis le recalibrage de la leçon 12, § 9.10).
+Lune baisse `gravite` (0,037 contre 0,06 depuis le recalibrage de la leçon 12, § 9.10).
 C'est le moment où Adam comprend qu'une donnée peut piloter le comportement.
 
 ⚠️ Cette section disait 0.08 : c'était la gravité **normale** des leçons 09b–11, donc la Lune
@@ -1003,10 +1003,10 @@ départ par couleur, une clarté visée à midi et à minuit. Valeurs complètes
 
 | Thème | Débloqué à | `gravite` | Particularité |
 |---|---|---|---|
-| 🐉 **Dragonneau** | 0 m | 0.036 | — |
-| 🎿 **Ski** | 800 m | 0.036 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
-| 🐬 **Dauphin** | 1 500 m | 0.036 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
-| 🚀 **Lune** | 2 500 m | **0.022** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
+| 🐉 **Dragonneau** | 0 m | 0.06 | — |
+| 🎿 **Ski** | 900 m | 0.06 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
+| 🐬 **Dauphin** | 1 500 m | 0.06 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
+| 🚀 **Lune** | 3 000 m | **0.037** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
 
 ⚠️ **Deux couleurs voisines ne doivent jamais changer d'ordre de clarté au cours de la
 journée** (le ciel plus clair que les collines à midi, mais plus sombre à minuit) : elles se
@@ -1041,14 +1041,14 @@ Les thèmes se débloquent au **record** (la meilleure distance, gardée dans `r
 justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 20 parties par joueur
 automatique, avec le réglage recalibré (§ 9.10, une île = 560 m) :
 
-| | Distance (médiane) | Ski 800 | Dauphin 1 500 | Lune 2 500 |
+| | Distance (médiane) | Ski 900 | Dauphin 1 500 | Lune 3 000 |
 |---|---|---|---|---|
-| ne jamais appuyer | 427 m | — | — | — |
-| tenir tout le temps | 638 m | — | — | — |
-| plonge, maladroit | 707 m | 25 % | — | — |
-| plonge, précis | 1 406 m | 100 % | 40 % | — |
-| vise son atterrissage, avec erreurs | 2 628 m | 100 % | 100 % | 60 % |
-| vise bien | 3 922 m | 100 % | 100 % | 100 % |
+| ne jamais appuyer | 455 m | — | — | — |
+| tenir tout le temps | 700 m | — | — | — |
+| plonge, maladroit | 828 m | 10 % | — | — |
+| plonge, précis | 1 638 m | 100 % | 85 % | — |
+| vise son atterrissage, avec erreurs | 3 218 m | 100 % | 100 % | 70 % |
+| vise bien | 3 801 m | 100 % | 100 % | 100 % |
 
 ⚠️ **Un seuil atteignable sans effort est gratuit.** Chaque seuil est placé juste au-dessus
 d'une stratégie à dépasser : Ski au-dessus de « tenir tout le temps ». Une première version
@@ -1184,22 +1184,30 @@ que **1,6 fois** plus loin que celui qui ne fait rien, contre **7 à 10 fois** d
 jour. Chez nous, rien ne rendait vraiment du jour, et `VX_MIN = 1.2` garantissait à lui seul
 1,7 île.
 
-**Le nouveau réglage** (code fourni de la leçon 12, détail dans `lecon_12/CORRECTION.md`) :
+**Le nouveau réglage** (code fourni de la leçon 12, détail dans `lecon_12/CORRECTION.md`),
+en deux passes : mesures de l'original, puis essai du père :
 
-- **rythme 1,5 fois plus lent** (mêmes trajectoires) : gravité 0,036, plongeon 0,133,
-  ACCEL 0,098, FREIN 0,124, FRICTION 0,998, vitesse 0,4 à 6,0 ;
-- **îles de 5 600 px**, creux de 50 (+4 par île, max 70) au lieu de 65 (+10, max 110) ;
+- **gravité 0,06**, plongeon 0,16, ACCEL 0,098, FREIN 0,124, FRICTION 0,998, vitesse 0,4 à
+  6,0 (une 1re passe à 0,036 a été jugée « trop flottante ») ;
+- **îles de 5 600 px**, creux de 50 (+4 par île, max 70) au lieu de 65 (+10, max 110),
+  collines raccourcies de 8 px par île (min 150) ;
+- **forme d'île** : plateau de départ de 100 px, chaque île **commence par une descente**,
+  grande descente de 84 px sur 3 collines, **bosse arrondie** de 60 px, puis la mer ;
+- **le grand saut réussit toujours** (comme l'original) : on retombe dans la 1re descente de
+  l'île suivante, ~2,4 s de vol, au moins `VITESSE_SAUT` 4.0 ;
+- **caméra** : en vol haut, elle garde le **fond des vallées** à l'écran (repère lissé) ;
+  au-dessus de la mer et en fin d'île, tout le fond ;
 - **jour de 60 s** au départ, nuit +20 % par île ;
-- **+20 % de jour par nouvelle île** (+3 % par île de plus) ;
+- **+15 % de jour par nouvelle île** (+3 % par île de plus) ;
 - **le beau coup** : relâché au décollage, plongé en vol, retombé dans une descente, après
-  au moins 18 images de vol → +3 % de jour, ×2 puis ×3 en série.
+  au moins 18 images de vol → +2 % de jour, ×2 puis ×3 en série.
 
 | Joueur automatique | Îles | Durée |
 |---|---|---|
-| ne jamais appuyer | 0,76 | 60 s |
-| tenir tout le temps | 1,14 | 70 s |
-| vise son atterrissage, avec erreurs | 4,9 | 2 min 36 |
-| vise bien | 7,5 | 2 min 54 |
+| ne jamais appuyer | 0,81 | 60 s |
+| tenir tout le temps | 1,25 | 67 s |
+| vise son atterrissage, avec erreurs | 5,7 | 2 min 13 |
+| vise bien | 6,7 | 2 min 19 |
 
 ⚠️ **Récompenser « un atterrissage qui fait gagner de la vitesse » ne suffit pas** : plonger en
 vol puis retomber dans une pente en fait gagner, et « tenir tout le temps » le fait sans le
@@ -1211,5 +1219,5 @@ descend » atterrit en montée une fois sur deux et ne représente pas un bon jo
 Les joueurs qui simulent appuyer / relâcher jusqu'à l'atterrissage et gardent le meilleur
 donnent les durées et les distances de l'original.
 
-Écart restant : le bon joueur atteint l'île 2 vers 26 s (le père, dans l'original : ~52 s).
+Écart restant : une partie de bon joueur dure ~2 min 15 (le père, dans l'original : ~4 min).
 À juger en jouant. Les leçons 09b–11 gardent l'ancien réglage.
