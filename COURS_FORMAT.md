@@ -980,13 +980,12 @@ THEME_DRAGON = {
 ```
 
 Un thème peut changer des valeurs de **gameplay**, pas seulement des couleurs — le thème
-Lune baisse `gravite` à **0.05**. C'est le moment où Adam comprend qu'une donnée peut piloter
-le comportement.
+Lune baisse `gravite` (0,022 contre 0,036 depuis le recalibrage de la leçon 12, § 9.10).
+C'est le moment où Adam comprend qu'une donnée peut piloter le comportement.
 
-⚠️ Cette section disait 0.08 : c'est devenu la gravité **normale** à la leçon 09b, donc la Lune
-n'aurait rien changé. Mesuré à 0,05 (leçon 12) : vols 30 % plus hauts, distance quasi
-identique (joueur moyen 1 761 m dans les deux cas). La Lune se joue autrement sans fausser
-les records. À 0,04, les vols d'un bon joueur montent à 2 500 px : trop.
+⚠️ Cette section disait 0.08 : c'était la gravité **normale** des leçons 09b–11, donc la Lune
+n'aurait rien changé. Mesuré : à gravité réduite d'un tiers, vols plus hauts, distances
+quasi identiques. La Lune se joue autrement sans fausser les records.
 
 ### Chaque couleur existe en deux versions : jour et nuit
 
@@ -1004,10 +1003,10 @@ départ par couleur, une clarté visée à midi et à minuit. Valeurs complètes
 
 | Thème | Débloqué à | `gravite` | Particularité |
 |---|---|---|---|
-| 🐉 **Dragonneau** | 0 m | 0.08 | — |
-| 🎿 **Ski** | 1 300 m | 0.08 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
-| 🐬 **Dauphin** | 1 650 m | 0.08 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
-| 🚀 **Lune** | 1 800 m | **0.05** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
+| 🐉 **Dragonneau** | 0 m | 0.036 | — |
+| 🎿 **Ski** | 800 m | 0.036 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
+| 🐬 **Dauphin** | 1 500 m | 0.036 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
+| 🚀 **Lune** | 2 500 m | **0.022** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
 
 ⚠️ **Deux couleurs voisines ne doivent jamais changer d'ordre de clarté au cours de la
 journée** (le ciel plus clair que les collines à midi, mais plus sombre à minuit) : elles se
@@ -1039,19 +1038,21 @@ fois sur 39, donc des diagonales parfaitement régulières. `random.Random(grain
 même reproductibilité sans la grille, et un éclat tiré par étoile évite l'effet pochoir.
 
 Les thèmes se débloquent au **record** (la meilleure distance, gardée dans `record.txt`) — ça
-justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 30 parties par niveau
-de joueur automatique :
+justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 20 parties par joueur
+automatique, avec le réglage recalibré (§ 9.10, une île = 560 m) :
 
-| | Distance | Ski 1 300 | Dauphin 1 650 | Lune 1 800 |
+| | Distance (médiane) | Ski 800 | Dauphin 1 500 | Lune 2 500 |
 |---|---|---|---|---|
-| ne jamais appuyer | 1 257 m | — | — | — |
-| tenir tout le temps | 1 614 m | ✅ | — | — |
-| débutant | 1 583 m (médiane) | 100 % | 13 % | 3 % |
-| moyen | 1 761 m | 100 % | 83 % | 33 % |
-| expert | 1 946 m | 100 % | 100 % | 100 % |
+| ne jamais appuyer | 427 m | — | — | — |
+| tenir tout le temps | 638 m | — | — | — |
+| plonge, maladroit | 707 m | 25 % | — | — |
+| plonge, précis | 1 406 m | 100 % | 40 % | — |
+| vise son atterrissage, avec erreurs | 2 628 m | 100 % | 100 % | 60 % |
+| vise bien | 3 922 m | 100 % | 100 % | 100 % |
 
-⚠️ **Tout seuil sous 1 257 m est gratuit** : on l'atteint sans toucher au bouton. Chaque seuil
-est placé juste au-dessus d'une stratégie à dépasser (ne rien faire, puis tenir tout le temps).
+⚠️ **Un seuil atteignable sans effort est gratuit.** Chaque seuil est placé juste au-dessus
+d'une stratégie à dépasser : Ski au-dessus de « tenir tout le temps ». Une première version
+(Ski à 1 300 m, avant le recalibrage) se débloquait en tenant le bouton : refusé par le père.
 
 ### 9.7 Fichiers d'une leçon du bloc 2
 
@@ -1170,3 +1171,45 @@ Sans ça, le bouton n'a **aucun effet visible** : la branche « au sol » rééc
 chaque image, et le dragonneau reste posé quoi qu'Adam fasse. Le rebond garantit qu'il
 passe du temps en l'air dès la leçon 07, donc que `ESPACE` se voit immédiatement. Le
 rebond disparaît en 09b, remplacé par le suivi de pente.
+
+### 9.10 Le recalibrage de la leçon 12 — l'écart entre bons et mauvais joueurs
+
+**Le constat du père** (2026-11-11) : dans *Tiny Wings*, ne rien faire ne termine pas l'île 1,
+tenir tout le temps finit avant la fin de l'île 2, Adam atteint l'île 5 et le père l'île 7.
+Avec le réglage des leçons 09b–11, ne rien faire menait à l'île 3 : le bon joueur n'allait
+que **1,6 fois** plus loin que celui qui ne fait rien, contre **7 à 10 fois** dans l'original.
+
+**La cause.** Dans l'original, le bon joueur vit **4 fois plus longtemps** (4 min contre
+1 min) : le soleil recule quand on enchaîne de bons coups, et chaque nouvelle île redonne du
+jour. Chez nous, rien ne rendait vraiment du jour, et `VX_MIN = 1.2` garantissait à lui seul
+1,7 île.
+
+**Le nouveau réglage** (code fourni de la leçon 12, détail dans `lecon_12/CORRECTION.md`) :
+
+- **rythme 1,5 fois plus lent** (mêmes trajectoires) : gravité 0,036, plongeon 0,133,
+  ACCEL 0,098, FREIN 0,124, FRICTION 0,998, vitesse 0,4 à 6,0 ;
+- **îles de 5 600 px**, creux de 50 (+4 par île, max 70) au lieu de 65 (+10, max 110) ;
+- **jour de 60 s** au départ, nuit +20 % par île ;
+- **+20 % de jour par nouvelle île** (+3 % par île de plus) ;
+- **le beau coup** : relâché au décollage, plongé en vol, retombé dans une descente, après
+  au moins 18 images de vol → +3 % de jour, ×2 puis ×3 en série.
+
+| Joueur automatique | Îles | Durée |
+|---|---|---|
+| ne jamais appuyer | 0,76 | 60 s |
+| tenir tout le temps | 1,14 | 70 s |
+| vise son atterrissage, avec erreurs | 4,9 | 2 min 36 |
+| vise bien | 7,5 | 2 min 54 |
+
+⚠️ **Récompenser « un atterrissage qui fait gagner de la vitesse » ne suffit pas** : plonger en
+vol puis retomber dans une pente en fait gagner, et « tenir tout le temps » le fait sans le
+vouloir (mesuré : jusqu'à l'île 11). La règle exige donc d'avoir **relâché au décollage**.
+Mesuré : ni le passif ni « tenir tout le temps » ne réussit un seul beau coup.
+
+⚠️ **Mesurer avec des joueurs qui visent.** Un joueur automatique qui plonge « dès qu'il
+descend » atterrit en montée une fois sur deux et ne représente pas un bon joueur humain.
+Les joueurs qui simulent appuyer / relâcher jusqu'à l'atterrissage et gardent le meilleur
+donnent les durées et les distances de l'original.
+
+Écart restant : le bon joueur atteint l'île 2 vers 26 s (le père, dans l'original : ~52 s).
+À juger en jouant. Les leçons 09b–11 gardent l'ancien réglage.

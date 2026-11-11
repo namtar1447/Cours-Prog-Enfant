@@ -32,13 +32,20 @@ MI_HAUTEUR = 6
 
 # --- La chute et la glisse (leçon 09b) ---
 # La gravité quand on plane n'est plus ici : c'est le THÈME qui la donne.
-GRAVITE_PLONGEON = 0.30
-ACCEL_DESCENTE = 0.22
-FREIN_MONTEE = 0.28
+#
+# RÉGLÉ À LA LEÇON 12, après comparaison avec Tiny Wings : le jeu tourne
+# 1,5 fois plus lentement (mêmes trajectoires, jouées plus calmement), et
+# le dragonneau peut presque s'arrêter dans une montée s'il ne fait rien.
+# Avant : GRAVITE_PLONGEON 0.30, ACCEL 0.22, FREIN 0.28, FRICTION 0.997,
+#         VX_MIN 1.2, VX_MAX 9.0.
+GRAVITE_PLONGEON = 0.133
+ACCEL_DESCENTE = 0.098
+FREIN_MONTEE = 0.124             # toujours plus grand qu'ACCEL_DESCENTE
 BONUS_PLONGEON = 2.6
 MALUS_PLONGEON = 3.5
-FRICTION = 0.997
-VX_MIN, VX_MAX = 1.2, 9.0
+FRICTION = 0.998
+VX_MIN, VX_MAX = 0.4, 6.0
+VITESSE_DEPART = 1.3
 VITESSE_AILES = 0.15
 
 # --- La caméra (leçon 10) ---
@@ -53,10 +60,17 @@ VISEE_BAS = 60
 VISEE_HAUT = 26
 SUIVI_CAMERA = 0.10
 
-# --- La nuit (leçon 11) ---
-VITESSE_NUIT = 0.00015
-FACTEUR_ILE = 0.35
-BONUS_ATTERRISSAGE = 0.004
+# --- La nuit (leçon 11, réglée à la leçon 12) ---
+# Comme dans Tiny Wings : la journée est courte (une minute si on ne fait
+# rien), mais le bon joueur regagne du jour.
+VITESSE_NUIT = 0.000278          # nuit noire en 60 s, sur la 1re île
+FACTEUR_ILE = 0.20               # la nuit va 20 % plus vite à chaque île
+BONUS_ATTERRISSAGE = 0.004       # le petit bonus de la leçon 11
+BONUS_ILE = 0.20                 # une nouvelle île rend 20 % de jour…
+BONUS_ILE_PAS = 0.03             # … et 3 % de plus à chaque île
+BONUS_BEAU_COUP = 0.03           # un beau coup rend 3 % de jour…
+SERIE_MAX = 3                    # … 6 % au 2e d'affilée, 9 % au 3e et plus
+VOL_BEAU_COUP = 18               # un beau coup, c'est un vrai vol (0,3 s)
 DEBUT_ETOILES = 0.6
 
 NIVEAUX_NUIT = 8                 # en combien d'étapes le dragonneau s'assombrit
@@ -183,10 +197,12 @@ def nouvelle_partie():
     """Une partie toute neuve : tout est rangé dans un dictionnaire."""
     depart_y = hauteur_du_sol(0) - MI_HAUTEUR
     return {
-        "camera_x": 0.0, "y": depart_y, "vy": 0.0, "vx": 2.0,
+        "camera_x": 0.0, "y": depart_y, "vy": 0.0, "vx": VITESSE_DEPART,
         "animation": 0.0, "au_sol_avant": True,
         "zoom": 1.0, "visee": float(VISEE_BAS), "camera_y": depart_y - VISEE_BAS,
-        "heure": 0.0, "soleil": 0, "attente": 0,
+        "heure": 0.0, "soleil": 0, "message": "", "attente": 0,
+        # pour reconnaître un beau coup
+        "vol": 0, "relache": False, "plonge": False, "serie": 0, "ile": 0,
     }
 
 
@@ -225,7 +241,21 @@ def avancer(jeu, bouton, gravite):
             gain = vx - avant
             if gain > 0:
                 heure -= gain * BONUS_ATTERRISSAGE
+
+            # Le BEAU COUP (leçon 12) : le geste de la leçon 09b, en entier.
+            # Relâché au décollage, plongé pendant le vol, et retombé dans une
+            # descente. Ne rien faire ou tenir tout le temps ne le réussit
+            # jamais. Enchaînés, les beaux coups rendent de plus en plus de jour.
+            if (jeu["relache"] and jeu["plonge"] and pente > 0
+                    and jeu["vol"] >= VOL_BEAU_COUP):
+                jeu["serie"] += 1
+                fois = min(jeu["serie"], SERIE_MAX)
+                heure -= BONUS_BEAU_COUP * fois
                 jeu["soleil"] = 45
+                jeu["message"] = "+ jour !" if fois == 1 else f"+ jour x{fois} !"
+            else:
+                jeu["serie"] = 0
+
             if heure < 0.0:
                 heure = 0.0
 
@@ -237,6 +267,15 @@ def avancer(jeu, bouton, gravite):
             accel = FREIN_MONTEE * (MALUS_PLONGEON if bouton else 1.0)
 
         vx = max(VX_MIN, min(VX_MAX, (vx + pente * accel) * FRICTION))
+        jeu["vol"] = 0
+    else:
+        # En l'air : on retient comment le vol a commencé, et s'il a plongé.
+        if jeu["au_sol_avant"]:
+            jeu["relache"] = not bouton
+            jeu["plonge"] = False
+        if bouton:
+            jeu["plonge"] = True
+        jeu["vol"] += 1
 
     jeu["au_sol_avant"] = y >= sol
     camera_x += vx
@@ -244,6 +283,14 @@ def avancer(jeu, bouton, gravite):
 
     # --- La nuit (leçon 11) ---
     ile = numero_ile(camera_x)
+
+    # Une nouvelle île rend du jour (leçon 12)
+    if ile > jeu["ile"]:
+        jeu["ile"] = ile
+        heure = max(0.0, heure - (BONUS_ILE + BONUS_ILE_PAS * (ile - 1)))
+        jeu["soleil"] = 90
+        jeu["message"] = f"ile {ile + 1} !  + jour"
+
     fois_plus_vite = 1 + FACTEUR_ILE * ile
     heure += VITESSE_NUIT * fois_plus_vite
 
@@ -324,7 +371,7 @@ def dessiner_partie(surf, jeu, theme, hud=True):
     ecrire(surf, f"{distance(jeu)} m", 3, 2)
     ecrire(surf, f"ile {numero_ile(camera_x) + 1}", 3, 11)
     if jeu["soleil"] > 0:
-        ecrire(surf, "+ jour !", 3, 20, COULEUR_SOLEIL)
+        ecrire(surf, jeu["message"], 3, 20, COULEUR_SOLEIL)
 
     pygame.draw.rect(surf, COULEUR_PLAQUE, (LARGEUR - 30, 2, 28, 15))
 

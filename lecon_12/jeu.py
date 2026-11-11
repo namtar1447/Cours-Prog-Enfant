@@ -39,7 +39,7 @@ from ecrans import dessiner_menu, dessiner_fin, lire_record, sauver_record
 # --- Les réglages ---
 LARGEUR, HAUTEUR = 160, 120
 ZOOM_FENETRE = 4
-GRAVITE = 0.08                   # la gravité de la leçon 11 (jusqu'au TODO 5a)
+GRAVITE = 0.036                  # la gravité normale (jusqu'au TODO 5a)
 
 
 # ============================================================

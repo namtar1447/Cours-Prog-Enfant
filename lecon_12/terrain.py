@@ -1,7 +1,9 @@
 # ============================================================
 # Leçon 12 — terrain.py
 # ============================================================
-# Le terrain à îles de la leçon 11, sans changement.
+# Le terrain à îles de la leçon 11, RÉGLÉ après comparaison avec Tiny Wings :
+# des îles un peu plus longues, et des collines qui se creusent moins
+# d'une île à l'autre (avant, elles devenaient des ravins).
 #
 # Pour rappel, il sait deux choses de plus que celui de la leçon 10 :
 #
@@ -27,7 +29,7 @@ POINTE = 2.2                     # netteté du sommet
 
 NIVEAU_EAU = 108                 # la hauteur de la mer
 
-LONGUEUR_ILE = 4800              # une île fait 4 800 px, soit 480 m
+LONGUEUR_ILE = 5600              # une île fait 5 600 px, soit 560 m
 PLAGE = 400                      # la plage par laquelle on arrive sur l'île
 OCEAN = 500                      # la mer à franchir au bout
 L_REMONTEE = 60                  # la petite remontée qui sert de tremplin
@@ -59,7 +61,7 @@ def reglages_ile(i):
     ça fait une falaise au beau milieu du terrain.
     """
     longueur_voulue = max(120, 200 - 15 * i)
-    creux_max = min(110, 65 + 10 * i)
+    creux_max = min(70, 50 + 4 * i)
     nombre = max(N_DESCENTE + 3, round(ZONE_COLLINES / longueur_voulue))
     return ZONE_COLLINES / nombre, creux_max, nombre
 
