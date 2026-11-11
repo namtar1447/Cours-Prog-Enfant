@@ -46,7 +46,7 @@ DRAGONNEAU = {
 
 SKI = {
     "nom": "Ski",
-    "distance": 900,
+    "distance": 1000,
     "gravite": 0.06,
 
     # --- de jour : neige, ciel bleu, lac gelé ---
@@ -70,7 +70,7 @@ SKI = {
 
 DAUPHIN = {
     "nom": "Dauphin",
-    "distance": 1500,
+    "distance": 2000,
     "gravite": 0.06,
 
     # --- de jour : des vagues, et un dauphin gris-bleu ---
@@ -94,7 +94,7 @@ DAUPHIN = {
 
 LUNE = {
     "nom": "Lune",
-    "distance": 3000,
+    "distance": 4500,
     "gravite": 0.037,            # sur la Lune, on plane plus longtemps !
 
     # --- de jour : le ciel est toujours noir dans l'espace ---

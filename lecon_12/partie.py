@@ -24,7 +24,7 @@ import random
 import pygame
 
 from terrain import (hauteur_du_sol, numero_ile, est_eau, dans_le_tremplin,
-                     apres_le_sommet, fond_des_vallees, reglages_ile,
+                     dans_la_descente, apres_le_sommet, fond_des_vallees, reglages_ile,
                      CRETE, NIVEAU_EAU, LONGUEUR_ILE, RIVE, PIED)
 from themes import melanger
 
@@ -55,7 +55,7 @@ VITESSE_AILES = 0.15
 # Comme dans Tiny Wings, il réussit TOUJOURS : en quittant le tremplin, le
 # dragonneau est lancé juste ce qu'il faut pour retomber dans la première
 # descente de l'île suivante. Celui qui arrive vite saute plus vite.
-VITESSE_SAUT = 4.0               # au moins cette vitesse pour sauter
+VITESSE_SAUT = 5.5               # au moins cette vitesse pour sauter
 
 # --- La caméra (leçon 10) ---
 ZOOM_MIN = 0.30
@@ -71,15 +71,15 @@ SUIVI_CAMERA = 0.10
 SUIVI_REFERENCE = 0.05           # vitesse à laquelle le repère du sol change
 
 # --- La nuit (leçon 11, réglée à la leçon 12) ---
-# Comme dans Tiny Wings : la journée est courte (une minute si on ne fait
-# rien), mais le bon joueur regagne du jour.
-VITESSE_NUIT = 0.000278          # nuit noire en 60 s, sur la 1re île
+# Comme dans Tiny Wings : la journée est courte (un peu plus d'une minute si
+# on ne fait rien), mais le bon joueur regagne du temps.
+VITESSE_NUIT = 0.000222          # nuit noire en 75 s, sur la 1re île
 FACTEUR_ILE = 0.20               # la nuit va 20 % plus vite à chaque île
 BONUS_ATTERRISSAGE = 0.004       # le petit bonus de la leçon 11
 BONUS_ILE = 0.15                 # une nouvelle île rend 15 % de jour…
 BONUS_ILE_PAS = 0.03             # … et 3 % de plus à chaque île
-BONUS_BEAU_COUP = 0.02           # un beau coup rend 2 % de jour…
-SERIE_MAX = 3                    # … 4 % au 2e d'affilée, 6 % au 3e et plus
+BONUS_BEAU_COUP = 0.015          # un beau coup rend 1,5 % de jour…
+SERIE_MAX = 3                    # … 3 % au 2e d'affilée, 4,5 % au 3e et plus
 VOL_BEAU_COUP = 18               # un beau coup, c'est un vrai vol (0,3 s)
 DEBUT_ETOILES = 0.6
 
@@ -124,6 +124,23 @@ DRAGON_AILE_BASSE = [
 ]
 
 
+# Quand on plonge, le dragonneau replie ses ailes le long du dos (leçon 12).
+DRAGON_AILES_REPLIEES = [
+    "................",
+    "................",
+    "................",
+    "....AAAA...D.D..",
+    "..AAAAAACCCCCC..",
+    "DAAAAACCCCCCCC..",
+    "DD..CCCCCCCOCCC.",
+    ".DDCCCCCCCCCCCCC",
+    "..DCCCCCCCCCCC..",
+    "...DCCCCCCCC....",
+    "....DDDDDD......",
+    "................",
+]
+
+
 def faire_sprite(motif, theme, part_de_nuit):
     """Dessine le dragonneau aux couleurs du thème, avec un contour d'un pixel."""
     couleurs = {
@@ -162,7 +179,8 @@ def sprites_du_theme(theme):
     if theme["nom"] not in _SPRITES:
         _SPRITES[theme["nom"]] = [
             [faire_sprite(motif, theme, niveau / (NIVEAUX_NUIT - 1))
-             for motif in (DRAGON_AILE_HAUTE, DRAGON_AILE_BASSE)]
+             for motif in (DRAGON_AILE_HAUTE, DRAGON_AILE_BASSE,
+                           DRAGON_AILES_REPLIEES)]
             for niveau in range(NIVEAUX_NUIT)]
     return _SPRITES[theme["nom"]]
 
@@ -213,7 +231,7 @@ def nouvelle_partie():
         "heure": 0.0, "soleil": 0, "message": "", "attente": 0,
         # pour reconnaître un beau coup
         "vol": 0, "relache": False, "plonge": False, "serie": 0, "ile": 0,
-        "saut": False, "reference": float(CRETE),
+        "saut": False, "sur_bosse": False, "reference": float(CRETE), "bouton": False,
     }
 
 
@@ -224,13 +242,18 @@ def distance(jeu):
 
 def avancer(jeu, bouton, gravite):
     """Une image de jeu. `gravite` : celle du thème, quand on plane."""
+    jeu["bouton"] = bouton               # pour le dessin : ailes repliées
     camera_x, y, vy, vx = jeu["camera_x"], jeu["y"], jeu["vy"], jeu["vx"]
     zoom, visee, heure = jeu["zoom"], jeu["visee"], jeu["heure"]
 
     # --- Le grand saut (leçon 12) : il part du tremplin, et rien ne l'arrête ---
-    au_sol = y >= hauteur_du_sol(camera_x) - MI_HAUTEUR - 0.001
-    if (not jeu["saut"] and dans_le_tremplin(camera_x)
-            and (not au_sol or apres_le_sommet(camera_x))):
+    # Il part au SOMMET de la bosse, à condition d'avoir roulé dessus : arriver
+    # en l'air d'un vol précédent ne relance rien, on retombe d'abord.
+    # Seul secours : s'il allait toucher la mer en plein vol.
+    if not jeu["saut"] and (
+            (dans_le_tremplin(camera_x) and apres_le_sommet(camera_x) and jeu["sur_bosse"])
+            or (est_eau(camera_x) and jeu["vol"] > 0)):
+        jeu["sur_bosse"] = False
         jeu["saut"] = True
         ile_suivante = numero_ile(camera_x) + 1
         cible = (ile_suivante * LONGUEUR_ILE + RIVE
@@ -280,7 +303,7 @@ def avancer(jeu, bouton, gravite):
                 fois = min(jeu["serie"], SERIE_MAX)
                 heure -= BONUS_BEAU_COUP * fois
                 jeu["soleil"] = 45
-                jeu["message"] = "+ jour !" if fois == 1 else f"+ jour x{fois} !"
+                jeu["message"] = "+ temps !" if fois == 1 else f"+ temps x{fois} !"
             else:
                 jeu["serie"] = 0
 
@@ -296,6 +319,8 @@ def avancer(jeu, bouton, gravite):
 
         vx = max(VX_MIN, min(VX_MAX, (vx + pente * accel) * FRICTION))
         jeu["vol"] = 0
+        if dans_le_tremplin(camera_x) and not jeu["saut"]:
+            jeu["sur_bosse"] = True          # il a bien roulé sur la bosse
     else:
         # En l'air : on retient comment le vol a commencé, et s'il a plongé.
         if jeu["au_sol_avant"]:
@@ -317,7 +342,7 @@ def avancer(jeu, bouton, gravite):
         jeu["ile"] = ile
         heure = max(0.0, heure - (BONUS_ILE + BONUS_ILE_PAS * (ile - 1)))
         jeu["soleil"] = 90
-        jeu["message"] = f"ile {ile + 1} !  + jour"
+        jeu["message"] = f"ile {ile + 1} !  + temps"
 
     fois_plus_vite = 1 + FACTEUR_ILE * ile
     heure += VITESSE_NUIT * fois_plus_vite
@@ -347,8 +372,8 @@ def avancer(jeu, bouton, gravite):
     # zoom sauterait d'un coup.
     if est_eau(camera_x):
         cible = NIVEAU_EAU
-    elif fond_des_vallees(camera_x) == PIED:
-        cible = PIED
+    elif dans_la_descente(camera_x) or dans_le_tremplin(camera_x):
+        cible = fond_des_vallees(camera_x)
     else:
         cible = CRETE + (fond_des_vallees(camera_x) - CRETE) * part
     jeu["reference"] += (cible - jeu["reference"]) * SUIVI_REFERENCE
@@ -401,7 +426,11 @@ def dessiner_partie(surf, jeu, theme, hud=True):
                              (colonne, sy + max(1, int(3 * zoom))))
 
     niveau = min(NIVEAUX_NUIT - 1, int(nuit * NIVEAUX_NUIT))
-    image = sprites_du_theme(theme)[niveau][int(jeu["animation"]) % 2]
+    # les ailes battent… sauf quand on plonge : il les replie
+    if jeu["bouton"] and not jeu["saut"]:
+        image = sprites_du_theme(theme)[niveau][2]
+    else:
+        image = sprites_du_theme(theme)[niveau][int(jeu["animation"]) % 2]
     if zoom < 0.85:
         image = pygame.transform.scale(image, (max(6, int(18 * zoom)),
                                                max(5, int(14 * zoom))))

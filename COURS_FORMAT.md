@@ -293,7 +293,7 @@ désormais officiellement.
 | 2 | **Une seule nouvelle équation à écrire par leçon**, au plus | Les autres sont fournies, ou cachées dans une fonction qu'il **appelle** (`melanger(...)`) : appeler une fonction, c'est le niveau de la leçon 04. |
 | 3 | **Chaque TODO a son modèle visible** | « Écris : » + la ligne, ou « Complète : » + une ligne à trous (`if heure >= ___:`), plus sa carte « Boîte à outils » (section 1). |
 | 4 | **Le jeu tourne après chaque TODO** | Le code fourni ne dépend jamais d'une variable que crée un TODO. Sinon : une **valeur par défaut** fournie, qu'Adam **modifie** (`couleur_ciel = THEME["ciel"]` → `melanger(...)`). Vérifier en lançant le jeu avec 0, 1, 2… TODO faits. |
-| 5 | **Une ligne « ▶ Teste : »** par TODO | Ce qu'il doit voir à l'écran. Si l'effet est invisible, ajouter un retour visible dans le code fourni (« + jour ! »), ou le **dire honnêtement** (« rien de nouveau à voir, c'est normal »). |
+| 5 | **Une ligne « ▶ Teste : »** par TODO | Ce qu'il doit voir à l'écran. Si l'effet est invisible, ajouter un retour visible dans le code fourni (« + temps ! »), ou le **dire honnêtement** (« rien de nouveau à voir, c'est normal »). |
 | 6 | **Un « Pourquoi ? » d'une phrase** dans chaque TODO | À quoi ça sert dans le jeu, pas comment ça calcule. |
 | 7 | **Pas de `min` / `max` à écrire** | Un plancher s'écrit avec un `if` (leçon 02) : `if heure < 0.0: heure = 0.0`. `min` / `max` restent permis dans le code fourni. |
 | 8 | **L'ordre des TODO suit la leçon, pas le fichier** | L'en-tête du fichier le dit, et explique Ctrl+F pour trouver « TODO 3 ». |
@@ -1004,9 +1004,9 @@ départ par couleur, une clarté visée à midi et à minuit. Valeurs complètes
 | Thème | Débloqué à | `gravite` | Particularité |
 |---|---|---|---|
 | 🐉 **Dragonneau** | 0 m | 0.06 | — |
-| 🎿 **Ski** | 900 m | 0.06 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
-| 🐬 **Dauphin** | 1 500 m | 0.06 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
-| 🚀 **Lune** | 3 000 m | **0.037** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
+| 🎿 **Ski** | 1 000 m | 0.06 | neige **plus claire** que le ciel à toute heure ; la mer est un lac gelé |
+| 🐬 **Dauphin** | 2 000 m | 0.06 | tout est bleu : tout repose sur la clarté. Ciel de nuit éclairci (L\* 26) pour garder eau et vagues distinctes |
+| 🚀 **Lune** | 4 500 m | **0.037** | ciel noir de jour comme de nuit ; la nuit se lit au sol et aux étoiles |
 
 ⚠️ **Deux couleurs voisines ne doivent jamais changer d'ordre de clarté au cours de la
 journée** (le ciel plus clair que les collines à midi, mais plus sombre à minuit) : elles se
@@ -1039,16 +1039,16 @@ même reproductibilité sans la grille, et un éclat tiré par étoile évite l'
 
 Les thèmes se débloquent au **record** (la meilleure distance, gardée dans `record.txt`) — ça
 justifie le système au lieu d'en faire un gadget. Seuils mesurés sur 20 parties par joueur
-automatique, avec le réglage recalibré (§ 9.10, une île = 560 m) :
+automatique, avec le réglage recalibré (§ 9.10, une île = 760 m) :
 
-| | Distance (médiane) | Ski 900 | Dauphin 1 500 | Lune 3 000 |
+| | Distance (médiane) | Ski 1 000 | Dauphin 2 000 | Lune 4 500 |
 |---|---|---|---|---|
-| ne jamais appuyer | 455 m | — | — | — |
-| tenir tout le temps | 700 m | — | — | — |
-| plonge, maladroit | 828 m | 10 % | — | — |
-| plonge, précis | 1 638 m | 100 % | 85 % | — |
-| vise son atterrissage, avec erreurs | 3 218 m | 100 % | 100 % | 70 % |
-| vise bien | 3 801 m | 100 % | 100 % | 100 % |
+| ne jamais appuyer | 550 m | — | — | — |
+| tenir tout le temps | 918 m | — | — | — |
+| plonge, maladroit | 1 085 m | 62 % | — | — |
+| plonge, précis | 1 968 m | 100 % | 31 % | — |
+| vise son atterrissage, avec erreurs | 4 804 m | 100 % | 100 % | 75 % |
+| vise bien | 5 648 m | 100 % | 100 % | 100 % |
 
 ⚠️ **Un seuil atteignable sans effort est gratuit.** Chaque seuil est placé juste au-dessus
 d'une stratégie à dépasser : Ski au-dessus de « tenir tout le temps ». Une première version
@@ -1140,6 +1140,8 @@ La ligne vit dans quatre `jeu.py` (09, 09b, 10, 11) comme code fourni, et c'est 
 l'écrit en 08 (TODO 3). La changer rétroactivement réécrirait donc sa propre ligne et
 casserait la règle « `jeu.py` = l'état terminé de la leçon précédente ».
 
+**Mise à jour (2026-11-11)** : finalement **fait à la leçon 12**, dans le code fourni (3e dessin « ailes repliées »), à la demande du père. Le dessin de ses propres ailes reste un bon exercice de pixel art pour la 13.
+
 **Décision du père (2026-11-10)** : en faire un exercice de la **leçon 13**, dans la version
 « ailes figées pendant le plongeon » :
 
@@ -1185,29 +1187,32 @@ jour. Chez nous, rien ne rendait vraiment du jour, et `VX_MIN = 1.2` garantissai
 1,7 île.
 
 **Le nouveau réglage** (code fourni de la leçon 12, détail dans `lecon_12/CORRECTION.md`),
-en deux passes : mesures de l'original, puis essai du père :
+en trois passes : mesures de l'original, puis deux essais du père :
 
 - **gravité 0,06**, plongeon 0,16, ACCEL 0,098, FREIN 0,124, FRICTION 0,998, vitesse 0,4 à
   6,0 (une 1re passe à 0,036 a été jugée « trop flottante ») ;
-- **îles de 5 600 px**, creux de 50 (+4 par île, max 70) au lieu de 65 (+10, max 110),
-  collines raccourcies de 8 px par île (min 150) ;
-- **forme d'île** : plateau de départ de 100 px, chaque île **commence par une descente**,
-  grande descente de 84 px sur 3 collines, **bosse arrondie** de 60 px, puis la mer ;
-- **le grand saut réussit toujours** (comme l'original) : on retombe dans la 1re descente de
-  l'île suivante, ~2,4 s de vol, au moins `VITESSE_SAUT` 4.0 ;
-- **caméra** : en vol haut, elle garde le **fond des vallées** à l'écran (repère lissé) ;
-  au-dessus de la mer et en fin d'île, tout le fond ;
-- **jour de 60 s** au départ, nuit +20 % par île ;
-- **+15 % de jour par nouvelle île** (+3 % par île de plus) ;
+- **îles de 7 600 px**, collines creuses de 50 (+4 par île, max 70), raccourcies de 8 px
+  par île (min 150) ;
+- **forme d'île** : plateau de départ de 100 px ; chaque île **commence par une descente** ;
+  elle finit par une **grande descente de 1 700 px** (180 px de dénivelé, 22 petites bosses
+  qui s'effacent — « au moins 20 collines, 4 s à très bonne vitesse ») et une **bosse
+  arrondie** de 60 px ; la mer est bien plus bas, l'île suivante se dresse comme une falaise ;
+- **le grand saut réussit toujours** (comme l'original). Il part du **sommet de la bosse**,
+  seulement si on a roulé dessus : arriver en l'air d'un vol précédent ne relance rien ;
+- **caméra** : en vol haut, elle garde le **fond des vallées** à l'écran (repère lissé) ; en fin
+  d'île, la pente qui arrive ; au-dessus de la mer, la mer ;
+- **jour de 75 s** au départ, nuit +20 % par île ;
+- **+15 % de temps par nouvelle île** (+3 % par île de plus) ;
 - **le beau coup** : relâché au décollage, plongé en vol, retombé dans une descente, après
-  au moins 18 images de vol → +2 % de jour, ×2 puis ×3 en série.
+  au moins 18 images de vol → +1,5 % de temps, ×2 puis ×3 en série ;
+- message **« + temps ! »** (choix du père) ; **ailes repliées** en plongeon (3e dessin).
 
 | Joueur automatique | Îles | Durée |
 |---|---|---|
-| ne jamais appuyer | 0,81 | 60 s |
-| tenir tout le temps | 1,25 | 67 s |
-| vise son atterrissage, avec erreurs | 5,7 | 2 min 13 |
-| vise bien | 6,7 | 2 min 19 |
+| ne jamais appuyer | 0,72 | 1 min 16 |
+| tenir tout le temps | 1,21 | 1 min 25 |
+| vise son atterrissage, avec erreurs | 6,2 | 3 min 08 |
+| vise bien | 7,5 | 3 min 21 |
 
 ⚠️ **Récompenser « un atterrissage qui fait gagner de la vitesse » ne suffit pas** : plonger en
 vol puis retomber dans une pente en fait gagner, et « tenir tout le temps » le fait sans le
@@ -1219,5 +1224,6 @@ descend » atterrit en montée une fois sur deux et ne représente pas un bon jo
 Les joueurs qui simulent appuyer / relâcher jusqu'à l'atterrissage et gardent le meilleur
 donnent les durées et les distances de l'original.
 
-Écart restant : une partie de bon joueur dure ~2 min 15 (le père, dans l'original : ~4 min).
-À juger en jouant. Les leçons 09b–11 gardent l'ancien réglage.
+⚠️ **Le grand saut ne doit jamais partir d'un dragonneau déjà en l'air** (signalé par le père :
+« notre mécanisme m'a relancé dans les airs »). Et sur la Lune, un saut lancé avant le sommet
+est moins raide que la bosse : il la retouche et repart. Partir du sommet règle les deux. Les leçons 09b–11 gardent l'ancien réglage.
